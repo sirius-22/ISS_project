@@ -1,0 +1,1 @@
+<img src="../commons/resources/.referenceDocProf/organizzazioneSprint.png">
