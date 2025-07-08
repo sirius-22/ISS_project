@@ -6,4 +6,4 @@ Membri del team di sviluppo (in ordine alfabetico):
 
 | <img src="img/vale.jpg" width="150"/> | <img src="img/angela.jpeg" width="150"/> | <img src="img/Siria.jpeg" width="150"/> |
 |-----------------------|-----------------------|-----------------------|
-| Bacchelli Valentina       | Russo Angela        | Savignagno Siria       |
+| Bacchelli Valentina       | Russo Angela        | Savignano Siria       |
