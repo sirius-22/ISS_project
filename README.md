@@ -1,6 +1,8 @@
 # ISS_project
 Progetto di ingegneria dei sistemi software M
-<span style="color:blue">suggerisco di usare i colori</span> <span style="color:pink">visto che al prof piacciono</span>
+
+$${\color{lightblue}Suggerisco \space di \space usare \space i \space \color{red}colori \space \color{lightgreen} per \space qualche \space parola }$$
+  visto che al $${\color{blue}prof}$$ piacciono. 
 
 ## Team
 Membri del team di sviluppo :
