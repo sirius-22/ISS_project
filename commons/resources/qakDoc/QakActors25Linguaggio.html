@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>QakActors25Linguaggio &#8212; iss24 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css?v=34905f61" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=87712ff3" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="QakActors25Actors" href="QakActors25Actors.html" />
+    <link rel="prev" title="QakActors25Intro" href="QakActors25Intro.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="QakActors25Actors.html" title="QakActors25Actors"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="QakActors25Intro.html" title="QakActors25Intro"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">iss24 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">QakActors25Linguaggio</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="qakactors25linguaggio">
+<h1>QakActors25Linguaggio<a class="headerlink" href="#qakactors25linguaggio" title="Link to this heading">¶</a></h1>
+<section id="linguaggio-qak">
+<h2>Linguaggio qak<a class="headerlink" href="#linguaggio-qak" title="Link to this heading">¶</a></h2>
+<p>Il linguaggio si pone nel solco dei <a class="reference internal" href="ConcettiFondamentali.html#domain-specific-languages"><span class="std std-ref">Domain Specific Languages</span></a> e permette di esprimere
+un insieme dei concetti che forma  <a class="reference internal" href="QakActors25Intro.html#il-metamodello-qak"><span class="std std-ref">Il metamodello Qak</span></a>.</p>
+<p>Il ruolo ‘strategico’ dei linguaggi in informatica si comprende subito considerando
+che <strong>ogni computazione</strong> (ogni sistema software) può essere espressa usando un insieme molto limitato
+di ‘mosse’ (istruzioni) studiate dalla teoria
+come <a class="reference internal" href="ConcettiFondamentali.html#macchine-di-turing-di-minky-e-pda"><span class="std std-ref">macchine astratte elementari</span></a>.</p>
+<p>In sintesi, possiamo dire che l’uso du un linguaggio comporta descrizioni di un
+sistema software:</p>
+<p><span class="remark">più compatte, più esplicie e semanticamente più ricche</span></p>
+<p>Il linguaggio qak intende promuovere
+la definizione in tempi brevi di <span class="blue">prototipi di sistemi distribuiti</span>, utilizzabili nelle fasi preliminari
+di un progetto di sviluppo software, al fine di <strong>interagire con il committente</strong>, per chiarire e stabilizzare
+i requisiti.</p>
+<p>In molti casi, la formalizzazione dei requsiti e della analisi del problema
+in ternini di modelli eseguibili qak costituisce anche un passo pragmaticamente utile
+per la costruzione effettiva del prodotto finale.</p>
+<section id="id2">
+<h3>Qak syntax<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>La sintassi del linguaggio è riportata in  <a class="reference external" href="./_static/Qactork.xtext">Qak syntax</a>.</p>
+<section id="scopo-della-grammatica">
+<h4>Scopo della grammatica<a class="headerlink" href="#scopo-della-grammatica" title="Link to this heading">¶</a></h4>
+<p>Lo ‘scopo’ della grammatica è la produzione relativa alla specifica del sistema.</p>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>QActorSystemSpec:
+  name=ID                             //(1)
+  ( mqttBroker = BrokerSpec)?         //(2)
+  ( libs       = UserLibs  )?         //(3)
+  ( message   += Message   )*         //(4)
+  ( context   += Context   )*         //(5)
+  ( actor     += QActorDeclaration )* //(6)
+  (display    = DisplayDecl)?         //(7)
+  (facade     = FacadeDecl)?          //(8)
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">(</span> <span class="pre">...</span> <span class="pre">)</span></code><span class="slidekp">?</span> signitifca <strong>opzionale</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">(</span> <span class="pre">...</span> <span class="pre">)</span></code><span class="slidekp">*</span> signitifca <strong>zero o più volte</strong></p>
+</td>
+<td><p><strong>Specifica del sistema</strong></p>
+<ol class="arabic simple">
+<li><p>nome del sistema</p></li>
+<li><p>indirizzo di un broker MQTT</p></li>
+<li><p>dichiarazione di una o più <span class="slide2">librerie applicative</span></p></li>
+<li><p><a class="reference internal" href="#dichiarazione-dei-messaggi"><span class="std std-ref">Dichiarazione dei messaggi</span></a></p></li>
+<li><p><a class="reference internal" href="#dichiarazione-dei-contesti"><span class="std std-ref">Dichiarazione dei contesti</span></a></p></li>
+<li><p><a class="reference internal" href="#dichiarazione-degli-attori"><span class="std std-ref">Dichiarazione degli attori</span></a></p></li>
+<li><p>Dichiarazione di un Display di sistema</p></li>
+<li><p><a class="reference internal" href="#dichiarazione-di-una-facade"><span class="std std-ref">Dichiarazione di una Facade</span></a> di sistema</p></li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Le regole sintattche del linguaggio impongono che un
+modello Qak venga definito organizzando la sua descrizione
+in una <strong>sequenza di dichiarazioni</strong>.</p>
+</section>
+</section>
+<section id="dichiarazione-dei-messaggi">
+<h3>Dichiarazione dei messaggi<a class="headerlink" href="#dichiarazione-dei-messaggi" title="Link to this heading">¶</a></h3>
+<p>I diversi <a class="reference internal" href="unibo.basicomm23.html#tipi-di-messaggi"><span class="std std-ref">Tipi di messaggi</span></a> sono dichiarati usando una <em>sintassi</em> Prolog-like (si veda <a class="reference external" href="http://amsacta.unibo.it/5450/7/tuprolog-guide.pdf">tuProlog</a> &gt;):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Message      :  BasicMessage | Event | OtherMsg;
+BasicMessage :  Dispatch | Request;
+OtherMsg     :  Reply;
+
+Event:    &quot;Event&quot;     name=ID  &quot;:&quot; msg = PHead  (cmt=STRING)?;
+Dispatch: &quot;Dispatch&quot;  name=ID  &quot;:&quot; msg = PHead  (cmt=STRING)?;
+Request:  &quot;Request&quot;   name=ID  &quot;:&quot; msg = PHead  (cmt=STRING)?;
+Reply:    &quot;Reply&quot;     name=ID  &quot;:&quot; msg = PHead  ( &quot;for&quot; reqqq = [Request] )? (cmt=STRING)?;
+
+PHead :       PAtom | PStruct | PStructRef ;  //sintassi Prolog
+...
+</pre></div>
+</div>
+</section>
+<section id="dichiarazione-dei-contesti">
+<h3>Dichiarazione dei contesti<a class="headerlink" href="#dichiarazione-dei-contesti" title="Link to this heading">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Context : &quot;Context&quot;  name=ID &quot;ip&quot;  ip = ComponentIP   ( &quot;commonObj&quot; commonObj = STRING)?  ;
+ComponentIP : {ComponentIP} &quot;[&quot; &quot;host=&quot; host=STRING &quot;port=&quot; port=INT &quot;]&quot; ;
+</pre></div>
+</div>
+<p>Un contesto può introdurre un <span class="slide2">oggetto accessibile a tutti gli attori</span>.</p>
+</section>
+<section id="dichiarazione-degli-attori">
+<h3>Dichiarazione degli attori<a class="headerlink" href="#dichiarazione-degli-attori" title="Link to this heading">¶</a></h3>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QActorDeclaration</span><span class="p">:</span> <span class="n">QActorInternal</span> <span class="o">|</span>
+                   <span class="n">QActorExternal</span><span class="p">;</span>
+
+<span class="n">QActorInternal</span><span class="p">:</span>  <span class="n">QActor</span> <span class="o">|</span>
+                 <span class="n">QActorCoded</span><span class="p">;</span>
+</pre></div>
+</div>
+</td>
+<td><p>La sintassi indica che vi sono tre tipi di attori.</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="#attori-normali"><span class="std std-ref">Attori normali</span></a></p></li>
+<li><p><a class="reference internal" href="#attori-coded"><span class="std std-ref">Attori coded</span></a></p></li>
+<li><p><a class="reference internal" href="#attori-external"><span class="std std-ref">Attori external</span></a></p></li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Gli attori possono inoltre comportarsi come generatori di stream</p>
+<section id="attori-normali">
+<h4>Attori normali<a class="headerlink" href="#attori-normali" title="Link to this heading">¶</a></h4>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 60.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Gli attori ‘normali’ sono descritti come <a class="reference internal" href="ConcettiFondamentali.html#automi-a-stati-finiti"><span class="std std-ref">Automi a stati finiti</span></a>.</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Nome dell’attore</p></li>
+<li><p>Riferimento al Contesto</p></li>
+<li><p>Oggetto locale usato dall’attore (per un esempio si veda <span class="xref std std-ref">helloworld3 withobj</span>)</p></li>
+<li><p>Attore creato solo dinamicamente</p></li>
+<li><p>Libreirie importate</p></li>
+<li><p>Azioni iniziali dell’attore</p></li>
+<li><p>Stati dell’attore</p></li>
+<li><p>Dichiarazione dell’oggetto locale</p></li>
+<li><p>Dichiarazione delle librerie importate</p></li>
+</ol>
+</div></blockquote>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>QActor: &quot;QActor&quot;
+/*1*/ name=ID
+/*2*/&quot;context&quot; context = [ Context ]
+/*3*/(&quot;withobj&quot; withobj = WithObject)?
+/*4*/( dynamic ?= &quot;dynamicOnly&quot;)?
+  &quot;{&quot;
+/*5*/( imports += UserImport )*
+/*6*/( start   = AnyAction )?
+/*7*/( states += State )*
+  &quot;}&quot;;
+
+/*8*/WithObject: name=ID
+       &quot;using&quot; method=STRING;
+
+/*9*/UserImport:
+    &quot;import&quot; file=STRING ;
+</pre></div>
+</div>
+<p>Si veda <a class="reference internal" href="QakActors25Actors.html#anyaction"><span class="std std-ref">AnyAction</span></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="stati-di-un-attore-normale">
+<h4>Stati di un attore normale<a class="headerlink" href="#stati-di-un-attore-normale" title="Link to this heading">¶</a></h4>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 70.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><ol class="arabic simple">
+<li><p>Nome dello stato</p></li>
+<li><p>Stato iniziale. Il tag <code class="docutils literal notranslate"><span class="pre">initial</span></code> deve essere presente in un <strong>unico stato</strong>.</p></li>
+<li><p>Azioni locali allo stato</p></li>
+<li><p>Transizioni verso lo stato futuro</p></li>
+</ol>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>/*1*/State: &quot;State&quot; name=ID
+/*2*/( normal?=&quot;initial&quot;)?
+  &quot;{&quot;
+/*3*/( actions += StateAction )*
+  &quot;}&quot;
+/*4*/( transition = Transition )?
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attori-coded">
+<h4>Attori coded<a class="headerlink" href="#attori-coded" title="Link to this heading">¶</a></h4>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Un <span class="slide3">CodedQActor</span> è un attore scritto direttamente in codice (kotlin, Java o altro) che si comporta
+come fli attori qak.</p>
+<p><span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#democodedqactor-qak"><span class="std std-ref">democodedqactor.qak</span></a></p>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>/*1*/QActorCoded : &quot;CodedQActor&quot;    name=ID
+    &quot;context&quot; context = [ Context ]
+    &quot;className&quot; className = STRING
+    ( dynamic ?= &quot;dynamicOnly&quot;)?;
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attori-external">
+<h4>Attori external<a class="headerlink" href="#attori-external" title="Link to this heading">¶</a></h4>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 60.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Un attore dichiearato <span class="slide3">external</span> è un attore cha fa parte del sistema ma senza essere definito nel modello corrente,
+in quanto parte di un altro contesto.</p>
+<p><span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#demoaddtocore-qak"><span class="std std-ref">demoaddtocore.qak</span></a></p>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span><span class="mi">1</span><span class="o">*/</span><span class="n">QActorExternal</span><span class="p">:</span> <span class="s2">&quot;ExternalQActor&quot;</span> <span class="n">name</span><span class="o">=</span><span class="n">ID</span>
+    <span class="s2">&quot;context&quot;</span> <span class="n">context</span> <span class="o">=</span> <span class="p">[</span> <span class="n">Context</span> <span class="p">]</span> <span class="p">;</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attori-streamer">
+<h4>Attori streamer<a class="headerlink" href="#attori-streamer" title="Link to this heading">¶</a></h4>
+<p>La <a class="reference external" href="https://en.wikipedia.org/wiki/Reactive_programming">Reactive programming</a> è una combinazione di idee riconducibili al modello <span class="slide2">Observer</span>,
+al modello <span class="slide2">Iterator</span> e al modello di programmazione <span class="slide2">funzionale</span>.</p>
+<p>In questo stile di programmazione,
+un servizio-consumatore reagisce ai dati non appena arrivano, con la capacità anche di propagare
+le modifiche come eventi agli osservatori registrati.</p>
+<p>Un sistema Qak può essere impostato seguendo questo stile  programmazione
+emettendo eventi usando la primitiva <a class="reference internal" href="QakActors25Actors.html#operazioni-di-messaggista-streamed"><span class="std std-ref">subscribeTo</span></a>.
+Per un esempio si veda: <span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#demostreams-qak"><span class="std std-ref">demostreams.qak</span></a></p>
+</section>
+</section>
+<section id="dichiarazione-di-una-facade">
+<h3>Dichiarazione di una Facade<a class="headerlink" href="#dichiarazione-di-una-facade" title="Link to this heading">¶</a></h3>
+<p>Una Facade:</p>
+<ul class="simple">
+<li><p>rappresenta un componente che offre accessi tramite Web ad un sistema qak.</p></li>
+<li><p>vuole essere un modo per dotare un sistema qak di interfacce Web in accordo ai principi
+della <span class="xref std std-ref">Clean architecture</span></p></li>
+<li><p>deve essere realizzata da una classe applicativa definita dall’application designer</p></li>
+<li><p>lascia alla <a class="reference internal" href="QakActors25Intro.html#qak-infrastructure"><span class="std std-ref">Qak infrastructure</span></a>  il compito di interagire con un attore di riferimento del sistema qak
+mediante invio/ricezione di messaggi.</p></li>
+</ul>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FacadeDecl</span> <span class="p">:</span> <span class="s2">&quot;Facade&quot;</span>
+<span class="o">/*</span><span class="mi">1</span><span class="o">*/</span> <span class="n">name</span><span class="o">=</span><span class="n">ID</span>
+<span class="o">/*</span><span class="mi">2</span><span class="o">*/</span> <span class="s2">&quot;port&quot;</span> <span class="n">port</span><span class="o">=</span><span class="n">INT</span>
+<span class="o">/*</span><span class="mi">3</span><span class="o">*/</span> <span class="s2">&quot;usingactor&quot;</span> <span class="n">actor</span><span class="o">=</span><span class="p">[</span><span class="n">QActorInternal</span><span class="p">]</span>
+                   <span class="s2">&quot;inctx&quot;</span> <span class="n">context</span><span class="o">=</span> <span class="p">[</span><span class="n">Context</span><span class="p">]</span>
+<span class="o">/*</span><span class="mi">4</span><span class="o">*/</span> <span class="s2">&quot;appl&quot;</span> <span class="n">appl</span><span class="o">=</span><span class="n">STRING</span>
+<span class="o">/*</span><span class="mi">4</span><span class="o">*/</span> <span class="n">libs</span><span class="o">=</span><span class="n">UserLibs</span> <span class="p">;</span>
+</pre></div>
+</div>
+</td>
+<td><ol class="arabic simple">
+<li><p>identificatore della Facade</p></li>
+<li><p>porta di accesso alla Facade</p></li>
+<li><p>attore di riferimento per la Facade</p></li>
+<li><p>classe applicativa che realizza la Facade</p></li>
+<li><p>librerie per la Facade</p></li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+<p><span class="slidekp">Es&gt;</span> <span class="xref std std-ref">ServiceMath24Facade</span>.</p>
+</section>
+</section>
+<section id="transizioni-di-stato">
+<h2>Transizioni di stato<a class="headerlink" href="#transizioni-di-stato" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Transition</span>         <span class="p">:</span>  <span class="n">EmptyTransition</span> <span class="o">|</span> <span class="n">NonEmptyTransition</span>  <span class="p">;</span>
+</pre></div>
+</div>
+<p>La transizone da uno stato a uno stato successivo può avvenire senza attesa di alcun messaggio (<span class="blue">EmptyTransition</span>)
+oppure (<span class="blue">NonEmptyTransition</span>) in relazione alla disponibilità di un messaggio tra quelli definiti in <a class="reference internal" href="#dichiarazione-dei-messaggi"><span class="std std-ref">Dichiarazione dei messaggi</span></a>.</p>
+<section id="emptytransition">
+<h3>EmptyTransition<a class="headerlink" href="#emptytransition" title="Link to this heading">¶</a></h3>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>EmptyTransition:
+/*1*/    &quot;Goto&quot; targetState=[State]
+/*2*/    (&quot;if&quot; eguard=AnyAction
+/*3*/    &quot;else&quot; othertargetState=[State] )?  ;
+</pre></div>
+</div>
+</td>
+<td><ol class="arabic simple">
+<li><p>Riferimento allo stato futuro (nel caso di guardia <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p></li>
+<li><p>Specifica (opzionale) di una <a class="reference internal" href="#guardia"><span class="std std-ref">Guardia</span></a></p></li>
+<li><p>Stato futuro nel caso di <a class="reference internal" href="#guardia"><span class="std std-ref">Guardia</span></a> <code class="docutils literal notranslate"><span class="pre">false</span></code></p></li>
+</ol>
+<p><span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#demoguards-qak"><span class="std std-ref">demoguards.qak</span></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<section id="guardia">
+<h4>Guardia<a class="headerlink" href="#guardia" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Una guardia è una espressione scritta in Kotlin, che può essere valutata come <code class="docutils literal notranslate"><span class="pre">true</span></code> o <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></li>
+<li><p>Una transizione associata a una guardia, viene attivata solo se la valutazione della condizione espressa dalla
+guardia produce il valore <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="nonemptytransition">
+<h3>NonEmptyTransition<a class="headerlink" href="#nonemptytransition" title="Link to this heading">¶</a></h3>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>NonEmptyTransition:
+/*1*/  &quot;Transition&quot; name=ID
+/*2*/  (duration=Timeout)?
+/*3*/  (trans+=InputTransition)*
+</pre></div>
+</div>
+</td>
+<td><ol class="arabic simple">
+<li><p>Nome della transizione</p></li>
+<li><p>Specifica di un tempo massimo di attesa: si veda <a class="reference internal" href="#timeout-per-transizioni"><span class="std std-ref">Timeout per transizioni</span></a></p></li>
+<li><p>Transizione relativa a un messaggio</p></li>
+</ol>
+<p><span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#demoguards-qak"><span class="std std-ref">demoguards.qak</span></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Una <span class="blue">NonEmptyTransition</span> associata alla disponibilità di un messaggio
+distingue tra i diversi
+<a class="reference internal" href="#dichiarazione-dei-messaggi"><span class="std std-ref">tipi di messaggio</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>InputTransition    : MsgTransSwitch | RequestTransSwitch |  ReplyTransSwitch |
+                     EventTransSwitch | InterruptTranSwitch ;
+
+MsgTransSwitch     : &quot;whenMsg&quot;     message=[Dispatch]
+                      (&quot;and&quot;  guard=AnyAction  )?  &quot;&gt;&quot;  targetState=[State]  ;
+RequestTransSwitch : &quot;whenRequest&quot; message=[Request]
+                      (&quot;and&quot;  guard=AnyAction  )?  &quot;&gt;&quot;  targetState=[State]  ;
+ReplyTransSwitch   : &quot;whenReply&quot;   message=[Reply]
+                      (&quot;and&quot;  guard=AnyAction  )?  &quot;&gt;&quot;  targetState=[State]  ;
+EventTransSwitch   : &quot;whenEvent&quot;   message=[Event]
+                      (&quot;and&quot;  guard=AnyAction  )?  &quot;&gt;&quot;  targetState=[State]  ;
+InterruptTranSwitch: &quot;whenInterrupt&quot;   message=[Dispatch]
+                      (&quot;and&quot;  guard=AnyAction  )?  &quot;&gt;&quot;  targetState=[State]  ;
+</pre></div>
+</div>
+<section id="wheninterrupt">
+<h4>whenInterrupt<a class="headerlink" href="#wheninterrupt" title="Link to this heading">¶</a></h4>
+<p>Esegue la transzione da uno stato <code class="docutils literal notranslate"><span class="pre">SA</span></code> a uno stato <code class="docutils literal notranslate"><span class="pre">SB</span></code>, con ritorno allo stato <code class="docutils literal notranslate"><span class="pre">SA</span></code>,
+quando <code class="docutils literal notranslate"><span class="pre">SB</span></code> esegue l’istruzione qak
+<a class="reference internal" href="QakActors25Actors.html#operazioni-di-ritorno-da-interruzione"><span class="std std-ref">returnFromInterrupt</span></a>.</p>
+<p><span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#demointerrupt-qak"><span class="std std-ref">demointerrupt.qak</span></a>.</p>
+</section>
+<section id="timeout-per-transizioni">
+<h4>Timeout per transizioni<a class="headerlink" href="#timeout-per-transizioni" title="Link to this heading">¶</a></h4>
+<p>Per evitare una attesa indefinita di messaggi in uno stato, è poosibile associare alla transizione un <span class="blue">timeout</span>
+(come un numero naturale in <em>msec</em>)
+scaduto il quale l’automa transita nello stato specificato.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Timeout</span>            <span class="p">:</span> <span class="n">TimeoutInt</span> <span class="o">|</span> <span class="n">TimeoutVar</span> <span class="o">|</span> <span class="n">TimeoutSol</span> <span class="o">|</span> <span class="n">TimeoutVarRef</span><span class="p">;</span>
+<span class="n">TimeoutInt</span>         <span class="p">:</span> <span class="s2">&quot;whenTime&quot;</span>    <span class="n">msec</span><span class="o">=</span><span class="n">INT</span>  <span class="s2">&quot;&gt;&quot;</span> <span class="n">targetState</span> <span class="o">=</span> <span class="p">[</span><span class="n">State</span><span class="p">]</span>  <span class="p">;</span>
+<span class="n">TimeoutVar</span>         <span class="p">:</span> <span class="s2">&quot;whenTimeVar&quot;</span>    <span class="n">variable</span>   <span class="o">=</span> <span class="n">Variable</span>    <span class="s2">&quot;&gt;&quot;</span> <span class="n">targetState</span> <span class="o">=</span> <span class="p">[</span><span class="n">State</span><span class="p">]</span>  <span class="p">;</span>
+<span class="n">TimeoutVarRef</span>      <span class="p">:</span> <span class="s2">&quot;whenTimeVarRef&quot;</span> <span class="n">refvar</span>     <span class="o">=</span> <span class="n">VarRef</span>      <span class="s2">&quot;&gt;&quot;</span> <span class="n">targetState</span> <span class="o">=</span> <span class="p">[</span><span class="n">State</span><span class="p">]</span>  <span class="p">;</span>
+<span class="n">TimeoutSol</span>         <span class="p">:</span> <span class="s2">&quot;whenTimeSol&quot;</span>    <span class="n">refsoltime</span> <span class="o">=</span> <span class="n">VarSolRef</span>   <span class="s2">&quot;&gt;&quot;</span> <span class="n">targetState</span> <span class="o">=</span> <span class="p">[</span><span class="n">State</span><span class="p">]</span>  <span class="p">;</span>
+</pre></div>
+</div>
+<p>Lo scadere del tempo indicato in <span class="blue">whenTime</span> (regola <code class="docutils literal notranslate"><span class="pre">TimeoutInt</span></code>) provoca l’emissione di un <strong>evento</strong>,
+con indentificatore
+<code class="docutils literal notranslate"><span class="pre">local_tout_actorname_state</span></code> ove <code class="docutils literal notranslate"><span class="pre">actorname</span></code> è il nome dell’attore e <code class="docutils literal notranslate"><span class="pre">state</span></code> è  il nome dello stato corrente.
+<span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#demo0-perceiver"><span class="std std-ref">demo0 perceiver</span></a></p>
+<p>Le forme che si aggiungono a <code class="docutils literal notranslate"><span class="pre">TimeoutInt</span></code> sono utili in situazioni in cui il tempo non sia noto a priori,
+ma derivi da elaborazioni. <span class="slidekp">Es&gt;</span> <a class="reference internal" href="QakActors25Demo.html#demo0-sender"><span class="std std-ref">demo0 sender</span></a></p>
+<p>Indice: <a class="reference internal" href="QakActors25Intro.html#qakactors25index"><span class="std std-ref">QakActors25Index</span></a></p>
+</section>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">QakActors25Linguaggio</a><ul>
+<li><a class="reference internal" href="#linguaggio-qak">Linguaggio qak</a><ul>
+<li><a class="reference internal" href="#id2">Qak syntax</a><ul>
+<li><a class="reference internal" href="#scopo-della-grammatica">Scopo della grammatica</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dichiarazione-dei-messaggi">Dichiarazione dei messaggi</a></li>
+<li><a class="reference internal" href="#dichiarazione-dei-contesti">Dichiarazione dei contesti</a></li>
+<li><a class="reference internal" href="#dichiarazione-degli-attori">Dichiarazione degli attori</a><ul>
+<li><a class="reference internal" href="#attori-normali">Attori normali</a></li>
+<li><a class="reference internal" href="#stati-di-un-attore-normale">Stati di un attore normale</a></li>
+<li><a class="reference internal" href="#attori-coded">Attori coded</a></li>
+<li><a class="reference internal" href="#attori-external">Attori external</a></li>
+<li><a class="reference internal" href="#attori-streamer">Attori streamer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dichiarazione-di-una-facade">Dichiarazione di una Facade</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#transizioni-di-stato">Transizioni di stato</a><ul>
+<li><a class="reference internal" href="#emptytransition">EmptyTransition</a><ul>
+<li><a class="reference internal" href="#guardia">Guardia</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#nonemptytransition">NonEmptyTransition</a><ul>
+<li><a class="reference internal" href="#wheninterrupt">whenInterrupt</a></li>
+<li><a class="reference internal" href="#timeout-per-transizioni">Timeout per transizioni</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="QakActors25Intro.html"
+                          title="previous chapter">QakActors25Intro</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="QakActors25Actors.html"
+                          title="next chapter">QakActors25Actors</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/QakActors25Linguaggio.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="QakActors25Actors.html" title="QakActors25Actors"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="QakActors25Intro.html" title="QakActors25Intro"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">iss24 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">QakActors25Linguaggio</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Antonio Natali.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>QakActors25Intro &#8212; iss24 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css?v=34905f61" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=87712ff3" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="QakActors25Linguaggio" href="QakActors25Linguaggio.html" />
+    <link rel="prev" title="commdemo" href="commdemo.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="QakActors25Linguaggio.html" title="QakActors25Linguaggio"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="commdemo.html" title="commdemo"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">iss24 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">QakActors25Intro</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="qakactors25intro">
+<h1>QakActors25Intro<a class="headerlink" href="#qakactors25intro" title="Link to this heading">¶</a></h1>
+<section id="qakactors25index">
+<h2>QakActors25Index<a class="headerlink" href="#qakactors25index" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="#qakactors25intro"><span class="std std-ref">QakActors25Intro</span></a></p></li>
+<li><p><a class="reference internal" href="QakActors25Linguaggio.html#qakactors25linguaggio"><span class="std std-ref">QakActors25Linguaggio</span></a></p></li>
+<li><p><a class="reference internal" href="QakActors25Actors.html#qakactors25actors"><span class="std std-ref">QakActors25Actors</span></a></p></li>
+<li><p><a class="reference internal" href="QakActors25Implementazione.html#qakactors25implementazione"><span class="std std-ref">QakActors25Implementazione</span></a></p></li>
+<li><p><a class="reference internal" href="QakActors25Demo.html#qakactors25demo"><span class="std std-ref">QakActors25Demo</span></a></p></li>
+</ol>
+<section id="qakactors25-note-storiche">
+<h3>QakActors25 note storiche<a class="headerlink" href="#qakactors25-note-storiche" title="Link to this heading">¶</a></h3>
+<p>Secondo Carl <a class="reference external" href="https://en.wikipedia.org/wiki/Carl_Hewitt">Hewitt</a> &gt; (uno dei padri fondatori) il modello computazionale ad attori è stato ispirato,
+a differenza dei precedenti modelli di calcolo,
+dalla fisica, inclusa la relatività generale e la meccanica quantistica.</p>
+<p>Vi è oggi una ampia gamma di proposte di linguaggi / librerie ad attori, tra cui:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://akka.io/">Akka</a> &gt;: ispirato a <a class="reference external" href="https://en.wikipedia.org/wiki/Actor_model">Modello computazionale ad attori</a> &gt; di  Hewitt. Per le motivazioni si veda <a class="reference external" href="https://doc.akka.io//docs/akka/current/typed/guide/actors-motivation.html">Akka actors</a> &gt;.</p></li>
+<li><p><a class="reference external" href="https://go.dev/">GO</a> &gt;: ispirato a <a class="reference external" href="https://en.wikipedia.org/wiki/Communicating_sequential_processes">CSP</a>&gt;, propone <em>goroutine</em> e <em>CanaliGO</em>. Per la documentazione si veda <a class="reference external" href="https://go.dev/doc/">GO doc</a>&gt;.</p></li>
+<li><p><a class="reference external" href="https://kotlinlang.org/docs/shared-mutable-state-and-concurrency.html#actors">Kotlin Actors</a> &gt; : propone <em>croutines</em> e <em>channels</em> (si veda <a class="reference external" href="https://play.kotlinlang.org/hands-on/Introduction%20to%20Coroutines%20and%20Channels/08_Channels">Kotlin channel</a>&gt;)</p></li>
+</ul>
+<p>Un motto di riferimento alquanto significativo per questo modello è il seguente:</p>
+<p><span class="slide2">Do not communicate by sharing memory … instead, share memory by communicating</span></p>
+</section>
+</section>
+<section id="qakactors25-introduzione">
+<h2>QakActors25: Introduzione<a class="headerlink" href="#qakactors25-introduzione" title="Link to this heading">¶</a></h2>
+<p>La <span class="blue">Q/q</span>  nella parola <em>QActor</em>, significa “quasi” poiché il linguaggio non è inteso come un linguaggio
+di programmazione generico, ma piuttosto un <span class="remark">linguaggio di modellazione eseguibile</span>,
+da utilizzare durante l’analisi del problema e il progetto di protitpi di sistemi distribuiti,
+i cui componenti sono  attori  che si comportano come un <a class="reference external" href="https://it.wikipedia.org/wiki/Automa_a_stati_finiti">Automa a stati finiti</a>, in stretta relazione
+con l’idea di sistemi basati su <a class="reference external" href="https://microservices.io/">Microservizi</a>.</p>
+<p>L’aggiunta di <span class="blue">k</span> al prefisso (es <code class="docutils literal notranslate"><span class="pre">qak</span></code>, <code class="docutils literal notranslate"><span class="pre">Qak</span></code>) significa che stiamo facendo riferimento alla versione
+implementata in <a class="reference external" href="https://kotlinlang.org/">Kotlin</a>&gt;, senza utilizzare i supporti Akka (come fatto nella prima versione del linguaggio).</p>
+<p>Per una <span class="slide2">Introduzione all’uso di Kotlin</span> si veda: si veda: <a class="reference internal" href="KotlinNotes.html#kotlinnotes"><span class="std std-ref">KotlinNotes</span></a>.</p>
+<section id="quadro-generale">
+<h3>Quadro generale<a class="headerlink" href="#quadro-generale" title="Link to this heading">¶</a></h3>
+<p>Un attore qak specializza la classe astratta  <a class="reference internal" href="QakActors25Implementazione.html#it-unibo-kactor-actorbasicfsm-kt"><span class="std std-ref">it.unibo.kactor.ActorBasicFsm.kt</span></a>
+che a sua volta specializza la classe astratta  <a class="reference internal" href="QakActors25Implementazione.html#it-unibo-kactor-actorbasic-kt"><span class="std std-ref">it.unibo.kactor.ActorBasic.kt</span></a>,
+entrambe definite nella <a class="reference internal" href="#qak-infrastructure"><span class="std std-ref">Qak infrastructure</span></a>.</p>
+<p>E’  possibile costruire un sistena software basato su attori qak semplicemente usando queste
+librerie.</p>
+<p>Tuttavia, l’uso della <a class="reference internal" href="#qak-software-factory"><span class="std std-ref">Qak software factory</span></a> e del connesso <a class="reference internal" href="QakActors25Linguaggio.html#linguaggio-qak"><span class="std std-ref">Linguaggio qak</span></a>
+rende lo sviluppo dei sistemi molto più rapido, comprensibile e gestibile.</p>
+</section>
+<section id="qak-software-factory">
+<h3>Qak software factory<a class="headerlink" href="#qak-software-factory" title="Link to this heading">¶</a></h3>
+<p>Il <a class="reference internal" href="QakActors25Linguaggio.html#linguaggio-qak"><span class="std std-ref">Linguaggio qak</span></a> è definito utilizzando il framework <a class="reference external" href="https://www.eclipse.org/Xtext/">Xtext</a>&gt;, che permette di costruire un insieme di
+<span class="remark">plugin</span> per l’ecosistema Eclipse che, una volta installati, permettono ad un application designer
+de realizzare in tempi rapidi un <span class="remark">modello eseguibile del sistema</span>.</p>
+<section id="i-plugin-della-qak-factory">
+<h4>I plugin della Qak factory<a class="headerlink" href="#i-plugin-della-qak-factory" title="Link to this heading">¶</a></h4>
+<p>I plugin che,  installati in Eclipse, realizzano la <a class="reference internal" href="#qak-software-factory"><span class="std std-ref">Qak software factory</span></a> sono:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">it.unibo.Qactork.ide_1.6.0.jar</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">it.unibo.Qactork.ui_1.6.0.jar</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">it.unibo.Qactork_1.6.0.jar</span></code></p></li>
+</ul>
+<p>Essi sono disponibili in <span class="slide2">issLab25/iss25Material/plugins</span>.</p>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 55.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><a class="reference internal image-reference" href="_images/qakSoftwareFactory.png"><img alt="_images/qakSoftwareFactory.png" class="align-center" src="_images/qakSoftwareFactory.png" style="width: 100%;" />
+</a>
+</td>
+<td><p>L’application designer usa l’editor guidato dalla sintassi per scrivere un <a class="reference internal" href="ConcettiFondamentali.html#modelli"><span class="std std-ref">modello</span></a> del sistema
+che definisce</p>
+<p><span class="slide2">struttura, interazione e comportamento</span></p>
+<p>di un sistema distribuito.</p>
+<p>Il <a class="reference internal" href="ConcettiFondamentali.html#modelli"><span class="std std-ref">modello</span></a> è una istanza de <a class="reference internal" href="#il-metamodello-qak"><span class="std std-ref">Il metamodello Qak</span></a>, sulla base del quale è costruita la Factory.</p>
+<p>Una volta salvato il modello, la factory produce
+<a class="reference internal" href="#qak-codice-e-risorse-generate"><span class="std std-ref">codice e risorse</span></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Questa impostazione
+è tipica delle software factories relative ai <a class="reference internal" href="ConcettiFondamentali.html#domain-specific-languages"><span class="std std-ref">Domain Specific Languages</span></a> che si pongono
+nel solco della <a class="reference external" href="https://en.wikipedia.org/wiki/Model-driven_engineering">Model driven engineering</a>&gt;.</p>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 70.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><a class="reference internal image-reference" href="_images/factory.jpg"><img alt="_images/factory.jpg" class="align-center" src="_images/factory.jpg" style="width: 100%;" />
+</a>
+</td>
+<td><p>La factory genera il codice necessario per ‘mappare’ i concetti di alto livello (espressi nel modello)
+in strutture di più basso livello, che possono essere eseguite avvelendosi di appositi supporti e librerie di utilità
+application-independent.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="qak-codice-e-risorse-generate">
+<h3>Qak codice e risorse generate<a class="headerlink" href="#qak-codice-e-risorse-generate" title="Link to this heading">¶</a></h3>
+<p>La <a class="reference internal" href="#qak-software-factory"><span class="std std-ref">Qak software factory</span></a> costruisce vari prodotti indispensabili o utili, tra cui:</p>
+<ul class="simple">
+<li><p>un file che contiene la descrizione del sistema, in sintassi Prolog</p></li>
+<li><p>il file <code class="docutils literal notranslate"><span class="pre">build2025.gradle</span></code> e  altre risorse</p></li>
+<li><p>il codice di raccordo con la <a class="reference internal" href="#qak-infrastructure"><span class="std std-ref">Qak infrastructure</span></a>
+(la <a class="reference internal" href="RiferimentiBase.html#vista-sommersa"><span class="std std-ref">parte sommersa</span></a> di ogni sistema Qak)</p></li>
+<li><p>il codice Python per la produzione di una rappresentazione grafica del sistema</p></li>
+</ul>
+</section>
+<section id="qak-infrastructure">
+<h3>Qak infrastructure<a class="headerlink" href="#qak-infrastructure" title="Link to this heading">¶</a></h3>
+<p>La libreria <span class="slide3">unibo.qakactor23-5.0.jar</span> è prodotta nel progetto  <span class="blue">unibo.qakactor23</span> e costituisce
+la <span class="blue">qak-infrastructure</span>, che si appoggia
+al supporto <span class="slide3">unibo.basicomm23-1.0.jar</span> introdotto nel progetto <a class="reference internal" href="unibo.basicomm23.html#unibo-basicomm23"><span class="std std-ref">unibo.basicomm23</span></a>,
+che implementa il concetto astratto di <a class="reference internal" href="unibo.basicomm23.html#unibo-basicomm23-interfaces-interaction"><span class="std std-ref">Interaction</span></a> per diversi protocolli (TCP, UDP, CoAP, etc.).</p>
+<p>Per maggiori dettagli, s veda: <a class="reference internal" href="QakActors25Implementazione.html#qakactors25implementazione"><span class="std std-ref">QakActors25Implementazione</span></a></p>
+</section>
+</section>
+</section>
+<section id="il-metamodello-qak">
+<h1>Il metamodello Qak<a class="headerlink" href="#il-metamodello-qak" title="Link to this heading">¶</a></h1>
+<p>Il <a class="reference internal" href="QakActors25Linguaggio.html#linguaggio-qak"><span class="std std-ref">Linguaggio qak</span></a> reso disponibile dalla <a class="reference internal" href="#qak-software-factory"><span class="std std-ref">Qak software factory</span></a> intende fornire un linguaggio
+per la definizione di</p>
+<p><span class="slide2">modelli eseguibili</span> di un sistema,</p>
+<p>basati su un insieme
+di <a href="#id2"><span class="problematic" id="id3">:reamrk:`concetti volti a cattuare l'idea`</span></a> che un sistema software (distribuito) possiede le seguenti
+caratteristiche:</p>
+<ul class="simple">
+<li><p>il <a class="reference internal" href="#qakactors25-il-sistema"><span class="std std-ref">sistema</span></a> è formato da una insieme di <a class="reference internal" href="#qakactors25-l-attore"><span class="std std-ref">attori</span></a></p></li>
+<li><p>gli attori interagiscono scambiandosi messaggi
+(di tipo <a class="reference internal" href="unibo.basicomm23.html#unibo-basicomm23-interfaces-iapplmessage"><span class="std std-ref">IApplMessage</span></a>, nel nostro caso)</p></li>
+<li><p>un attore è un ente autonomo, capace di elaborare messaggi. Pertanto la struttura
+del codice di un attore si presta ad essere modellata come un <a class="reference internal" href="ConcettiFondamentali.html#automi-a-stati-finiti"><span class="std std-ref">Automi a stati finiti</span></a></p></li>
+<li><p>gli attori sono raggruppati in <a class="reference internal" href="#qakactors25-il-contesto"><span class="std std-ref">contesti</span></a> che li abilitano a interazioni via rete</p></li>
+<li><p>i contesti possono essere allocati (deployed) su uno o più  nodi computazionali, fisici o virtuali</p></li>
+</ul>
+<section id="qakactors25-il-sistema">
+<h2>QakActors25 - il sistema<a class="headerlink" href="#qakactors25-il-sistema" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 70.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Un sistema ad attori qak è composto da una collezioni di attori, attivati in uno o più contesti,
+allocati in uno o piò nodi di elaborazione.</p></td>
+<td><a class="reference internal image-reference" href="_images/Actor24sysqak.PNG"><img alt="_images/Actor24sysqak.PNG" class="align-center" src="_images/Actor24sysqak.PNG" style="width: 100%;" />
+</a>
+</td>
+</tr>
+<tr class="row-even"><td><p>Un sistema ad attori qak è configurato in modo automatico a partire da una descrizione espressa in forma
+di <span class="blue">base di conoscenza</span>, in sintassi Prolog.</p>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">context</span><span class="p">(</span><span class="n">ctx1</span><span class="p">,</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>  <span class="s2">&quot;TCP&quot;</span><span class="p">,</span> <span class="s2">&quot;8923&quot;</span><span class="p">)</span><span class="o">.</span>
+<span class="n">context</span><span class="p">(</span><span class="n">ctx2</span><span class="p">,</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>  <span class="s2">&quot;TCP&quot;</span><span class="p">,</span> <span class="s2">&quot;8925&quot;</span><span class="p">)</span><span class="o">.</span>
+<span class="n">qactor</span><span class="p">(</span> <span class="n">producer1</span><span class="p">,</span> <span class="n">ctx1</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">className</span><span class="o">&gt;</span><span class="p">)</span><span class="o">.</span>
+<span class="n">qactor</span><span class="p">(</span> <span class="n">consumer</span><span class="p">,</span>  <span class="n">ctx2</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">className</span><span class="o">&gt;</span><span class="p">)</span><span class="o">.</span>
+<span class="n">qactor</span><span class="p">(</span> <span class="n">producer2</span><span class="p">,</span> <span class="n">ctx3</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">className</span><span class="o">&gt;</span><span class="p">)</span><span class="o">.</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="qakactors25-l-attore">
+<h2>QakActors25 - l’attore<a class="headerlink" href="#qakactors25-l-attore" title="Link to this heading">¶</a></h2>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 70.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Un attore qak è un componente attivo che:</p>
+<ul class="simple">
+<li><p>nasce, vive e muore in un <a class="reference internal" href="QakActors25.html#qakactors25-il-contesto"><span class="std std-ref">contesto</span></a> che può essere comune a (molti) altri attori;</p></li>
+<li><p>ha un <strong>nome univoco</strong> nell’ambito di tutto il sistema;</p></li>
+<li><p>è logicamente attivo, cioè dotato di flusso di controllo autonomo;</p></li>
+<li><p>è capace di inviare messaggi ad un altro attore, di cui conosce il <strong>nome</strong>, incluso sè stesso;</p></li>
+<li><p>è capace di eseguire elaborazioni autonome e/o elaborazioni di messaggi;</p></li>
+<li><p>è dotato di una sua <span class="remark">coda locale</span> (<strong>msgQueue</strong>) in cui sono depositati i messaggi
+a lui inviati</p></li>
+</ul>
+</td>
+<td><a class="reference internal image-reference" href="_images/actor24.png"><img alt="_images/actor24.png" class="align-center" src="_images/actor24.png" style="width: 100%;" />
+</a>
+<ul class="simple">
+<li><p>Elabora i messaggi secondo quanto riportato in <a class="reference internal" href="QakActors25Actors.html#la-gestione-dei-messaggi"><span class="std std-ref">La gestione dei messaggi</span></a>.</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="qakactors25-il-contesto">
+<h2>QakActors25 - il contesto<a class="headerlink" href="#qakactors25-il-contesto" title="Link to this heading">¶</a></h2>
+<p>Un contesto è un componente software che gestisce <code class="docutils literal notranslate"><span class="pre">N&gt;0</span></code> actor qak, <strong>abilitandoli</strong>
+alla ricezione e trasmissione di messaggi via rete.</p>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 70.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Un contesto rappresenta un nodo logico di elaborazione dotato di un server e di un porta di ingresso,
+su cui altri contesti possono stabilire una <a class="reference internal" href="unibo.basicomm23.html#interconnessione"><span class="std std-ref">Interconnessione</span></a>, di solito basata su <code class="docutils literal notranslate"><span class="pre">TCP</span></code>,
+<code class="docutils literal notranslate"><span class="pre">CoAP</span></code> e <code class="docutils literal notranslate"><span class="pre">MQTT</span></code>.</p>
+<p>Un contesto deve essere allocato su un computer fisico o su un  virtual macìhine / container.</p>
+</td>
+<td><a class="reference internal image-reference" href="_images/actor24Ctx.png"><img alt="_images/actor24Ctx.png" class="align-center" src="_images/actor24Ctx.png" style="width: 100%;" />
+</a>
+</td>
+</tr>
+<tr class="row-even"><td><p>Un contesto mantiene una tabella  (<span class="blue">actorMap</span>)  con i riferimento agli attori locali e una tabella
+(<span class="blue">proxyMap</span>) con i riferimenti ai Proxy che mantengono una <a class="reference internal" href="unibo.basicomm23.html#interconnessione"><span class="std std-ref">Interconnessione</span></a> con gli altri contesti
+del sistema.</p>
+</td>
+<td><a class="reference internal image-reference" href="_images/actor24CtxMaps.png"><img alt="_images/actor24CtxMaps.png" class="align-center" src="_images/actor24CtxMaps.png" style="width: 100%;" />
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default" style="width: 100%">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Il Server di contesto depone i messaggi <a class="reference internal" href="unibo.basicomm23.html#unibo-basicomm23-interfaces-iapplmessage"><span class="std std-ref">IApplMessage</span></a>
+ricevuti su una <a class="reference internal" href="unibo.basicomm23.html#interconnessione"><span class="std std-ref">Interconnessione</span></a> sulla  <code class="docutils literal notranslate"><span class="pre">msgQueue</span></code>
+dell’attore destinatario.</p>
+<p>Per questo scopo, il Sever si avvale di un unico <span class="blue">gestore di messaggi di sistema</span>:
+il <code class="docutils literal notranslate"><span class="pre">ContextMsgHandler</span></code>.</p>
+</td>
+<td><a class="reference internal image-reference" href="_images/Actors24SingleNodeAndCtx.png"><img alt="_images/Actors24SingleNodeAndCtx.png" class="align-center" src="_images/Actors24SingleNodeAndCtx.png" style="width: 100%;" />
+</a>
+<p>La figura mostra il caso di attori locali ad un nodo di elaborazione che possono
+inviare/ricevere messaggi tra loro oppure elaborare messaggi inviati
+da componenti remoti.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Indice: <a class="reference internal" href="#qakactors25index"><span class="std std-ref">QakActors25Index</span></a></p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">QakActors25Intro</a><ul>
+<li><a class="reference internal" href="#qakactors25index">QakActors25Index</a><ul>
+<li><a class="reference internal" href="#qakactors25-note-storiche">QakActors25 note storiche</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#qakactors25-introduzione">QakActors25: Introduzione</a><ul>
+<li><a class="reference internal" href="#quadro-generale">Quadro generale</a></li>
+<li><a class="reference internal" href="#qak-software-factory">Qak software factory</a><ul>
+<li><a class="reference internal" href="#i-plugin-della-qak-factory">I plugin della Qak factory</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#qak-codice-e-risorse-generate">Qak codice e risorse generate</a></li>
+<li><a class="reference internal" href="#qak-infrastructure">Qak infrastructure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#il-metamodello-qak">Il metamodello Qak</a><ul>
+<li><a class="reference internal" href="#qakactors25-il-sistema">QakActors25 - il sistema</a></li>
+<li><a class="reference internal" href="#qakactors25-l-attore">QakActors25 - l’attore</a></li>
+<li><a class="reference internal" href="#qakactors25-il-contesto">QakActors25 - il contesto</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="commdemo.html"
+                          title="previous chapter">commdemo</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="QakActors25Linguaggio.html"
+                          title="next chapter">QakActors25Linguaggio</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/QakActors25Intro.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="QakActors25Linguaggio.html" title="QakActors25Linguaggio"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="commdemo.html" title="commdemo"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">iss24 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">QakActors25Intro</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Antonio Natali.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>
