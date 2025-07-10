@@ -8,6 +8,6 @@ $${\color{lightblue}Suggerisco \space di \space usare \space i \space \color{red
 
 ## Team
 Membri del team di sviluppo :
-| <img src="./commons/resources/Profileimg/vale.jpg" width="150"/> | <img src="./commons/resources/Profileimg/angela.jpeg" width="150"/> | <img src="./commons/resources/Profileimg/Siria.jpeg" width="150"/> |
+| <img src="./commons/resources/Profileimg/vale.jpg" width="150"/> | <img src="./commons/resources/Profileimg/Angela.jpeg" width="150"/> | <img src="./commons/resources/Profileimg/Siria.jpeg" width="150"/> |
 |-----------------------|-----------------------|-----------------------|
 | Bacchelli Valentina       | Russo Angela        | Savignano Siria       |
