@@ -1,3 +1,21 @@
+## 
+
+A _Maritime Cargo shipping company_ (from now on, simply ${\color{blue}\text{company}}$) intends to automate the operations of load of freight in the ship’s cargo hold (or simply ${\color{blue}\text{hold}}$). To this end, the company plans to employ a Differential Drive Robot (from now, called ${\color{blue}\text{cargorobot}}$) for the loading of goods (named ${\color{blue}\text{products}}$) in the ship’s hold.
+
+The products to be loaded must be placed in a container of predefined dimensions and registered, by specifying its weight, within a database, by using a proper service (${\color{blue}\text{productservice}}$). After the registration, the _productservice_ returns a **unique product identifier** as a natural number  ${\color{blue}\texttt{PID, PID>0}}$.
+
+The hold is a rectangular, flat area with an Input/Output port (${\color{blue}\text{IOPort}}$). The area provides  ${\color{blue}\texttt{4 slots}}$ for the product containers.
+
+<img src="./commons/resources/.referenceDocProf/tf25sceneAnnotated.jpg">
+
+In the picture above:
+
+* The slots depict the hold storage areas, when they are ocuupied by product containes
+
+* The slots5 area is ${\color{red}\text{permanentely occupied}}$, while the other slots are initially empty
+
+* The sensor put in front of the ${\color{blue}\text{IOPort}}$ is a sonar used to detect the presence of a product container, when it measures a distance  ${\color{blue}\texttt{D}}$, such that  ${\color{blue}\texttt{D < DFREE/2}}$, during a reasonable time (e.g.  ${\color{blue}\texttt{3}}$ secs).
+
 ## TF2025 Requirements
 
 The company asks us to build a software system (named ${\color{blue}\text{cargoservice}}$) that:
