@@ -1,0 +1,286 @@
+System system_overview
+
+// MESSAGES AND EVENTS ========================================================
+// ClientSimulator -> ProductService
+Request registrationrequest:	registrationrequest(Weight)
+
+// ProductService -> ClientSimulator
+Reply registrationaccepted: registrationaccepted(PID)
+
+// ClientSimulator -> CargoService
+Request loadrequest:	loadrequest(PID)
+
+// CargoService -> ProductService
+Request productdatareq: productdatareq(PID)
+
+// ProductService -> CargoService
+
+Reply productdata: productdata(Weight)
+Reply errorproductdata: errorproductdata(M) //PID doesn't exist
+
+// CargoService -> ClientSimulator
+
+Reply loadaccepted:		loadaccepted(Slot)
+Reply loadrejected:		loadrejected(M)
+
+// CargoService -> CargoRobot
+Dispatch movecontainer:		movecontainer(Slot)
+//sonar error case
+Dispatch stop:			stop(M)
+Dispatch resume:		resume(M)
+
+// CargoRobot -> BasicRobot
+Dispatch cmd:			cmd(M)
+Request step:			step(M)
+
+// CargoService -> CargoServiceStatusGUI
+Dispatch updategui: 	updategui(
+							robotState, 
+							robotPosition, 
+							slotsState, 
+							ledState
+						)
+
+// CargoService -> Raspberry
+Dispatch updateled: 	updateled(LedStatus)
+
+// Raspberry -> CargoService
+Dispatch distance:		distance(D)
+
+
+// CONTEXTS ===================================================================
+Context ctx_cargoservice		ip [host="localhost" port=11800]
+Context ctx_productservice		ip [host="localhost" port=11801]
+Context ctx_raspdevice			ip [host="localhost" port=11802]
+Context ctx_client_simulator	ip [host="localhost" port=11803]
+Context ctx_basicrobot      	ip [host="localhost" port=11810]
+
+// ACTORS =====================================================================
+ExternalQActor basicrobot context ctx_basicrobot
+ExternalQActor productservice context ctx_productservice
+
+// ACTORS for ctx_client_simulator --------------------------------------------
+/*
+ * Test Actor:
+ * The client sends a registration request
+ */
+QActor client_simulator context ctx_client_simulator {
+	State state_init initial {
+		println("[client_simulator] Sending a registration request to ProductService...")
+		request productservice -m		registrationrequest: registrationrequest(Weight)
+	}Transition t0 whenReply registrationaccepted -> state_handle_load_req
+	
+	State state_handle_load_req{
+		printCurrentMessage
+		onMsg(registrationaccepted: registrationaccepted(PID)) {
+			[#
+				PID = payloadArg(0)
+				
+			#]
+		println("[client_simulator] Sending a load request to CargoService...")
+		request cargoservice -m		loadrequest: loadrequest($PID)
+		}
+	}
+}
+
+// ACTORS for ctx_cargoservice ------------------------------------------------
+
+//
+/*
+ * Receives updates from  cargoservice  
+ */
+QActor cargoservicestatusgui context ctx_cargoservice {
+	[#
+		//set intial status
+	#]
+	State state_init initial {
+		println("[CargoServiceStatusGUI] Initializing...")
+		[#
+			//init
+		#]
+		println("[CargoServiceStatusGUI] Initialization completed.")
+	}
+	Goto state_idle
+	
+	State state_idle {
+		println("[CargoServiceStatusGUI] Waiting for updates...")
+		// wait for messages
+	}
+	Transition t0 	whenMsg updategui -> state_handle_update
+	
+	State state_handle_update {
+		// TODO: get message info and update state
+
+	}
+	Goto state_idle
+}
+
+
+QActor cargorobot context ctx_cargoservice {
+	State state_init initial {
+		// go at home
+		forward cargoservicestatusgui -m updategui: updategui(M)
+	}
+	Goto state_idle
+	
+	State state_idle {
+		forward cargoservicestatusgui -m updategui: updategui(M)
+		
+	}
+	Transition t0	//whenTime 5000		-> state_idle
+					whenMsg movecontainer	-> state_move_cont
+					whenMsg	stop 		-> state_handle_stop
+	
+	State state_move_cont {
+		onMsg(movecontainer: movecontainer(Slot)){
+			[# var Slot =  payloadArg(0) #]
+		}
+		println("[Cargorobot] Moving container to slot $Slot...")
+		// TO-DO
+		// pickup 
+		// move
+		// store
+		request basicrobot -m step : step(M)
+		forward basicrobot -m cmd : cmd(M)
+		
+		forward cargoservicestatusgui -m updategui: updategui(M)
+		
+		println("[cargoRobot] container transported")
+	}
+	Goto state_idle
+	
+	State state_handle_stop {
+		// do stop 
+	}
+	Transition t0	whenMsg resume		-> state_handle_resume
+	
+	State state_handle_resume {
+		// do something
+		
+		returnFromInterrupt
+	}
+}
+
+QActor cargoservice context ctx_cargoservice {
+	/*[#
+		var CurrentSlotState: Float = 0.0f
+
+	#]*/
+	State state_init initial {
+		[#
+			//initial status
+		#]
+		printCurrentMessage
+		println("[CargoService] Reset")
+		
+	}
+	Goto state_idle
+	
+	State state_idle {
+		println("[CargoService] Idle...")
+		// wait for messages...
+	}
+	Transition t0	whenRequest loadrequest	-> state_handle_load
+					whenMsg distance 			-> state_handle_distance
+					
+	State state_handle_load {
+		printCurrentMessage
+		onMsg(loadrequest: loadrequest(PID)) {
+			[#
+				PID = payloadArg(0)
+				
+			#]
+			}request productservice -m		productdatareq: productdatareq($PID)
+		}Transition t1 whenReply productdata -> state_handle_product
+		
+		State state_handle_product{
+			onMsg(productdata: productdata(Weight)){
+				[#
+					Weight = payloadArg(0)
+				
+				#]
+				}
+				
+			if	[#
+					// empty slots && Weight<MAXLOAD
+					
+				#] 
+				{
+				//find free slot
+			
+				replyTo loadrequest with loadaccepted: loadaccepted($Slot)
+				forward cargorobot -m movecontainer: movecontainer($Slot)
+				
+				//delay 1000 // pickup time (known)
+			}
+			else {
+				replyTo loadrequest with loadrejected: loadrejected($M)
+			}
+			forward cargoservicestatusgui -m updategui: updategui(M)
+			
+		}
+	Goto state_idle
+	
+	State state_handle_distance {
+		onMsg(distance: distance(V)) {
+			if [# payloadArg(0).toFloat() >= DFREE#] {
+				// state_handle_stop
+				forward cargorobot -m stop: stop(M)
+			} else {
+				// state_handle_resume
+				forward cargorobot -m resume: resume(M)
+			}
+		}
+	}
+	Goto state_idle
+}
+
+
+
+
+
+// ACTORS for ctx_raspdevice --------------------------------------------------
+/*
+ * Gets distance from sonar and sends alarm messages
+ */
+QActor sonardevice context ctx_raspdevice {
+	State state_init initial {
+		println("[SonarDevice] Init")
+	}
+	Goto state_detection
+	
+	State state_detection {
+		// 
+		delay 3000
+		
+		forward cargoservice -m distance: distance(D)
+	}
+}
+QActor leddevice context ctx_raspdevice {
+	State state_init initial {
+		println("[LedDevice] Initializing...")
+	}
+	
+	State state_update {
+		onMsg(updateled:	update_led(ARG)){
+			[# newState = (payloadArg(0)) #]
+			println("update_led(${newState})")
+			[# 
+				transitNow(newState)
+			#]
+		}
+	}
+	
+	State state_off {
+		
+	}
+	Transition t0	whenMsg updateled	-> state_update
+	
+	State state_on {
+		
+	}
+	Transition t0	whenMsg updateled	-> state_update
+	
+	
+}
+
