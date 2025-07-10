@@ -25,12 +25,12 @@ The company asks us to build a software system (named ${\color{blue}\text{cargos
    The request is rejected when:
 
    * the product weight is evaluated too high, since the ship can carry a maximum load of
-     ${\color{black}\texttt{MaxLoad > 0 kg}}$
+     ${\color{blue}\texttt{MaxLoad > 0 kg}}$
    * the hold is already full, i.e., the
      ${\color{lightblue}\texttt{4 slots}}$ are already occupied.
 
    If the request is accepted, the ${\color{blue}\text{cargoservice}}$ associates a slot to the product
-   ${\color{black}\texttt{PID}}$ and returns the name of the reserved slot.
+   ${\color{blue}\texttt{PID}}$ and returns the name of the reserved slot.
    Afterwards, it waits for the product container to be delivered to the ${\color{blue}\text{ioport}}$.
    In the meantime, other requests are not elaborated.
 
