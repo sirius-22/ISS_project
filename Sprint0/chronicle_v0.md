@@ -17,7 +17,7 @@ I requisiti richiesti dal committente si possono consultare al seguente link:
 ## Modello
 
 ### Perché usare QAK
-[Documentazione](qakDoc)
+[Documentazione](../commons/resources/qakDoc)
 
 ### Architettura iniziale
 
