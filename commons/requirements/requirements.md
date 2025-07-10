@@ -10,11 +10,11 @@ The hold is a rectangular, flat area with an Input/Output port (${\color{blue}\t
 
 In the picture above:
 
-* The slots depict the hold storage areas, when they are ocuupied by product containes
+* The ${\color{magenta}\text{slots}}$ depict the hold storage areas, when they are ocuupied by product containes
 
-* The slots5 area is ${\color{red}\text{permanentely occupied}}$, while the other slots are initially empty
+* The ${\color{magenta}\text{slots5}}$ area is ${\color{red}\text{permanentely occupied}}$, while the other slots are initially empty
 
-* The sensor put in front of the ${\color{blue}\text{IOPort}}$ is a sonar used to detect the presence of a product container, when it measures a distance  ${\color{blue}\texttt{D}}$, such that  ${\color{blue}\texttt{D < DFREE/2}}$, during a reasonable time (e.g.  ${\color{blue}\texttt{3}}$ secs).
+* The ${\color{magenta}\text{sensor}}$ put in front of the ${\color{blue}\text{IOPort}}$ is a sonar used to detect the presence of a product container, when it measures a distance  ${\color{blue}\texttt{D}}$, such that  ${\color{blue}\texttt{D < DFREE/2}}$, during a reasonable time (e.g.  ${\color{blue}\texttt{3}}$ secs).
 
 ## TF2025 Requirements
 
