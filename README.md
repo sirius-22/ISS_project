@@ -5,6 +5,7 @@ $${\color{lightblue}Suggerisco \space di \space usare \space i \space \color{red
   visto che al $${\color{blue}prof}$$ piacciono. 
 
 - [Sprint 0](Sprint0)
+- [Sprint 1](Sprint1)
 
 ## Team
 Membri del team di sviluppo :
