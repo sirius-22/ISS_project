@@ -14,6 +14,8 @@ I requisiti richiesti dal committente si possono consultare al seguente link:
 
 ## Macrocomponenti del sistema
 
+## Numero di nodi computazionali
+
 ## Modello
 
 ### Perché usare QAK
