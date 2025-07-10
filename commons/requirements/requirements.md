@@ -6,7 +6,7 @@ The products to be loaded must be placed in a container of predefined dimensions
 
 The hold is a rectangular, flat area with an Input/Output port (${\color{blue}\text{IOPort}}$). The area provides  ${\color{blue}\texttt{4 slots}}$ for the product containers.
 
-<img src="./commons/resources/.referenceDocProf/tf25sceneAnnotated.jpg">
+<img src="../resources/.referenceDocProf/tf25sceneAnnotated.jpg">
 
 In the picture above:
 
