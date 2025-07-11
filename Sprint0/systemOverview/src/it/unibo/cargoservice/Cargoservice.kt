@@ -34,8 +34,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					action { //it:State
 						
 									//initial status
-						CommUtils.outcyan("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
+						subscribeToLocalActor("sonardevice") 
 						CommUtils.outblack("[CargoService] Reset")
 						//genTimer( actor, state )
 					}
@@ -53,7 +52,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t05",targetState="state_handle_load",cond=whenRequest("loadrequest"))
-					transition(edgeName="t06",targetState="state_handle_distance",cond=whenDispatch("distance"))
+					transition(edgeName="t06",targetState="state_handle_distance",cond=whenEvent("distance"))
 				}	 
 				state("state_handle_load") { //this:State
 					action { //it:State
@@ -104,9 +103,11 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								if(  payloadArg(0).toFloat() >= DFREE 
 								 ){forward("stop", "stop(M)" ,"cargorobot" ) 
+								forward("updateled", "updateled("on")" ,"leddevice" ) 
 								}
 								else
 								 {forward("resume", "resume(M)" ,"cargorobot" ) 
+								 forward("updateled", "updateled("off")" ,"leddevice" ) 
 								 }
 						}
 						//genTimer( actor, state )
