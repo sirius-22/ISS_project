@@ -8,7 +8,7 @@ Infine sarà necessario sviluppare un piano di lavoro per definire deadline e i 
 
 ## Requisiti
 I requisiti richiesti dal committente si possono consultare al seguente link:
-[Requisiti del committente](../commons/requirements/requirements.md)
+[Requisiti del committente](../commons/requirements/readme.md)
 
 ## Vocabolario
 
