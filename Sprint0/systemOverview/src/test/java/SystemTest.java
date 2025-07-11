@@ -41,7 +41,8 @@ public class SystemTest {
         assertTrue("Test PID invalido", 
                  response.contains("loadrejected"));
     }
-	
+
+	@Test
 	public void testLoadRequestAccepted() throws Exception {
 		String req = CommUtils.buildRequest("mock",
                 "loadrequest", "load_product(1)", 
@@ -75,7 +76,8 @@ public class SystemTest {
                 response.contains("loadrejected") && 
                 response.contains("too_heavy"));
     }
-	
+
+	@Test
 	public void testLoadRequestNoFreeSlots() throws Exception {
 		String req = CommUtils.buildRequest("mock",
                 "loadrequest", "load_product(3)", 
