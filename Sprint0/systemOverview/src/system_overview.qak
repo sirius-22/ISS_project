@@ -5,7 +5,7 @@ System system_overview
 Request registrationrequest:	registrationrequest(Weight)
 
 // ProductService -> ClientSimulator
-Reply registrationaccepted: registrationaccepted(PID)
+Reply registrationaccepted: registrationaccepted(PID) for registrationrequest
 
 // ClientSimulator -> CargoService
 Request loadrequest:	loadrequest(PID)
@@ -20,8 +20,8 @@ Reply errorproductdata: errorproductdata(M) //PID doesn't exist
 
 // CargoService -> ClientSimulator
 
-Reply loadaccepted:		loadaccepted(Slot)
-Reply loadrejected:		loadrejected(M)
+Reply loadaccepted:		loadaccepted(Slot) for loadrequest
+Reply loadrejected:		loadrejected(M) for loadrequest
 
 // CargoService -> CargoRobot
 Dispatch movecontainer:		movecontainer(Slot)
@@ -45,7 +45,7 @@ Dispatch updategui: 	updategui(
 Dispatch updateled: 	updateled(LedStatus)
 
 // Raspberry -> CargoService
-Dispatch distance:		distance(D)
+Event distance:		distance(D)
 
 
 // CONTEXTS ===================================================================
@@ -115,6 +115,17 @@ QActor cargoservicestatusgui context ctx_cargoservice {
 	Goto state_idle
 }
 
+QActor slotmanagement context ctx_cargoservice{
+	State state_init initial{
+		//setting Slot status
+	}
+	Goto idle
+	
+	State idle{
+		//TODO transition on Slot request from cargoservice
+	}
+}
+
 
 QActor cargorobot context ctx_cargoservice {
 	State state_init initial {
@@ -170,7 +181,7 @@ QActor cargoservice context ctx_cargoservice {
 		[#
 			//initial status
 		#]
-		printCurrentMessage
+		subscribeTo sonardevice for distance
 		println("[CargoService] Reset")
 		
 	}
@@ -181,7 +192,7 @@ QActor cargoservice context ctx_cargoservice {
 		// wait for messages...
 	}
 	Transition t0	whenRequest loadrequest	-> state_handle_load
-					whenMsg distance 			-> state_handle_distance
+					whenEvent distance 			-> state_handle_distance
 					
 	State state_handle_load {
 		printCurrentMessage
@@ -206,7 +217,7 @@ QActor cargoservice context ctx_cargoservice {
 					
 				#] 
 				{
-				//find free slot
+				//find free slot (message to slotmanagement)
 			
 				replyTo loadrequest with loadaccepted: loadaccepted($Slot)
 				forward cargorobot -m movecontainer: movecontainer($Slot)
@@ -226,9 +237,11 @@ QActor cargoservice context ctx_cargoservice {
 			if [# payloadArg(0).toFloat() >= DFREE#] {
 				// state_handle_stop
 				forward cargorobot -m stop: stop(M)
+				forward leddevice -m updateled : updateled("on")
 			} else {
 				// state_handle_resume
 				forward cargorobot -m resume: resume(M)
+				forward leddevice -m updateled : updateled("off")
 			}
 		}
 	}
@@ -241,7 +254,7 @@ QActor cargoservice context ctx_cargoservice {
 
 // ACTORS for ctx_raspdevice --------------------------------------------------
 /*
- * Gets distance from sonar and sends alarm messages
+ * Gets distance from sonar and sends it
  */
 QActor sonardevice context ctx_raspdevice {
 	State state_init initial {
@@ -252,8 +265,8 @@ QActor sonardevice context ctx_raspdevice {
 	State state_detection {
 		// 
 		delay 3000
-		
-		forward cargoservice -m distance: distance(D)
+		[# var Distance = 10.0 #]
+		emitlocalstream distance : distance($Distance)	
 	}
 }
 QActor leddevice context ctx_raspdevice {
@@ -261,25 +274,25 @@ QActor leddevice context ctx_raspdevice {
 		println("[LedDevice] Initializing...")
 	}
 	
-	State state_update {
-		onMsg(updateled:	update_led(ARG)){
-			[# newState = (payloadArg(0)) #]
-			println("update_led(${newState})")
-			[# 
-				transitNow(newState)
-			#]
-		}
-	}
-	
-	State state_off {
-		
-	}
-	Transition t0	whenMsg updateled	-> state_update
-	
-	State state_on {
-		
-	}
-	Transition t0	whenMsg updateled	-> state_update
+//	State state_update {
+//		onMsg(updateled:	update_led(ARG)){
+//			[# newState = (payloadArg(0)) #]
+//			println("update_led(${newState})")
+//			[# 
+//				transitNow(newState)
+//			#]
+//		}
+//	}
+//	
+//	State state_off {
+//		
+//	}
+//	Transition t0	whenEvent updateled	-> state_update
+//	
+//	State state_on {
+//		
+//	}
+//	Transition t0	whenEvent updateled	-> state_update
 	
 	
 }

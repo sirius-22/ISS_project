@@ -43,7 +43,8 @@ class Sonardevice ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 				state("state_detection") { //this:State
 					action { //it:State
 						delay(3000) 
-						forward("distance", "distance(D)" ,"cargoservice" ) 
+						 var Distance = 10.0  
+						emitLocalStreamEvent("distance", "distance($Distance)" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
