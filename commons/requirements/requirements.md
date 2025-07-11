@@ -10,7 +10,7 @@ The hold is a rectangular, flat area with an Input/Output port (${\color{blue}\t
 
 In the picture above:
 
-* The ${\color{magenta}\text{slots}}$ depict the hold storage areas, when they are ocuupied by product containes
+* The ${\color{magenta}\text{slots}}$ depict the hold storage areas, when they are occupied by product containers
 
 * The ${\color{magenta}\text{slots5}}$ area is ${\color{red}\text{permanentely occupied}}$, while the other slots are initially empty
 
