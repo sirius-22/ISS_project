@@ -36,8 +36,6 @@
 Con Qak, il **gap tra modello concettuale e codice eseguibile** è ridotto drasticamente.
 In sistemi tradizionali, l’**abstraction gap** è alto: i modelli (diagrammi UML, diagrammi di sequenza, ecc.) non corrispondono al codice effettivo.
 
-Con Qak:
-
 * il modello **è il codice**;
 * si parla di **modello eseguibile**, sviluppato con una DSL (Domain Specific Language);
 * si facilita l'**allineamento tra progetto e implementazione**, riducendo bug e tempo di sviluppo.
