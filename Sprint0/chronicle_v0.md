@@ -40,7 +40,7 @@ Per individuare le macrocomponenti del sistema è giusto esaminare e schematizza
 
 | Bounded Context            | Macrocomponente     | Responsabilità Principale      |
 |----------------------------|---------------------|--------------------------------|
-| Gestione Carico            |                     | Si occupa della logica di business legata al processo di carico, come validazione, assegnazione dello slot, avanzamento del processo di carico |
+| Gestione Carico            | cargoservice        | Si occupa della logica di business legata al processo di carico, come validazione, assegnazione dello slot, avanzamento del processo di carico |
 | Slot Management            | slotmanagement      | Gestisce lo stato fisico della stiva, come tenere traccia degli slot disponibili e occupati, quale prodotto si trova in quale slot, fornire informazioni sull'occupazione della stiva |
 | Interazione fisica/sensori | leddevice, sonardevice, cargorobot | Si occupa dell'interfacciamento con i dispositivi fisici, leggendone dati (come nel caso del sonar) o attivandoli per determinare anomalie (come nel caso del led) o determinare una determinata posizione (come nel caso del cargorobot) |
 | Visualizzazione Stiva      | cargoservicestatusgui | Gestisce l'interfaccia utente (GUI) per mostrare lo stato corrente della stiva in modo dinamico interrogando i dati rilevanti |
