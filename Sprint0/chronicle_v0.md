@@ -63,6 +63,7 @@ Macrocomponenti da sviluppare in parte:
 ## Numero di nodi computazionali
 Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema dovesse avere al più 4 nodi computazionali, così come si può vedere in figura.
 ![Figura nodi computazionali](../commons/resources/ArchitecturesImg/MacroArchitecture.pdf)
+<embed src="../commons/resources/ArchitecturesImg/MacroArchitecture.pdf" width="100%" height="600px" type="application/pdf">
 
 ## Modello
 
