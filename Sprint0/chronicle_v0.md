@@ -60,8 +60,8 @@ Macrocomponenti da sviluppare in parte:
 
 ## Numero di nodi computazionali
 Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema dovesse avere al più 4 nodi computazionali, così come si può vedere in figura.
-![Figura nodi computazionali](../commons/resources/ArchitecturesImg/MacroArchitecture.png)
-<img src="../commons/resources/ArchitecturesImg/MacroArchitecture.png" width=50px>
+<br>
+<img src="../commons/resources/ArchitecturesImg/MacroArchitecture.png" width=500px>
 
 ## Modello
 
@@ -70,7 +70,8 @@ Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema d
 
 ### Architettura iniziale
 Di seguito viene riportata l'immagine dell'architettura iniziale, punto di riferimento per lo sprint successivo.
-<img src="systemOverview/system_overviewarch.png" width=50px>
+<br>
+<img src="systemOverview/system_overviewarch.png" width=500px>
 
 
 ## Piano di testing
