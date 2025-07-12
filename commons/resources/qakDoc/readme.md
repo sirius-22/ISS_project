@@ -1,41 +1,61 @@
-# Perchè Scegliere qak 
+# QAK
 
+### ✅ **Perché usare Qak per i microservizi**
 
-### ✅ **Vantaggi degli Attori rispetto ai POJO**
+**Qak** (quasi-actor in Kotlin) è un framework basato sul modello ad attori, orientato alla progettazione e implementazione di **sistemi distribuiti e reattivi**. I microservizi realizzati in Qak sono modellati come **attori autonomi**, con comportamento definito da un **automa a stati finiti** (FSM) che reagisce ai messaggi ricevuti.
 
-1. **Incapsulamento dello stato interno**
+---
 
-   * Gli attori **non espongono direttamente il loro stato interno**. L’unico modo per interagire con un attore è tramite l’invio di messaggi, evitando accessi diretti e quindi errori legati alla mutabilità o visibilità dello stato.
+### 📌 **Principali vantaggi di Qak per microservizi**
 
-2. **Thread safety garantita**
+1. **Message-driven e concorrente**
+   Gli attori elaborano messaggi in modo asincrono, sfruttando **canali Kotlin**. Questo evita il blocco dei thread e consente maggiore **scalabilità** e **reattività**.
 
-   * Il **modello ad attori è intrinsecamente thread-safe**, poiché ogni attore processa i messaggi **uno alla volta**, evitando race condition senza bisogno di `synchronized`, `volatile`, o altre primitive di sincronizzazione.
+2. **Modellazione eseguibile e DSL**
+   Il linguaggio Qak permette di definire il sistema in forma **modellata** e **eseguibile**, facilitando:
 
-3. **Protezione da concorrenza implicita**
+   * analisi;
+   * test;
+   * generazione automatica del codice;
+   * comprensione dell’interazione tra servizi.
 
-   * Gli attori **gestiscono la concorrenza in modo implicito**, rendendo più semplice scrivere codice concorrente senza introdurre errori difficili da tracciare.
+3. **Supporto integrato per protocolli distribuiti**
+   Ogni attore è anche una:
 
-4. **Maggiore scalabilità**
+   * **risorsa CoAP** (per IoT);
+   * **entità MQTT** (per eventi distribuiti);
+     rendendo Qak adatto a sistemi **eterogenei**.
 
-   * Il modello degli attori è progettato per essere **scalabile su più core e nodi** in modo efficiente, sfruttando modelli di scheduling e mailbox non bloccanti.
+4. **FSM (Finite State Machine)**
+   Gli attori Qak possono operare come FSM, offrendo una gestione **esplicita e controllata degli stati**. Perfetto per workflow, protocolli, robotica.
 
-5. **Facile distribuzione su rete**
+---
 
-   * Framework come Akka permettono di **distribuire gli attori su più nodi** della rete in modo trasparente, mentre un POJO vive all’interno di un singolo processo.
+### 📐 **Abstraction gap ridotto**
 
-6. **Tolleranza ai guasti integrata**
+Con Qak, il **gap tra modello concettuale e codice eseguibile** è ridotto drasticamente.
+In sistemi tradizionali, l’**abstraction gap** è alto: i modelli (diagrammi UML, diagrammi di sequenza, ecc.) non corrispondono al codice effettivo.
 
-   * Gli attori possono essere **supervisionati e gestiti in caso di errore** secondo una gerarchia, permettendo il recovery automatico o l’isolamento degli errori (es. actor supervision trees in Akka).
+Con Qak:
 
-7. **Maggiore chiarezza nell’architettura**
+* il modello **è il codice**;
+* si parla di **modello eseguibile**, sviluppato con una DSL (Domain Specific Language);
+* si facilita l'**allineamento tra progetto e implementazione**, riducendo bug e tempo di sviluppo.
 
-   * Il modello a messaggi favorisce una **separazione più chiara delle responsabilità** tra componenti e promuove un design orientato ai comportamenti (es. `receive` cambia dinamicamente con `context.become()`).
+---
 
-8. **Supporto per comportamenti asincroni naturali**
+### ⚔️ Vantaggi rispetto a POJO e approcci tradizionali
 
-   * L’interazione tramite messaggi promuove un **modello asincrono e reattivo**, più adatto a sistemi real-time, distribuiti o orientati a eventi.
+| **Aspetto**                   | **Qak Actor**                                                 | **POJO tradizionale**                                        |
+| ----------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Natura del componente**     | 🟢 **Attivo**: ha un proprio flusso di controllo              | 🔴 **Passivo**: esegue solo se chiamato da altri             |
+| **Concorrenza**               | Gestita da coroutine e canali (message-driven, non bloccante) | Richiede gestione manuale (thread, lock, sincronizzazione)   |
+| **Comunicazione**             | Asincrona via messaggi (dispatch/request/event)               | Invocazione diretta, spesso sincrona e accoppiata            |
+| **Stato e comportamento**     | Modellato come **FSM** (chiaro, deterministico, reattivo)     | Sparso nel codice, spesso implicito                          |
+| **Distribuzione**             | Supporto integrato per CoAP, MQTT, TCP                        | Richiede configurazione e librerie esterne                   |
+| **Progettazione**             | DSL + **modello eseguibile**                                  | Modello separato dal codice, soggetto a disallineamenti      |
+| **Abstraction gap**           | 🔽 Ridotto: il modello è il codice                            | 🔼 Alto: necessaria traduzione tra modello e implementazione |
+| **Sviluppo e prototipazione** | Rapido con Qak factory + Eclipse plugin                       | Manuale, lento, maggior rischio di errori                    |
 
-9. **Nessuna condivisione dello stato**
-
-   * Gli attori **non condividono memoria**, riducendo drasticamente i problemi tipici della programmazione concorrente come deadlock o livelock.
+---
 
