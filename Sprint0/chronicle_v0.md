@@ -79,7 +79,11 @@ Per un maggiore approfondimento sulle motivazioni dell'uso di qak si rimanda all
 ### Architettura iniziale
 Di seguito viene riportata l'immagine dell'architettura iniziale, punto di riferimento per lo sprint successivo.
 <br>
-<img src="systemOverview/system_overviewarch.png" width=500px>
+
+<div style="text-align: center;">
+  <img src="systemOverview/system_overviewarch.png" style="width: 80%; max-width: 1000px;">
+</div>
+
 
 
 ## Piano di testing
