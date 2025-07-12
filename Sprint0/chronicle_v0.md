@@ -48,10 +48,11 @@ Per individuare le macrocomponenti del sistema è giusto esaminare e schematizza
 Macrocomponenti da sviluppare:
 - cargoservice
 - slotmanagement
+- cargorobot
 - cargoservicestatusgui
 
 Macrocomponenti da non sviluppare perchè fornite dal committente:
-- cargorobot
+- basicrobot
 - productservice
 
 Macrocomponenti da sviluppare in parte:
