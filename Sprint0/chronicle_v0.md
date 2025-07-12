@@ -201,8 +201,8 @@ Vengono quindi definiti dei test per verificare che il servizio restituisca le r
 Al termine di questo sprint 0 abbiamo ritenuto opportuno suddividere il resto del progetto in 3 sprint, ognuno dei quali sarà dedicato a soddisfare un sottoinsieme specifico dei requisiti dati dal committente, ovvero a implementare un sottoinsieme dei macrocomponenti individuati in questa fase. Nello specifico:
 | Sprint | Componenti da sviluppare | Tempo stimato |
 |--------|--------------------------|---------------|
-| Sprint 1 | ```cargoservice```, ```cargorobot``` |  |
-| Sprint 2 | ```sonarservice```, ```slotmanagement``` |  |
-| Sprint 3 | ```cargoservicestatusgui```, ```ledservice``` |  |
+| Sprint 1 | ```cargoservice```, ```cargorobot``` | 36 |
+| Sprint 2 | ```sonarservice```, ```slotmanagement``` | 30 |
+| Sprint 3 | ```cargoservicestatusgui```, ```ledservice``` | 24 |
 
 I tempi riportati (in ore uomo) sono da considerarsi indicativi.
