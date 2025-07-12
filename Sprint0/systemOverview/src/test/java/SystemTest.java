@@ -79,6 +79,7 @@ public class SystemTest {
 
 	@Test
 	public void testLoadRequestNoFreeSlots() throws Exception {
+		// si faccia setup con slot pieni es. accettando preventivamente 4 richieste
 		String req = CommUtils.buildRequest("mock",
                 "loadrequest", "load_product(3)", 
                 "cargoservice").toString();
