@@ -88,7 +88,7 @@ Si mettono in evidenza le seguenti caratteristiche dell'architettura.
 
 - Il sistema è distribuito su almeno 4 nodi computazionali diversi.
 
-- La interazione ```client_simulator``` - ```cargoservice``` è di tipo {\color{green}\texttt{request-response}}$ ed è implicata dal testo dei requisiti.
+- La interazione ```client_simulator``` - ```cargoservice``` è di tipo ${\color{green}\texttt{request-response}}$ ed è implicata dal testo dei requisiti.
 
 - La interazione ```sonardevice``` è modellata come un evento, ma non è un requisito. Dunque potrebbe essere modificata negli sviluppi successivi, mentre potrebbe essere ritenuto un requisito che l’informazione prodotta dal sottosistema su ```ctx_raspdevice``` non sia di pertinenza di ```cargoservice``` (cosa questa da discutere e da approfondire con il committente).
 Risulta invece un requisito architetturale il fatto che il ```cargoservice``` ‘non veda’ ```basicrobot```, essendo un componente dato dal committente.
