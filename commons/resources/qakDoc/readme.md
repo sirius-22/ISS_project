@@ -39,8 +39,3 @@
 
    * Gli attori **non condividono memoria**, riducendo drasticamente i problemi tipici della programmazione concorrente come deadlock o livelock.
 
-10. **Possibilità di hot-swap del comportamento**
-
-* In alcuni framework, è possibile **cambiare dinamicamente il comportamento di un attore** durante il runtime, migliorando la flessibilità del sistema.
-
-
