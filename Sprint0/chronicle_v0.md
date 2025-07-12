@@ -67,7 +67,14 @@ Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema d
 ## Modello
 
 ### Perché usare QAK
-[Documentazione](../commons/resources/qakDoc)
+Qak consente di **modellare, realizzare ed eseguire** sistemi a microservizi in modo coerente, rapido e reattivo, **riducendo l’abstraction gap** e offrendo vantaggi concreti rispetto ai POJO in termini di
+
+* chiarezza strutturale,
+* comportamento esplicito,
+* gestione della concorrenza,
+* interoperabilità.
+
+Per un maggiore approfondimento sulle motivazioni dell'uso di qak si rimanda alla [Documentazione](../commons/resources/qakDoc).
 
 ### Architettura iniziale
 Di seguito viene riportata l'immagine dell'architettura iniziale, punto di riferimento per lo sprint successivo.
