@@ -54,12 +54,15 @@ Macrocomponenti da sviluppare:
 Macrocomponenti da non sviluppare perchè fornite dal committente:
 - basicrobot
 - productservice
+- WEnv
 
 Macrocomponenti da sviluppare in parte:
 - sonarservice
 - ledservice
 
 ## Numero di nodi computazionali
+Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema dovesse avere al più 4 nodi computazionali, così come si può vedere in figura.
+![Figura nodi computazionali](../commons/resources/ArchitecturesImg/MacroArchitecture.pdf)
 
 ## Modello
 
