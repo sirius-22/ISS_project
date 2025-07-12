@@ -11,4 +11,4 @@ $${\color{lightblue}Suggerisco \space di \space usare \space i \space \color{red
 Membri del team di sviluppo :
 | <img src="./commons/resources/Profileimg/vale.jpg" width="150"/> | <img src="./commons/resources/Profileimg/Angela.jpg" width="150"/> | <img src="./commons/resources/Profileimg/Siria.jpeg" width="150"/> |
 |-----------------------|-----------------------|-----------------------|
-| Bacchelli Valentina       | Russo Angela        | Savignano Siria       |
+| [Bacchelli Valentina](https://github.com/VBacchelli)       | [Russo Angela](https://github.com/gioliee)        | [Savignano Siria](https://github.com/sirius-22)       |
