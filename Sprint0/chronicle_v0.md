@@ -205,4 +205,4 @@ Al termine di questo sprint 0 abbiamo ritenuto opportuno suddividere il resto de
 | Sprint 2 | ```sonarservice```, ```slotmanagement``` | 30 |
 | Sprint 3 | ```cargoservicestatusgui```, ```ledservice``` | 24 |
 
-I tempi riportati (in ore uomo) sono da considerarsi indicativi.
+I tempi riportati (in ore uomo) sono da considerarsi indicativi e sono stati ricavati da una stima basata sul tempo impiegato per lo sprint 0.
