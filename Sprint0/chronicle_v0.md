@@ -165,6 +165,7 @@ Vengono quindi definiti dei test per verificare che il servizio restituisca le r
 ```java
     @Test
 	public void testLoadRequestNoFreeSlots() throws Exception {
+			// si faccia setup con slot pieni es. accettando preventivamente 4 richieste
 		String req = CommUtils.buildRequest("mock",
                 "loadrequest", "load_product(3)", 
                 "cargoservice").toString();
