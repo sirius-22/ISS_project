@@ -56,8 +56,8 @@ Macrocomponenti da non sviluppare perchè fornite dal committente:
 - WEnv
 
 Macrocomponenti da sviluppare in parte:
-- sonarservice
-- ledservice
+- sonardevice
+- leddevice
 
 ## Numero di nodi computazionali
 Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema dovesse avere al più 4 nodi computazionali, così come si può vedere in figura.
@@ -84,6 +84,15 @@ Di seguito viene riportata l'immagine dell'architettura iniziale, punto di rifer
   <img src="systemOverview/system_overviewarch.png" style="width: 80%; max-width: 1000px;">
 </div>
 
+Si mettono in evidenza le seguenti caratteristiche dell'architettura.
+
+Il sistema è distribuito su almeno 4 nodi computazionali diversi.
+
+La interazione client_simulator-cargoservice è di tipo request-response ed è implicata dal testo dei requsiti.
+
+La interazione sonardevice è modellata come un evento, ma non è un requisito. Dunque potrebbe essere modificata negli sviluppi successivi, mentre potrebbe essere ritenuto un requisito che l’informazione prodotta dal sottosistema su ctx_raspdevice non sia di pertinenza di cargoservice (cosa questa da discutere e da approfondire con il committente).
+
+Risulta invece un requisito architetturale il fatto che il cargoservice ‘non veda’ basicrobot, essendo un componente dato dal committente.
 
 
 ## Piano di testing
@@ -206,7 +215,7 @@ Al termine di questo sprint 0 abbiamo ritenuto opportuno suddividere il resto de
 | Sprint | Componenti da sviluppare | Tempo stimato |
 |--------|--------------------------|---------------|
 | Sprint 1 | ```cargoservice```, ```cargorobot``` | 36 |
-| Sprint 2 | ```sonarservice```, ```slotmanagement``` | 30 |
-| Sprint 3 | ```cargoservicestatusgui```, ```ledservice``` | 24 |
+| Sprint 2 | ```sonardevice```, ```slotmanagement``` | 30 |
+| Sprint 3 | ```cargoservicestatusgui```, ```leddevice``` | 24 |
 
 I tempi riportati (in ore uomo) sono da considerarsi indicativi e sono stati ricavati da una stima basata sul tempo impiegato per lo sprint 0.
