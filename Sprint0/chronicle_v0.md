@@ -60,7 +60,7 @@ Macrocomponenti da sviluppare in parte:
 - leddevice
 
 ## Numero di nodi computazionali
-Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema dovesse avere al più 4 nodi computazionali, così come si può vedere in figura.
+Dall'analisi dei requisiti dati dal committente, si è appurato che il sistema dovesse avere almeno 4 nodi computazionali, così come si può vedere in figura.
 <br>
 <img src="../commons/resources/ArchitecturesImg/MacroArchitecture.png" width=500px>
 
