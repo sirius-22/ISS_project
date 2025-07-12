@@ -22,7 +22,7 @@ I requisiti richiesti dal committente si possono consultare al seguente link:
 | **PID**                   | Identificatore univoco (Numero naturale > 0) assegnato ad ogni prodotto nel database. |
 | **IO-Port**               | Porta d'ingresso/uscita alla stiva, punto di arrivo per i contenitori prima del carico. |
 | **Slot**                  | Posizioni di stoccaggio all’interno della hold area contenenti i vari container dei prodotti, hanno una capacità massima. Sono 5 di cui una è permanentemente occupata. |
-| **Sonar**                 | Componente concreto (Hardware) dato dal committente con opportuno software per il funzionamento e posto sulla IO-Port che individua la presenza di un ostacolo, nel nostro caso per individuare un product container. |
+| **Sonar**                 | Componente concreto (Hardware) dato dal committente con software componente base e posto sulla IO-Port che individua la presenza di un ostacolo, nel nostro caso per individuare un product container. |
 | **D**                     | Distanza che rileva il sonar alla presenza di un contenitore. |
 | **DFREE**                 | Distanza massima per cui il sistema è in grado di funzionare correttamente. |
 | **Cargoservice**          | Sistema software da sviluppare. |
@@ -30,10 +30,8 @@ I requisiti richiesti dal committente si possono consultare al seguente link:
 | **Richiesta**             | Volontà di caricare un prodotto sulla nave. |
 | **HOME**                  | Posizione di partenza/ritorno del cargorobot dopo ogni operazione. |
 | **Web-gui**               | Interfaccia web grafica dove è possibile mostrare lo stato della hold e delle operazioni. |
-| **Led**                   | Componente concreto (Hardware) dato dal committente con opportuno software per il funzionamento e in grado di emettere luce nel caso il sonar misuri una distanza maggiore rispetto quella massima di rilevazione. |
+| **Led**                   | Componente concreto (Hardware) dato dal committente con software di utilizzo base e in grado di emettere luce nel caso il sonar misuri una distanza maggiore rispetto quella massima di rilevazione. |
 
-
-## Software fornito dal committente
 
 ## Macrocomponenti del sistema
 Per individuare le macrocomponenti del sistema è giusto esaminare e schematizzare i bounded context precedentemente individuati.
@@ -46,6 +44,19 @@ Per individuare le macrocomponenti del sistema è giusto esaminare e schematizza
 | Visualizzazione Stiva      | cargoservicestatusgui | Gestisce l'interfaccia utente (GUI) per mostrare lo stato corrente della stiva in modo dinamico interrogando i dati rilevanti |
 | Product Management         | productservice      | Gestisce il ciclo di vita dei prodotti che possono essere caricati in mare, in particolare fornirà alla gestione del carico il PID del prodotto e attributi rilevanti come il peso |
 
+## Software fornito dal committente
+Macrocomponenti da sviluppare:
+- cargoservice
+- slotmanagement
+- cargoservicestatusgui
+
+Macrocomponenti da non sviluppare perchè fornite dal committente:
+- cargorobot
+- productservice
+
+Macrocomponenti da sviluppare in parte:
+- sonarservice
+- ledservice
 
 ## Numero di nodi computazionali
 
