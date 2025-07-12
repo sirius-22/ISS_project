@@ -98,7 +98,7 @@ Risulta invece un requisito architetturale il fatto che il cargoservice ‘non v
 ## Piano di testing
 [Link al codice](./systemOverview/src/test/java/SystemTest.java)
 
-In questo sprint si formulano dei test generici su servizi mock, al fine di testare il funzionamento delle interazioni individuate tra i macrocomponenti del sistema. 
+In questo sprint si formulano dei test generici su richieste mock, al fine di testare il funzionamento delle interazioni individuate tra i macrocomponenti del sistema. 
 Nel [modello QAK](./systemOverview/src/system_overview.qak) vengono definite le seguenti richieste e relative risposte: 
 ```text
     // ClientSimulator -> ProductService
