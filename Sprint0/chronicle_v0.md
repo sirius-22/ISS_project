@@ -33,6 +33,7 @@ I requisiti richiesti dal committente si possono consultare al seguente link:
 
 ## Macrocomponenti del sistema
 Per individuare le macrocomponenti del sistema è giusto esaminare e schematizzare i bounded context precedentemente individuati.
+Lo scopo della tabella qui sotto riportata è proprio quello di individuare le macrocomponenti rispetto le responsabilità di ogni bounded context.
 
 | Bounded Context            | Macrocomponente     | Responsabilità Principale      |
 |----------------------------|---------------------|--------------------------------|
@@ -75,7 +76,8 @@ Di seguito viene riportata l'immagine dell'architettura iniziale, punto di rifer
 
 
 ## Piano di testing
-[Codice](./systemOverview/src/test/java/SystemTest.java)
+[Link al codice](./systemOverview/src/test/java/SystemTest.java)
+
 In questo sprint si formulano dei test generici su servizi mock, al fine di testare il funzionamento delle interazioni individuate tra i macrocomponenti del sistema. 
 Nel [modello QAK](./systemOverview/src/system_overview.qak) vengono definite le seguenti richieste e relative risposte: 
 ```text
@@ -188,3 +190,8 @@ Vengono quindi definiti dei test per verificare che il servizio restituisca le r
 
 
 ## Piano di lavoro
+| Sprint | Tempo stimato | Data di fine (indicativa) | 
+|--------|----------------|---------------------------|
+| Sprint 1 |  |  |
+| Sprint 2 |  |  |
+| Sprint 3 |  |  |
