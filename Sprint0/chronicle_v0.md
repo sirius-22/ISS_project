@@ -141,7 +141,7 @@ Vengono quindi definiti dei test per verificare che il servizio restituisca le r
                 response.contains("loadaccepted"));
     }
 ```
-* Test di richiesta rifiutata per peso superiore a \textt{MaxLoad}
+* Test di richiesta rifiutata per peso superiore a ${\color{blue}\texttt{MaxLoad}}$
 ```java
     @Test
 	public void testLoadRequestTooHeavy() throws Exception {
