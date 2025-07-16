@@ -78,7 +78,13 @@ Dovendo gestire diverse situazioni di fallimento, abbiamo ritenuto opportuno l'i
 
 **Requisito 5**
 - gestione interrupt attraverso evento
+- gestione evento di ripristino
 
+Sarà necessario aggiungere al modello due messaggi per gestire questi eventi:
+```
+```
+
+Poiché gli eventi andrebbero propagati a cargorobot, decidiamo di fare una subscribe dell'intero contesto ```ctx_cargoservice```.
 
 ### Cargorobot
 Cargorobot è il componente che si occupa di portare un container nello slot specificato dal cargoservice. Essendo anch'esso un componente reattivo e proattivo lo andremo a considerare come attore, analogamente al cargoservice.
@@ -96,6 +102,9 @@ Flusso di operazioni di cargorobot:
     - Si lascia la gestione di un eventuale errore al successivo confronto col committente
 - Poi comunica al basicrobot di rilasciare il prodotto e gli dà le indicazioni per tornare alla HOME
 - Terminate queste istruzioni, comunica al cargoservice che l'esecuzione della richiesta è terminata
+
+<!--In caso di ricezione di evento di interrupt, decidiamo per semplicità di far tornare il robot alla HOME e salvare lo slot verso cui era diretto. Al momento di ricezione dell'evento di ripristino, il cargorobot ricomincerà a dare le indicazioni dall'inizio al basicrobot.
+$\color{red}\text{Sarà necessario chiedere conferma al committente che questa soluzione non sia in conflitto con i requisiti.}$-->
 
 Notiamo la necessità di aggiungere al modello i seguenti messaggi:
 ```
