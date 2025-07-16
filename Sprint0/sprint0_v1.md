@@ -209,12 +209,13 @@ Vengono quindi definiti dei test per verificare che il servizio restituisca le r
 
 
 ## Piano di lavoro
-
 Al termine di questo sprint 0 abbiamo ritenuto opportuno suddividere il resto del progetto in 3 sprint, ognuno dei quali sarà dedicato a soddisfare un sottoinsieme specifico dei requisiti dati dal committente, ovvero a implementare un sottoinsieme dei macrocomponenti individuati in questa fase. Nello specifico:
-| Sprint | Componenti da sviluppare | Tempo stimato |
-|--------|--------------------------|---------------|
-| Sprint 1 | ```cargoservice```, ```cargorobot``` | 36 |
-| Sprint 2 | ```sonardevice```, ```slotmanagement``` | 30 |
-| Sprint 3 | ```cargoservicestatusgui```, ```leddevice``` | 24 |
+
+| Sprint       | Componenti da sviluppare     | Goal                                      | Tempo stimato |
+|--------------|------------------------------|-------------------------------------------|----------------|
+| Sprint 1 | `cargoservice`, `cargorobot`                 | Progettare e implementare la logica principale del sistema, ovvero la ricezione di una richiesta di carico e la sua esecuzione tramite il robot. | 36             |
+| Sprint 2 | `sonardevice`, `slotmanagement`              | <ul><li> Realizzare il componente fisico dotato di sonar e integrarlo con il sistema. </li> <li> Sviluppare la logica per la gestione dinamica degli slot di carico.</li></ul> | 30             |
+| Sprint 3 | `cargoservicestatusgui`, `leddevice`         | Sviluppare un'interfaccia grafica e un dispositivo LED per monitorare visivamente lo stato del sistema.       | 24             |
+
 
 I tempi riportati (in ore uomo) sono da considerarsi indicativi e sono stati ricavati da una stima basata sul tempo impiegato per lo sprint 0.
