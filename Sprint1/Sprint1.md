@@ -39,6 +39,7 @@ Abbiamo deciso di mantenere i requisiti originali in inglese per non correre il 
 ### Cargoservice
 Cargoservice è il componente principale del sistema e avrà il compito di interagire con ogni altra componente affinchè le operazioni da eseguire seguano il giusto ordine e flusso. Essendo, dunque, un componente reattivo e proattivo lo andremo a considerare come attore.
 Flusso di operazioni di cargoservice:
+- inizializzazione: comunica a cargorobot la mappa della stiva (vedere la considerazione nella sezione successiva)
 **Requisito 1**
 - riceve una request per il carico di un prodotto
 - nel caso in cui ci siano richieste successive vengono accodate finchè la richiesta presa in carico non è stata gestita (come di seguito specificato)
@@ -53,8 +54,22 @@ Flusso di operazioni di cargoservice:
 - ricevuta risposta controllo che l'aggiunta del peso del nuovo prodotto rimanga entro i limiti di MaxLoad
   - se il controllo va a buon fine viene accettata la richiesta (```loadaccepted(SLOT)```)
   - se il controllo fallisce la request è rifiutata, ovvero viene propagato un messaggio di errore (```loadrejected```)
+- una volta accettata la richiesta, attende di essere notificato della presenza del container
+- invia a cargorobot l'istruzione di caricare il container, fornendogli il nome dello slot assegnato
+- verifica la corretta esecuzione della richiesta (riceve richiesta di rilascio, vedi in seguito)
+- attende il completamento della richiesta (riceve da cargorobot la comunicazione di raggiungimento della HOME)
+- Da questo momento cargoservice può gestire una nuova richiesta
  
 * nel caso in cui ci fosse in futuro l'opportunità di dover chiedere altre informazioni del prodotto e non solo il peso, rispetta il principio aperto/chiuso
+
+Per quanto riguarda la verifica della corretta esecuzione della richiesta, ci siamo chieste quale fosse il componente più adatto al compito. La prima idea è stata quella di richiedere, a fine richiesta, a slotmanagement quale fosse il PID del prodotto caricato nello slot prescelto, in modo da verificare che coincida con quello appena caricato. Questo richiederebbe che slotmanagement riceva da cargorobot l'esito delle operazioni di carico e usi questo per aggiornare la sua rappresentazione della stiva.
+In alternativa, abbiamo pensato di confrontare lo slot assegnato al prodotto con quello in cui si trova il robot alla richiesta di rilascio prodotto. 
+
+Decidiamo quindi di definire una nuova richiesta da cargorobot a cargoservice:
+```
+```
+
+In questo modo possiamo anche gestire l'errore in cui il robot porta il container allo slot sbagliato. ${\color{red}\text{Sarà necessario richiedere al committente come comportarsi in tale situazione.}}$
 
 Dovendo gestire diverse situazioni di fallimento, abbiamo ritenuto opportuno l'introduzione di diverse cause di messaggio rifiutato, in particolare:
 - ```too_heavy```
@@ -64,17 +79,33 @@ Dovendo gestire diverse situazioni di fallimento, abbiamo ritenuto opportuno l'i
 **Requisito 5**
 - gestione interrupt attraverso evento
 
-### Cargorobot
-Cargorobot è il componente che si occupa di portare un container nello slot specificato dal cargoservice. Essendo, dunque, un componente reattivo e proattivo lo andremo a considerare come attore.
-Nella fase di inzializzazione il cargorobot cono
 
-## Architettura iniziale di riferimento
+### Cargorobot
+Cargorobot è il componente che si occupa di portare un container nello slot specificato dal cargoservice. Essendo anch'esso un componente reattivo e proattivo lo andremo a considerare come attore, analogamente al cargoservice.
+
+A questo punto si presenta la necessità di stabilire se e come il robot sappia "orientarsi". Da un lato, potrebbe essere cargoservice a mantenere la mappa dell'area e indicare al robot passo passo come muoversi, dall'altro cargorobot può essere inizializzato per conoscere la posizione degli slot e i loro nomi ed essere in grado di raggiungerli in autonomia. Un'ulteriore opzione sarebbe quella di costruire dinamicamente la mappa in fase di inizializzazione facendola percorrere al cargorobot, ma rimarrebbe la problematica di riconoscere il nome di ogni slot.
+
+Scegliamo la seconda opzione per semplicità, riservandoci di cambiare approccio in futuro, ad esempio in caso in cui la disposizione della stiva cambi di frequente. Comunicare la mappa della stiva sarà compito di cargoservice.
+
+Flusso di operazioni di cargorobot:
+- In fase di inizializzazione, riceve la mappa della stiva da cargoservice e memorizza la posizione degli slot associata ai loro nomi
+- Quando riceve una richiesta di carico, il cargorobot comunica al basicrobot di raggiungere la I/O port
+- Comunica al basicrobot di prelevare il container
+- Dà al basicrobot le indicazioni per raggiungere lo slot assegnato
+- Alla fine delle istruzioni, invia al cargoservice la richiesta di rilascio prodotto (```container_release```) e attende conferma
+    - Si lascia la gestione di un eventuale errore al successivo confronto col committente
+- Poi comunica al basicrobot di rilasciare il prodotto e gli dà le indicazioni per tornare alla HOME
+- Terminate queste istruzioni, comunica al cargoservice che l'esecuzione della richiesta è terminata
+
+Notiamo la necessità di aggiungere al modello i seguenti messaggi:
+```
+```
 
 ## Piano di testing
 Poiché nell'analisi del problema abbiamo definito le cause specifiche di rifiuto della richiesta da parte di 
 ```cargoservice```, abbiamo ritenuto opportuno modificare il seguente test aggiungendo il controllo sulla causa di rifiuto:
-Test di richiesta con PID invalido (<0)
-    ```Java
+* Test di richiesta con PID invalido (<0)
+```java
     @Test
     public void testLoadRequestInvalidPID() throws Exception {
         //richiesta con PID invalido
@@ -90,9 +121,8 @@ Test di richiesta con PID invalido (<0)
         
         //Verifica che sia stata rifiutata
         assertTrue("Test PID invalido", 
-                 response.contains("loadrejected"))&& 
-                response.contains("no_PID"));
+                 response.contains("loadrejected"));
     }
 ```
 
-## Nuova Archietettura
+## Nuova Architettura
