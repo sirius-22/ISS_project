@@ -121,7 +121,8 @@ Poiché nell'analisi del problema abbiamo definito le cause specifiche di rifiut
         
         //Verifica che sia stata rifiutata
         assertTrue("Test PID invalido", 
-                 response.contains("loadrejected"));
+                 response.contains("loadrejected"))&&
+                response.contains("no_PID");
     }
 ```
 
