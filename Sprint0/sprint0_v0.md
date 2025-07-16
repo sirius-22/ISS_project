@@ -81,7 +81,7 @@ Di seguito viene riportata l'immagine dell'architettura iniziale, punto di rifer
 <br>
 
 <div style="text-align: center;">
-  <img src="systemOverview/system_overviewarch.png" style="width: 80%; max-width: 1000px;">
+  <img src="../commons/resources/logicModels/Sprint0/v1/system_overviewarch.png" style="width: 80%; max-width: 1000px;">
 </div>
 
 Si mettono in evidenza le seguenti caratteristiche dell'architettura.

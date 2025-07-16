@@ -15,8 +15,8 @@ Request productdatareq: productdatareq(PID)
 
 // ProductService -> CargoService
 
-Reply productdata: productdata(Weight)
-Reply errorproductdata: errorproductdata(M) //PID doesn't exist
+Reply productdata: productdata(Weight) for productdatareq
+Reply errorproductdata: errorproductdata(M)  for productdatareq //PID doesn't exist  
 
 // CargoService -> ClientSimulator
 

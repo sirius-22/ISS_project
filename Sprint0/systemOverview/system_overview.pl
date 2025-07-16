@@ -5,6 +5,8 @@ request( registrationrequest, registrationrequest(Weight) ).
 reply( registrationaccepted, registrationaccepted(PID) ).  %%for registrationrequest
 request( loadrequest, loadrequest(PID) ).
 request( productdatareq, productdatareq(PID) ).
+reply( productdata, productdata(Weight) ).  %%for productdatareq
+reply( errorproductdata, errorproductdata(M) ).  %%for productdatareq
 reply( loadaccepted, loadaccepted(Slot) ).  %%for loadrequest
 reply( loadrejected, loadrejected(M) ).  %%for loadrequest
 dispatch( movecontainer, movecontainer(Slot) ).
