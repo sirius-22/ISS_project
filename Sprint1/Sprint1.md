@@ -41,10 +41,10 @@ Cargoservice è il componente principale del sistema e avrà il compito di inter
 Flusso di operazioni di cargoservice:
 - inizializzazione: comunica a cargorobot la mappa della stiva (vedere la considerazione nella sezione successiva)
 **Requisito 1**
-- riceve una request per il carico di un prodotto
+- riceve una request per il carico di un prodotto (```loadrequest```)
 - nel caso in cui ci siano richieste successive vengono accodate finchè la richiesta presa in carico non è stata gestita (come di seguito specificato)
-- dalla request prendiamo il PID
-- interroghiamo slot management per sapere se c'è uno slot libero e quale
+- legge il PID dal corpo della ```loadrequest```
+- interroga slot management per sapere se c'è uno slot libero e quale
     - se risposta positiva, slotmanagement manda il nome dello slot libero e si va avanti
     - se risposta negativa, si rifiuta la request (```loadrejected```)
 - interroghiamo productservice sull'esistenza di questo PID
@@ -67,6 +67,7 @@ In alternativa, abbiamo pensato di confrontare lo slot assegnato al prodotto con
 
 Decidiamo quindi di definire una nuova richiesta da cargorobot a cargoservice:
 ```
+Request loadcontainer : loadcontainer(SLOT)
 ```
 
 In questo modo possiamo anche gestire l'errore in cui il robot porta il container allo slot sbagliato. ${\color{red}\text{Sarà necessario richiedere al committente come comportarsi in tale situazione.}}$
@@ -82,6 +83,7 @@ Dovendo gestire diverse situazioni di fallimento, abbiamo ritenuto opportuno l'i
 
 Sarà necessario aggiungere al modello due messaggi per gestire questi eventi:
 ```
+
 ```
 
 Poiché gli eventi andrebbero propagati a cargorobot, decidiamo di fare una subscribe dell'intero contesto ```ctx_cargoservice```.
@@ -108,6 +110,8 @@ $\color{red}\text{Sarà necessario chiedere conferma al committente che questa s
 
 Notiamo la necessità di aggiungere al modello i seguenti messaggi:
 ```
+
+Reply containerloaded : containerloaded for loadcontainer
 ```
 
 ## Piano di testing
