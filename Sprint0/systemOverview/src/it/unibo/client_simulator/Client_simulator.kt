@@ -32,27 +32,7 @@ class Client_simulator ( name: String, scope: CoroutineScope, isconfined: Boolea
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
-						CommUtils.outblack("[client_simulator] Sending a registration request to ProductService...")
-						request("registrationrequest", "registrationrequest(Weight)" ,"productservice" )  
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t00",targetState="state_handle_load_req",cond=whenReply("registrationaccepted"))
-				}	 
-				state("state_handle_load_req") { //this:State
-					action { //it:State
-						CommUtils.outcyan("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
-						if( checkMsgContent( Term.createTerm("registrationaccepted(PID)"), Term.createTerm("registrationaccepted(PID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												PID = payloadArg(0)
-												
-								CommUtils.outblack("[client_simulator] Sending a load request to CargoService...")
-								request("loadrequest", "loadrequest($PID)" ,"cargoservice" )  
-						}
+						request("loadrequest", "loadrequest($PID)" ,"cargoservice" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

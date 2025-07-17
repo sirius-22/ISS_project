@@ -34,35 +34,11 @@ class Cargoservicestatusgui ( name: String, scope: CoroutineScope, isconfined: B
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
-						CommUtils.outblack("[CargoServiceStatusGUI] Initializing...")
-						
-									//init
-						CommUtils.outblack("[CargoServiceStatusGUI] Initialization completed.")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
-				}	 
-				state("state_idle") { //this:State
-					action { //it:State
-						CommUtils.outblack("[CargoServiceStatusGUI] Waiting for updates...")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t01",targetState="state_handle_update",cond=whenDispatch("updategui"))
-				}	 
-				state("state_handle_update") { //this:State
-					action { //it:State
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
 				}	 
 			}
 		}

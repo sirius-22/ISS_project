@@ -32,10 +32,6 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
-						
-									//initial status
-						subscribeToLocalActor("sonardevice") 
-						CommUtils.outblack("[CargoService] Reset")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -51,8 +47,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t05",targetState="state_handle_load",cond=whenRequest("loadrequest"))
-					transition(edgeName="t06",targetState="state_handle_distance",cond=whenEvent("distance"))
+					 transition(edgeName="t00",targetState="state_handle_load",cond=whenRequest("loadrequest"))
 				}	 
 				state("state_handle_load") { //this:State
 					action { //it:State
@@ -64,52 +59,14 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 												PID = payloadArg(0)
 												
 						}
-						request("productdatareq", "productdatareq($PID)" ,"productservice" )  
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t17",targetState="state_handle_product",cond=whenReply("productdata"))
-				}	 
-				state("state_handle_product") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("productdata(Weight)"), Term.createTerm("productdata(Weight)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-													Weight = payloadArg(0)
-												
-						}
 						if( 
 											// empty slots && Weight<MAXLOAD
 											
 						 ){answer("loadrequest", "loadaccepted", "loadaccepted($Slot)"   )  
-						forward("movecontainer", "movecontainer($Slot)" ,"cargorobot" ) 
 						}
 						else
 						 {answer("loadrequest", "loadrejected", "loadrejected($M)"   )  
 						 }
-						forward("updategui", "updategui(M)" ,"cargoservicestatusgui" ) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
-				}	 
-				state("state_handle_distance") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("distance(D)"), Term.createTerm("distance(V)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								if(  payloadArg(0).toFloat() >= DFREE 
-								 ){forward("stop", "stop(M)" ,"cargorobot" ) 
-								forward("updateled", "updateled("on")" ,"leddevice" ) 
-								}
-								else
-								 {forward("resume", "resume(M)" ,"cargorobot" ) 
-								 forward("updateled", "updateled("off")" ,"leddevice" ) 
-								 }
-						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
