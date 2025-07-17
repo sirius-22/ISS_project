@@ -61,6 +61,16 @@ Flusso di operazioni di cargoservice:
 - Da questo momento cargoservice può gestire una nuova richiesta
  
 * nel caso in cui ci fosse in futuro l'opportunità di dover chiedere altre informazioni del prodotto e non solo il peso, rispetta il principio aperto/chiuso
+ I messaggi che si scambiano cargoservice e productservice sono i seguenti:
+```
+// CargoService -> ProductService
+Request productdatareq: productdatareq(PID)
+
+// ProductService -> CargoService
+
+Reply productdata: productdata(Weight) for productdatareq
+Reply errorproductdata: errorproductdata(M)  for productdatareq //PID doesn't exist  
+```
 
 Per quanto riguarda la verifica della corretta esecuzione della richiesta, ci siamo chieste quale fosse il componente più adatto al compito. La prima idea è stata quella di richiedere, a fine richiesta, a slotmanagement quale fosse il PID del prodotto caricato nello slot prescelto, in modo da verificare che coincida con quello appena caricato. Questo richiederebbe che slotmanagement riceva da cargorobot l'esito delle operazioni di carico e usi questo per aggiornare la sua rappresentazione della stiva.
 In alternativa, abbiamo pensato di confrontare lo slot assegnato al prodotto con quello in cui si trova il robot alla richiesta di rilascio prodotto. 
@@ -68,6 +78,11 @@ In alternativa, abbiamo pensato di confrontare lo slot assegnato al prodotto con
 Decidiamo quindi di definire una nuova richiesta da cargorobot a cargoservice:
 ```
 Request loadcontainer : loadcontainer(SLOT)
+```
+
+Si necessita di un evento affinchè cargoservice sappia quando un container si trova davanti a I/O port:
+```
+Event containerhere : containerhere(M)
 ```
 
 In questo modo possiamo anche gestire l'errore in cui il robot porta il container allo slot sbagliato. ${\color{red}\text{Sarà necessario richiedere al committente come comportarsi in tale situazione.}}$
@@ -83,10 +98,31 @@ Dovendo gestire diverse situazioni di fallimento, abbiamo ritenuto opportuno l'i
 
 Sarà necessario aggiungere al modello due messaggi per gestire questi eventi:
 ```
-
+Event stopActions : stopActions(M)
+Event resumeActions : resumeActions(M)
 ```
 
 Poiché gli eventi andrebbero propagati a cargorobot, decidiamo di fare una subscribe dell'intero contesto ```ctx_cargoservice```.
+
+Inoltre per completezza si aggiungono anche i messaggi tra client_simulator e productService in fase di registrazione:
+```
+// ClientSimulator -> ProductService
+Request registrationrequest:	registrationrequest(Weight)
+
+// ProductService -> ClientSimulator
+Reply registrationaccepted: registrationaccepted(PID) for registrationrequest
+```
+
+In fase di prima modellazione abbiamo deciso di scrivere anche i messaggi tra cargoservice e slotmanagement anche se ci riserviamo in un secondo momoento di rendere l'entità slotmanagement statica
+```
+// CargoService -> SlotManagement
+Request freeSlot : freeSlot(M)
+Request totalWeightReq: totalWeightReq(M)
+// SlotManagement -> CargoService
+
+Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
+Reply totalWeight : totalWeight(Weight) for totalWeightReq
+```
 
 ### Cargorobot
 Cargorobot è il componente che si occupa di portare un container nello slot specificato dal cargoservice. Essendo anch'esso un componente reattivo e proattivo lo andremo a considerare come attore, analogamente al cargoservice.
@@ -110,8 +146,17 @@ $\color{red}\text{Sarà necessario chiedere conferma al committente che questa s
 
 Notiamo la necessità di aggiungere al modello i seguenti messaggi:
 ```
+//CargoService -> CargoRobot
+Request loadcontainer:		loadcontainer(Slot)
 
-Reply containerloaded : containerloaded for loadcontainer
+// CargoRobot -> CargoService
+Reply containerloaded : containerloaded(M) for loadcontainer
+
+// CargoRobot -> BasicRobot
+Dispatch cmd:			cmd(M)
+Request step:			step(M)
+Event alarm: 		alarm(STOP)
+
 ```
 
 ## Piano di testing
