@@ -1,0 +1,292 @@
+System logic_model
+
+// MESSAGES AND EVENTS ========================================================
+// ClientSimulator -> ProductService
+Request registrationrequest:	registrationrequest(Weight)
+
+// ProductService -> ClientSimulator
+Reply registrationaccepted: registrationaccepted(PID) for registrationrequest
+
+// ClientSimulator -> CargoService
+Request loadrequest:	loadrequest(PID)
+
+// CargoService -> ProductService
+Request productdatareq: productdatareq(PID)
+
+// ProductService -> CargoService
+
+Reply productdata: productdata(Weight) for productdatareq
+Reply errorproductdata: errorproductdata(M)  for productdatareq //PID doesn't exist  
+
+// CargoService -> ClientSimulator
+
+Reply loadaccepted:		loadaccepted(Slot) for loadrequest
+Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, no_slots, no_PID }
+
+// CargoService -> SlotManagement
+
+Request freeSlot : freeSlot(M)
+Request totalWeightReq: totalWeightReq(M)
+// SlotManagement -> CargoService
+
+Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
+Reply totalWeight : totalWeight(Weight) for totalWeightReq
+//CargoService -> CargoRobot
+Request loadcontainer:		loadcontainer(Slot)
+
+// CargoRobot -> CargoService
+
+Reply containerloaded : containerloaded(M) for loadcontainer
+
+// CargoRobot -> BasicRobot
+Dispatch cmd:			cmd(M)
+Request step:			step(M)
+Event alarm: 		alarm(STOP)
+
+// sonar event
+
+Event stopActions : stopActions(M)
+Event resumeActions : resumeActions(M)
+Event containerhere : containerhere(M)
+
+// CONTEXTS ===================================================================
+Context ctx_cargoservice		ip [host="localhost" port=11800]
+Context ctx_productservice		ip [host="localhost" port=11801]
+Context ctx_client_simulator	ip [host="localhost" port=11803]
+Context ctx_basicrobot      	ip [host="localhost" port=11810]
+
+// ACTORS =====================================================================
+ExternalQActor basicrobot context ctx_basicrobot
+ExternalQActor productservice context ctx_productservice
+
+// ACTORS for ctx_client_simulator --------------------------------------------
+/*
+ * Test Actor:
+ * The client sends a registration request
+ */
+QActor client_simulator context ctx_client_simulator {
+	State state_init initial {
+		
+		println("[client_simulator] Sending a registration request to ProductService...")
+		request productservice -m		registrationrequest: registrationrequest(Weight)
+	}
+	Transition t0 whenReply registrationaccepted -> state_handle_load_req
+	
+	State state_handle_load_req{
+		printCurrentMessage
+		onMsg(registrationaccepted: registrationaccepted(PID)) {
+			[#
+				PID = payloadArg(0)
+				
+			#]
+		println("[client_simulator] Sending a load request to CargoService...")
+		request cargoservice -m		loadrequest: loadrequest($PID)
+		}
+	}
+}
+
+// ACTORS for ctx_cargoservice ------------------------------------------------
+
+QActor sonar_mock context ctx_cargoservice{
+	State init initial{
+		
+	}Goto state_idle
+	
+	State state_idle{ 
+		emit containerhere : containerhere(M)
+		delay 3000
+		emit stopActions : stopActions(M)
+		delay 3000
+	}Goto res
+	
+	State res{
+		emit resumeActions : resumeActions(M)
+		delay 3000
+		
+	}Goto state_idle
+}
+
+QActor slotmanagement_mock context ctx_cargoservice{
+	State state_init initial{
+		//setting Slot status
+	}
+	Goto idle
+	
+	State idle{
+		//TODO transition on Slot request from cargoservice
+	}Transition t0 whenRequest freeSlot -> state_SlotState
+					whenRequest totalWeightReq -> state_Weight
+	
+	State state_SlotState{
+		// check slots update status
+		replyTo freeSlot with slotname : slotname($Slot)
+	}Goto idle
+					
+	State state_Weight{
+		
+		replyTo totalWeightReq with totalWeight : totalWeight($Weight)
+	}
+}
+
+
+QActor cargorobot context ctx_cargoservice {
+	State state_init initial {
+		// go at home
+//		forward cargoservicestatusgui -m updategui: updategui(M)
+	}
+	Goto state_idle
+	
+	State state_idle {
+//		forward cargoservicestatusgui -m updategui: updategui(M)
+		
+	}
+	Transition t0	//whenTime 5000		-> state_idle
+					whenRequest loadcontainer	-> state_move_cont
+					whenInterruptEvent stopActions -> state_wait_resume
+					
+	State state_wait_resume{
+		emit alarm : alarm(STOP) 
+	}Transition t1 whenEvent resumeActions -> state_resume
+	
+	State state_resume{
+		returnFromInterrupt
+	}
+	
+	State state_move_cont {
+		onMsg(loadcontainer: movecontainer(Slot)){
+			[# var Slot =  payloadArg(0) #]
+		}
+		println("[Cargorobot] Moving container to slot $Slot...")
+		// TODO
+		// pickup 
+		// move 
+		// store
+		request basicrobot -m step : step(M)
+		forward basicrobot -m cmd : cmd(M)
+		
+//		forward cargoservicestatusgui -m updategui: updategui(M)
+		
+		println("[cargoRobot] container transported")
+	}
+	Goto state_idle
+}
+
+QActor cargoservice context ctx_cargoservice {
+	/*[#
+		var CurrentSlotState: Float = 0.0f
+
+	#]*/
+	State state_init initial {
+//		[#
+//			//initial status
+//		#]
+//		subscribeTo sonardevice for distance
+//		println("[CargoService] Reset")
+//		
+		discardMsg Off
+	}
+	Goto state_idle
+//	
+	State state_idle {
+		println("[CargoService] Idle...")
+		// wait for messages...
+	}
+	Transition t0	whenRequest loadrequest	-> state_handle_slots 
+					whenInterruptEvent stopActions -> state_handle_stop
+//					whenEvent distance 			-> state_handle_distance
+
+					
+	State state_handle_stop{
+		
+	}Transition t3 whenEvent resumeActions -> state_handle_resume
+	
+	State state_handle_resume{
+		returnFromInterrupt
+	}
+	State state_handle_slots{
+		
+		request slotmanagement_mock -m freeSlot: freeSlot(m)
+		
+	}Transition t1 whenReply slotname -> state_handle_slot_name
+					whenInterruptEvent stopActions -> state_handle_stop
+	
+	State state_handle_slot_name{
+		onMsg(slotname : slotname(Name)){
+		[#
+			Name = payloadArg(0)
+		
+		#]
+		}
+		
+		//TODO if name NONE -> loadrejected
+	}Goto state_handle_load
+	
+	
+	State state_handle_load {
+		printCurrentMessage
+		onMsg(loadrequest: loadrequest(PID)) {
+			[#
+				PID = payloadArg(0)
+				
+			#]
+			} request productservice -m		productdatareq: productdatareq($PID)
+		}Transition t1 whenReply productdata -> state_handle_product
+		whenInterruptEvent stopActions -> state_handle_stop
+		
+		State state_handle_product{
+			onMsg(productdata: productdata(Weight)){
+				[#
+					Weight = payloadArg(0)
+				
+				#]
+				}
+			request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
+			}Transition t4 whenReply totalWeight -> state_handle_weight
+							whenInterruptEvent stopActions -> state_handle_stop
+			
+			State state_handle_weight{
+				onMsg(totalWeight: totalWeight(Weight)){
+				[#
+					TotWeight = payloadArg(0)
+				
+				#]
+				}
+			if	[#
+					// Weight+ TotWeight <MAXLOAD
+					
+				#] 
+				{
+			
+				replyTo loadrequest with loadaccepted: loadaccepted($Slot)
+				request cargorobot -m loadcontainer: loadcontainer($Slot)
+				
+//				//delay 1000 // pickup time (known)
+			}
+			else {
+				replyTo loadrequest with loadrejected: loadrejected($M)
+			}
+//			forward cargoservicestatusgui -m updategui: updategui(M)
+//			
+		}
+	Transition t2 whenReply containerloaded -> state_idle
+	whenInterruptEvent stopActions -> state_handle_stop
+//	
+//	State state_handle_distance {
+//		onMsg(distance: distance(V)) {
+//			if [# payloadArg(0).toFloat() >= DFREE#] {
+//				// state_handle_stop
+//				forward cargorobot -m stop: stop(M)
+//				forward leddevice -m updateled : updateled("on")
+//			} else {
+//				// state_handle_resume
+//				forward cargorobot -m resume: resume(M)
+//				forward leddevice -m updateled : updateled("off")
+//			}
+//		}
+//	}
+//	Goto state_idle
+}
+
+
+
+
