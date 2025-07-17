@@ -32,55 +32,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
-						forward("updategui", "updategui(M)" ,"cargoservicestatusgui" ) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
-				}	 
-				state("state_idle") { //this:State
-					action { //it:State
-						forward("updategui", "updategui(M)" ,"cargoservicestatusgui" ) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t02",targetState="state_move_cont",cond=whenDispatch("movecontainer"))
-					transition(edgeName="t03",targetState="state_handle_stop",cond=whenDispatch("stop"))
-				}	 
-				state("state_move_cont") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("movecontainer(Slot)"), Term.createTerm("movecontainer(Slot)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								 var Slot =  payloadArg(0)  
-						}
-						CommUtils.outblack("[Cargorobot] Moving container to slot $Slot...")
-						request("step", "step(M)" ,"basicrobot" )  
-						forward("cmd", "cmd(M)" ,"basicrobot" ) 
-						forward("updategui", "updategui(M)" ,"cargoservicestatusgui" ) 
-						CommUtils.outblack("[cargoRobot] container transported")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
-				}	 
-				state("state_handle_stop") { //this:State
-					action { //it:State
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t04",targetState="state_handle_resume",cond=whenDispatch("resume"))
-				}	 
-				state("state_handle_resume") { //this:State
-					action { //it:State
-						returnFromInterrupt(interruptedStateTransitions)
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

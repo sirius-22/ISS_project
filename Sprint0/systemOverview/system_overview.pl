@@ -1,20 +1,9 @@
 %====================================================================================
 % system_overview description   
 %====================================================================================
-request( registrationrequest, registrationrequest(Weight) ).
-reply( registrationaccepted, registrationaccepted(PID) ).  %%for registrationrequest
 request( loadrequest, loadrequest(PID) ).
-request( productdatareq, productdatareq(PID) ).
 reply( loadaccepted, loadaccepted(Slot) ).  %%for loadrequest
 reply( loadrejected, loadrejected(M) ).  %%for loadrequest
-dispatch( movecontainer, movecontainer(Slot) ).
-dispatch( stop, stop(M) ).
-dispatch( resume, resume(M) ).
-dispatch( cmd, cmd(M) ).
-request( step, step(M) ).
-dispatch( updategui, updategui(robotState,robotPosition,slotsState,ledState) ).
-dispatch( updateled, updateled(LedStatus) ).
-event( distance, distance(D) ).
 %====================================================================================
 context(ctx_cargoservice, "localhost",  "TCP", "11800").
 context(ctx_productservice, "localhost",  "TCP", "11801").

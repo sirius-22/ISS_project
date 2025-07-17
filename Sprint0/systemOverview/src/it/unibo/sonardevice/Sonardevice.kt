@@ -38,18 +38,6 @@ class Sonardevice ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="state_detection", cond=doswitch() )
-				}	 
-				state("state_detection") { //this:State
-					action { //it:State
-						delay(3000) 
-						 var Distance = 10.0  
-						emitLocalStreamEvent("distance", "distance($Distance)" ) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
 				}	 
 			}
 		}
