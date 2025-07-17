@@ -32,6 +32,9 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
+						subscribeToLocalActor("sonar_mock") 
+						subscribeToLocalActor("sonar_mock") 
+						subscribeToLocalActor("sonar_mock") 
 						discardMessages = false
 						//genTimer( actor, state )
 					}

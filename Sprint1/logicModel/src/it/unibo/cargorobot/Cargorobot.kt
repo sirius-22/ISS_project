@@ -32,6 +32,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
+						subscribeToLocalActor("sonar_mock") 
+						subscribeToLocalActor("sonar_mock") 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

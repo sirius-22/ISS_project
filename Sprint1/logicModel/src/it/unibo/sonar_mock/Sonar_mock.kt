@@ -41,9 +41,9 @@ class Sonar_mock ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("state_idle") { //this:State
 					action { //it:State
-						emit("containerhere", "containerhere(M)" ) 
+						emitLocalStreamEvent("containerhere", "containerhere(M)" ) 
 						delay(3000) 
-						emit("stopActions", "stopActions(M)" ) 
+						emitLocalStreamEvent("stopActions", "stopActions(M)" ) 
 						delay(3000) 
 						//genTimer( actor, state )
 					}
@@ -54,7 +54,7 @@ class Sonar_mock ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("res") { //this:State
 					action { //it:State
-						emit("resumeActions", "resumeActions(M)" ) 
+						emitLocalStreamEvent("resumeActions", "resumeActions(M)" ) 
 						delay(3000) 
 						//genTimer( actor, state )
 					}

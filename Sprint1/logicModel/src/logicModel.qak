@@ -93,14 +93,14 @@ QActor sonar_mock context ctx_cargoservice{
 	}Goto state_idle
 	
 	State state_idle{ 
-		emit containerhere : containerhere(M)
+		emitlocalstream containerhere : containerhere(M)
 		delay 3000
-		emit stopActions : stopActions(M)
+		emitlocalstream stopActions : stopActions(M)
 		delay 3000
 	}Goto res
 	
 	State res{
-		emit resumeActions : resumeActions(M)
+		emitlocalstream resumeActions : resumeActions(M)
 		delay 3000
 		
 	}Goto state_idle
@@ -132,6 +132,8 @@ QActor slotmanagement_mock context ctx_cargoservice{
 QActor cargorobot context ctx_cargoservice {
 	State state_init initial {
 		// go at home
+		subscribeTo sonar_mock for resumeActions
+		subscribeTo sonar_mock for stopActions
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 	}
 	Goto state_idle
@@ -180,7 +182,10 @@ QActor cargoservice context ctx_cargoservice {
 //		[#
 //			//initial status
 //		#]
-//		subscribeTo sonardevice for distance
+	
+		subscribeTo sonar_mock for resumeActions
+		subscribeTo sonar_mock for stopActions
+		subscribeTo sonar_mock for containerhere
 //		println("[CargoService] Reset")
 //		
 		discardMsg Off
