@@ -38,7 +38,8 @@ Abbiamo deciso di mantenere i requisiti originali in inglese per non correre il 
 ## Analisi del problema
 ### Cargoservice
 Cargoservice è il componente principale del sistema e avrà il compito di interagire con ogni altra componente affinchè le operazioni da eseguire seguano il giusto ordine e flusso. Essendo, dunque, un componente reattivo e proattivo lo andremo a considerare come attore.
-Flusso di operazioni di cargoservice:
+
+Di seguito si illustra il *Flusso di operazioni* di ***cargoservice***:
 - inizializzazione: comunica a cargorobot la mappa della stiva (vedere la considerazione nella sezione successiva)
 **Requisito 1**
 - riceve una request per il carico di un prodotto
@@ -93,7 +94,7 @@ A questo punto si presenta la necessità di stabilire se e come il robot sappia 
 
 Scegliamo la seconda opzione per semplicità, riservandoci di cambiare approccio in futuro, ad esempio in caso in cui la disposizione della stiva cambi di frequente. Comunicare la mappa della stiva sarà compito di cargoservice.
 
-Flusso di operazioni di cargorobot:
+Il *flusso di operazioni* di ***cargorobot*** è il seguente:
 - In fase di inizializzazione, riceve la mappa della stiva da cargoservice e memorizza la posizione degli slot associata ai loro nomi
 - Quando riceve una richiesta di carico, il cargorobot comunica al basicrobot di raggiungere la I/O port
 - Comunica al basicrobot di prelevare il container
