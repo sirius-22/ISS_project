@@ -27,6 +27,8 @@ Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, n
 
 Request freeSlot : freeSlot(M)
 Request totalWeightReq: totalWeightReq(M)
+
+Dispatch updatedatahold : updatedatahold(M)
 // SlotManagement -> CargoService
 
 Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
@@ -315,8 +317,14 @@ QActor cargoservice context ctx_cargoservice {
 //			forward cargoservicestatusgui -m updategui: updategui(M)
 //			
 		}
-	Transition t2 whenReply containerloaded -> state_idle
+	Transition t2 whenReply containerloaded -> state_update_hold
 	whenInterruptEvent stopActions -> state_handle_stop
+	
+	State state_update_hold{
+		
+		forward slotmanagement_mock -m updatedatahold: updatedatahold(M)
+		
+	}Goto state_idle
 //	
 //	State state_handle_distance {
 //		onMsg(distance: distance(V)) {

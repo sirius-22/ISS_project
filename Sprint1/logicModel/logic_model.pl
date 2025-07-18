@@ -11,6 +11,7 @@ reply( loadaccepted, loadaccepted(Slot) ).  %%for loadrequest
 reply( loadrejected, loadrejected(Error) ).  %%for loadrequest
 request( freeSlot, freeSlot(M) ).
 request( totalWeightReq, totalWeightReq(M) ).
+dispatch( updatedatahold, updatedatahold(M) ).
 reply( slotname, slotname(Slot) ).  %%for freeSlot
 reply( totalWeight, totalWeight(Weight) ).  %%for totalWeightReq
 request( loadcontainer, loadcontainer(Slot) ).

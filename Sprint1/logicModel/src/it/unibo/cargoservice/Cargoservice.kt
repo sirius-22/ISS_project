@@ -156,8 +156,18 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t219",targetState="state_idle",cond=whenReply("containerloaded"))
+					 transition(edgeName="t219",targetState="state_update_hold",cond=whenReply("containerloaded"))
 					interrupthandle(edgeName="t220",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+				}	 
+				state("state_update_hold") { //this:State
+					action { //it:State
+						forward("updatedatahold", "updatedatahold(M)" ,"slotmanagement_mock" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
 				}	 
 			}
 		}

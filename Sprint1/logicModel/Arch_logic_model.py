@@ -50,4 +50,5 @@ with Diagram('logic_modelArch', show=False, outformat='png', graph_attr=graphatt
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<productdatareq<font color="darkgreen"> productdata errorproductdata</font> &nbsp; >',  fontcolor='magenta') >> productservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<freeSlot<font color="darkgreen"> slotname</font> &nbsp; totalWeightReq<font color="darkgreen"> totalWeight</font> &nbsp; >',  fontcolor='magenta') >> slotmanagement_mock
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<loadcontainer<font color="darkgreen"> containerloaded</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
+     cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<updatedatahold &nbsp; >',  fontcolor='blue') >> slotmanagement_mock
 diag
