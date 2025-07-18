@@ -38,16 +38,38 @@ Request loadcontainer:		loadcontainer(Slot)
 
 Reply containerloaded : containerloaded(M) for loadcontainer
 
+//--------------------------------
 // CargoRobot -> BasicRobot
 Dispatch cmd:			cmd(M)
-Request step:			step(M)
-Event alarm: 		alarm(STOP)
+Event alarm: 		alarm(STOP) // to stop basicRobot
+
+//basicrobot command
+Request engage : engage(CALLER)
+Reply engagedone : engagedone(ARG) for engage
+Reply engagerefused : engagerefused(ARG) for engage
+
+Dispatch disengage    : disengage(ARG)
+
+Dispatch setdirection : dir( D )  //D =up|down|left|right
+
+Request  doplan     : doplan( PATH, STEPTIME )
+Reply doplandone    : doplandone( ARG )    for doplan
+Reply doplanfailed  : doplanfailed( ARG )  for doplan
+
+Request step       : step(TIME)
+Reply stepdone     : stepdone(V)                 for step
+Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
+
+Request moverobot    :  moverobot(TARGETX, TARGETY)
+Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
+Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
 
 // sonar event
 
 Event stopActions : stopActions(M)
 Event resumeActions : resumeActions(M)
 Event containerhere : containerhere(M)
+
 
 // CONTEXTS ===================================================================
 Context ctx_cargoservice		ip [host="localhost" port=11800]
@@ -135,8 +157,17 @@ QActor cargorobot context ctx_cargoservice {
 		subscribeTo sonar_mock for resumeActions
 		subscribeTo sonar_mock for stopActions
 //		forward cargoservicestatusgui -m updategui: updategui(M)
+
 	}
-	Goto state_idle
+	Goto state_engage
+	
+	State state_engage{
+		delay 3000
+		request basicrobot -m engage : engage("cargorobot")
+		
+		
+	}Transition t1 whenReply engagedone -> state_idle
+					whenReply engagerefused ->state_engage
 	
 	State state_idle {
 //		forward cargoservicestatusgui -m updategui: updategui(M)
@@ -163,14 +194,25 @@ QActor cargorobot context ctx_cargoservice {
 		// pickup 
 		// move 
 		// store
-		request basicrobot -m step : step(M)
-		forward basicrobot -m cmd : cmd(M)
+		
+		//request basicrobot -m step : step(M)
+		//forward basicrobot -m cmd : cmd(M)
+		//request basicrobot -m doplan : doplan(MOVES)
+		request basicrobot -m moverobot : moverobot(MOVES)
 		
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		
 		println("[cargoRobot] container transported")
-	}
-	Goto state_idle
+	}Transition t3 whenReply moverobotdone -> returnHOME
+					whenReply moverobotfailed -> goto_IO_port
+					
+		State returnHOME{
+			
+		}Goto state_idle
+		
+		State goto_IO_port{
+			
+		}Goto state_move_cont
 }
 
 QActor cargoservice context ctx_cargoservice {

@@ -44,11 +44,10 @@ with Diagram('logic_modelArch', show=False, outformat='png', graph_attr=graphatt
      sonar_mock >> Edge( label='stopActions', **eventedgeattr, decorate='true', fontcolor='red') >> cargoservice
      sonar_mock >> Edge( label='containerhere', **eventedgeattr, decorate='true', fontcolor='red') >> cargoservice
      sys >> Edge( label='resumeActions', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
-     cargorobot >> Edge(color='magenta', style='solid', decorate='true', label='<step &nbsp; >',  fontcolor='magenta') >> basicrobot
+     cargorobot >> Edge(color='magenta', style='solid', decorate='true', label='<engage<font color="darkgreen"> engagedone engagerefused</font> &nbsp; moverobot<font color="darkgreen"> moverobotdone moverobotfailed</font> &nbsp; >',  fontcolor='magenta') >> basicrobot
      client_simulator >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
      client_simulator >> Edge(color='magenta', style='solid', decorate='true', label='<registrationrequest<font color="darkgreen"> registrationaccepted</font> &nbsp; >',  fontcolor='magenta') >> productservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<productdatareq<font color="darkgreen"> productdata errorproductdata</font> &nbsp; >',  fontcolor='magenta') >> productservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<freeSlot<font color="darkgreen"> slotname</font> &nbsp; totalWeightReq<font color="darkgreen"> totalWeight</font> &nbsp; >',  fontcolor='magenta') >> slotmanagement_mock
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<loadcontainer<font color="darkgreen"> containerloaded</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
-     cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<cmd &nbsp; >',  fontcolor='blue') >> basicrobot
 diag

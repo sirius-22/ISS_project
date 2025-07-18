@@ -16,8 +16,21 @@ reply( totalWeight, totalWeight(Weight) ).  %%for totalWeightReq
 request( loadcontainer, loadcontainer(Slot) ).
 reply( containerloaded, containerloaded(M) ).  %%for loadcontainer
 dispatch( cmd, cmd(M) ).
-request( step, step(M) ).
 event( alarm, alarm(STOP) ).
+request( engage, engage(CALLER) ).
+reply( engagedone, engagedone(ARG) ).  %%for engage
+reply( engagerefused, engagerefused(ARG) ).  %%for engage
+dispatch( disengage, disengage(ARG) ).
+dispatch( setdirection, dir(D) ).
+request( doplan, doplan(PATH,STEPTIME) ).
+reply( doplandone, doplandone(ARG) ).  %%for doplan
+reply( doplanfailed, doplanfailed(ARG) ).  %%for doplan
+request( step, step(TIME) ).
+reply( stepdone, stepdone(V) ).  %%for step
+reply( stepfailed, stepfailed(DURATION,CAUSE) ).  %%for step
+request( moverobot, moverobot(TARGETX,TARGETY) ).
+reply( moverobotdone, moverobotok(ARG) ).  %%for moverobot
+reply( moverobotfailed, moverobotfailed(PLANDONE,PLANTODO) ).  %%for moverobot
 event( stopActions, stopActions(M) ).
 event( resumeActions, resumeActions(M) ).
 event( containerhere, containerhere(M) ).
