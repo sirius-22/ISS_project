@@ -1,6 +1,7 @@
 # Sprint 1
 
 ## Architettura iniziale dello sprint
+<img src='../Sprint0/systemOverview/system_overviewarch.png'>
 
 ## Obiettivi
 
@@ -57,7 +58,8 @@ Flusso di operazioni di cargoservice:
 - una volta accettata la richiesta, attende di essere notificato della presenza del container
 - invia a cargorobot l'istruzione di caricare il container, fornendogli il nome dello slot assegnato
 - verifica la corretta esecuzione della richiesta (riceve richiesta di rilascio, vedi in seguito)
-- attende il completamento della richiesta (riceve da cargorobot la comunicazione di raggiungimento della HOME)
+- attende il completamento della richiesta (riceve da cargorobot la comunicazione di raggiungimento della HOME, ```containerloaded```)
+- ricevuta la risposta che cargorobot è tornato ad HOME, cargoservice avviserà slotmanagement di aggiornare i dati della stiva salvandosi il pid del prodotto che è andato nello slot libero (```updatedatahold```)
 - Da questo momento cargoservice può gestire una nuova richiesta
  
 * nel caso in cui ci fosse in futuro l'opportunità di dover chiedere altre informazioni del prodotto e non solo il peso, rispetta il principio aperto/chiuso
@@ -72,20 +74,12 @@ Reply productdata: productdata(Weight) for productdatareq
 Reply errorproductdata: errorproductdata(M)  for productdatareq //PID doesn't exist  
 ```
 
-Per quanto riguarda la verifica della corretta esecuzione della richiesta, ci siamo chieste quale fosse il componente più adatto al compito. La prima idea è stata quella di richiedere, a fine richiesta, a slotmanagement quale fosse il PID del prodotto caricato nello slot prescelto, in modo da verificare che coincida con quello appena caricato. Questo richiederebbe che slotmanagement riceva da cargorobot l'esito delle operazioni di carico e usi questo per aggiornare la sua rappresentazione della stiva.
-In alternativa, abbiamo pensato di confrontare lo slot assegnato al prodotto con quello in cui si trova il robot alla richiesta di rilascio prodotto. 
-
-Decidiamo quindi di definire una nuova richiesta da cargorobot a cargoservice:
-```
-Request loadcontainer : loadcontainer(SLOT)
-```
+Per quanto riguarda il requisito di verifica della corretta esecuzione della richiesta lo abbiamo interpretato come verifica della non presenza di ostacoli nel suo percorso, qualora dovesse trovarne l'idea è far ritornare il basicrobot all'io-port per rieffettuare il percorso stabilito. In quanto non è specificato nei requisiti, ci confrenteremo con il committente in merito a ciò.
 
 Si necessita di un evento affinchè cargoservice sappia quando un container si trova davanti a I/O port:
 ```
 Event containerhere : containerhere(M)
 ```
-
-In questo modo possiamo anche gestire l'errore in cui il robot porta il container allo slot sbagliato. ${\color{red}\text{Sarà necessario richiedere al committente come comportarsi in tale situazione.}}$
 
 Dovendo gestire diverse situazioni di fallimento, abbiamo ritenuto opportuno l'introduzione di diverse cause di messaggio rifiutato, in particolare:
 - ```too_heavy```
@@ -129,18 +123,20 @@ Cargorobot è il componente che si occupa di portare un container nello slot spe
 
 A questo punto si presenta la necessità di stabilire se e come il robot sappia "orientarsi". Da un lato, potrebbe essere cargoservice a mantenere la mappa dell'area e indicare al robot passo passo come muoversi, dall'altro cargorobot può essere inizializzato per conoscere la posizione degli slot e i loro nomi ed essere in grado di raggiungerli in autonomia. Un'ulteriore opzione sarebbe quella di costruire dinamicamente la mappa in fase di inizializzazione facendola percorrere al cargorobot, ma rimarrebbe la problematica di riconoscere il nome di ogni slot.
 
-Scegliamo la seconda opzione per semplicità, riservandoci di cambiare approccio in futuro, ad esempio in caso in cui la disposizione della stiva cambi di frequente. Comunicare la mappa della stiva sarà compito di cargoservice.
+Scegliamo la seconda opzione per semplicità, riservandoci di cambiare approccio in futuro, ad esempio in caso in cui la disposizione della stiva cambi di frequente. Inizializziamo il cargorobot con la mappa salvata su un file di configurazione a parte.
 
 Flusso di operazioni di cargorobot:
-- In fase di inizializzazione, riceve la mappa della stiva da cargoservice e memorizza la posizione degli slot associata ai loro nomi
-- Quando riceve una richiesta di carico, il cargorobot comunica al basicrobot di raggiungere la I/O port
+- Inizializzazione di cargorobot con salvataggio della mappa della stiva e memorizzazione della posizione degli slot associata ai loro nomi
+- Richiesta di engage da parte di cargorobot a basicrobot
+- In caso di rifiuto della richiesta, verrà nuovamente fatta la richiesta di engage
+- In caso di successo della richiesta, quando riceve una richiesta di carico, il cargorobot comunica al basicrobot di raggiungere la I/O port
 - Comunica al basicrobot di prelevare il container
 - Dà al basicrobot le indicazioni per raggiungere lo slot assegnato
-- Alla fine delle istruzioni, invia al cargoservice la richiesta di rilascio prodotto (```container_release```) e attende conferma
-    - Si lascia la gestione di un eventuale errore al successivo confronto col committente
+- Per la considerazione fatta in precedenza, nel caso in cui il basicrobot non dovesse finire tutte le istruzione a lui fornite, l'idea è che torni all'io-port e riesegua tutte le istruzioni
 - Poi comunica al basicrobot di rilasciare il prodotto e gli dà le indicazioni per tornare alla HOME
 - Terminate queste istruzioni, comunica al cargoservice che l'esecuzione della richiesta è terminata
 
+N.B. Parliamo già, ad esempio, di richiesta di engage nonostante non sia nei requisiti in quanto si è andati a studiare il software fornito dal committente
 <!--In caso di ricezione di evento di interrupt, decidiamo per semplicità di far tornare il robot alla HOME e salvare lo slot verso cui era diretto. Al momento di ricezione dell'evento di ripristino, il cargorobot ricomincerà a dare le indicazioni dall'inizio al basicrobot.
 $\color{red}\text{Sarà necessario chiedere conferma al committente che questa soluzione non sia in conflitto con i requisiti.}$-->
 
@@ -158,6 +154,10 @@ Request step:			step(M)
 Event alarm: 		alarm(STOP)
 
 ```
+
+### Modello
+Per chiarezza insieriamo un link per il modello. [Modello QAK](./logicModel/src/logicModel.qak)
+
 
 ## Piano di testing
 Poiché nell'analisi del problema abbiamo definito le cause specifiche di rifiuto della richiesta da parte di 
@@ -184,4 +184,10 @@ Poiché nell'analisi del problema abbiamo definito le cause specifiche di rifiut
     }
 ```
 
+Per il momento risulta difficile individuare altri test in quanto utilizzando software del committente per basicrobot il suo stato non è direttamente verificabile, ci riserviamo aggiunte nella fase di progettazione dopo un riscontro con il committente.
+
 ## Nuova Architettura
+In seguito, la nuova architettura alla fine dell'analisi del problema, ci riserviamo la possibilità di cambiamenti a seguito della progettazione dell'attuale sprint. 
+
+![Immagine architettura](./logicModel/logic_modelarch.png)
+<!--<img src='./logicModel/logic_modelarch.png'>-->
