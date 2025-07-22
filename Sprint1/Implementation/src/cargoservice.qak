@@ -129,9 +129,13 @@ QActor slotmanagement_mock context ctx_cargoservice{
 QActor cargorobot context ctx_cargoservice {
 	State state_init initial {
 		// go at home
+		
+		//map
 		subscribeTo sonar_mock for resumeActions
 		subscribeTo sonar_mock for stopActions
 //		forward cargoservicestatusgui -m updategui: updategui(M)
+		
+		println("CargoRobot | Started ")
 
 	}
 	Goto state_engage

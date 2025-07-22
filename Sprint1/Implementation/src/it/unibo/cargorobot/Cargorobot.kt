@@ -34,6 +34,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						subscribeToLocalActor("sonar_mock") 
 						subscribeToLocalActor("sonar_mock") 
+						CommUtils.outblack("CargoRobot | Started ")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
