@@ -127,6 +127,7 @@ QActor slotmanagement_mock context ctx_cargoservice{
 
 
 QActor cargorobot context ctx_cargoservice {
+	import "main.java.*"
 	State state_init initial {
 		// go at home
 		
