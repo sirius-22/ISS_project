@@ -67,13 +67,12 @@ Flusso di operazioni di cargoservice:
  I messaggi che si scambiano ```cargoservice``` e ```productservice``` sono i seguenti:
 ```
 // CargoService -> ProductService
-Request productdatareq: productdatareq(PID)
+Request getProduct         : product( PID ) 
 
-// ProductService -> CargoService
-
-Reply productdata: productdata(Weight) for productdatareq
-Reply errorproductdata: errorproductdata(M)  for productdatareq //PID doesn't exist  
+ // ProductService ->
+Reply   getProductAnswer: product( JSonString ) for getProduct
 ```
+Ci appoggiamo alla classe ```Product.java``` fornita dal committente per gestire la risposta in formato JSon.
 
 Per quanto riguarda il requisito 3 di verifica della corretta esecuzione della richiesta di carico, dal confronto col committente è emerso che questa è già garantita poiché gli ostacoli nella mappa sono fissi, dunque il robot potrebbe incontrare un ostacolo solo se 
 si muove "a caso" e non secondo un path pianficato in precedenza.
@@ -201,3 +200,6 @@ In seguito, la nuova architettura alla fine dell'analisi del problema, ci riserv
 
 ![Immagine architettura](./logicModel/logic_modelarch.png)
 <!--<img src='./logicModel/logic_modelarch.png'>-->
+
+## Progettazione
+
