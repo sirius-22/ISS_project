@@ -75,7 +75,9 @@ Reply productdata: productdata(Weight) for productdatareq
 Reply errorproductdata: errorproductdata(M)  for productdatareq //PID doesn't exist  
 ```
 
-Per quanto riguarda il requisito 3 di verifica della corretta esecuzione della richiesta di carico, lo abbiamo interpretato come verifica dell'assenza di ostacoli nel percorso del robot; qualora dovesse trovarne, l'idea è far ritornare il basicrobot all'I/O port per rieffettuare il percorso stabilito. In quanto non è specificato nei requisiti, ci confronteremo con il committente in merito a ciò.
+Per quanto riguarda il requisito 3 di verifica della corretta esecuzione della richiesta di carico, dal confronto col committente è emerso che questa è già garantita poiché gli ostacoli nella mappa sono fissi, dunque il robot potrebbe incontrare un ostacolo solo se 
+si muove "a caso" e non secondo un path pianficato in precedenza.
+
 
 Si necessita di un evento affinchè ```cargoservice``` sappia quando un container si trova davanti a I/O port:
 ```
