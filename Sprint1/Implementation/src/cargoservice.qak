@@ -102,8 +102,13 @@ QActor sonar_mock context ctx_cargoservice{
 }
 
 QActor slotmanagement_mock context ctx_cargoservice{
+	[#
+		NUMSLOTS=5
+		var freeSlots=4
+	#]
 	State state_init initial{
 		//setting Slot status
+		
 	}
 	Goto idle
 	
@@ -114,12 +119,21 @@ QActor slotmanagement_mock context ctx_cargoservice{
 					whenRequest totalWeightReq -> state_Weight
 	
 	State state_SlotState{
-		// check slots update status
+		if [#freeSlots>0#]{
+		[#
+			Slot="slot"+NUMSLOTS-freeSlots
+		#]
 		replyTo freeSlot with slotname : slotname($Slot)
+		}else {
+			replyTo freeSlot with slotname:slotname("NONE")
+		}
 	}Goto idle
 					
 	State state_Weight{
-		
+		//TODO mettere qualcosa di sensato in weight
+		[#
+			Weight=10	
+		#]
 		replyTo totalWeightReq with totalWeight : totalWeight($Weight)
 	}
 }

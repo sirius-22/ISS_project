@@ -29,6 +29,9 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				NUMSLOTS=5
+				var freeSlots=4
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
@@ -51,7 +54,14 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 				}	 
 				state("state_SlotState") { //this:State
 					action { //it:State
+						if( freeSlots>0 
+						 ){
+									Slot="slot"+NUMSLOTS-freeSlots
 						answer("freeSlot", "slotname", "slotname($Slot)"   )  
+						}
+						else
+						 {answer("freeSlot", "slotname", "slotname("NONE")"   )  
+						 }
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -61,6 +71,8 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 				}	 
 				state("state_Weight") { //this:State
 					action { //it:State
+						
+									Weight=10	
 						answer("totalWeightReq", "totalWeight", "totalWeight($Weight)"   )  
 						//genTimer( actor, state )
 					}
