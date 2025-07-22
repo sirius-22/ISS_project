@@ -108,7 +108,8 @@ QActor slotmanagement_mock context ctx_cargoservice{
 	Goto idle
 	
 	State idle{
-		//TODO transition on Slot request from cargoservice
+		//TODO transition on Slot update request from cargoservice, not implemented in the mock
+		//(hold update after a load request is executed)
 	}Transition t0 whenRequest freeSlot -> state_SlotState
 					whenRequest totalWeightReq -> state_Weight
 	
@@ -190,10 +191,12 @@ QActor cargorobot context ctx_cargoservice {
 }
 
 QActor cargoservice context ctx_cargoservice {
-	/*[#
-		var CurrentSlotState: Float = 0.0f
+	import "main.java.domain.*" 
+	[#
+		
+		var Weight: Float = 0.0f
 
-	#]*/
+	#]
 	State state_init initial {
 //		[#
 //			//initial status
@@ -238,8 +241,15 @@ QActor cargoservice context ctx_cargoservice {
 		
 		#]
 		}
-		
-		//TODO if name NONE -> loadrejected
+		if [#
+			!Name.equals("NONE")
+		#]{
+			replyTo loadrequest with loadrejected: loadrejected("no_slots")
+		}
+		else {
+			replyTo loadrequest with loadaccepted: loadaccepted($Name)
+			request cargorobot -m loadcontainer: loadcontainer($Name)
+		}
 	}Goto state_handle_load
 	
 	
@@ -257,7 +267,8 @@ QActor cargoservice context ctx_cargoservice {
 		State state_handle_product{
 			onMsg(getProductAnswer: getProductAnswer(jsonString)){
 				[#
-					Weight = payloadArg(0)
+					val jsonString = payloadArg(0)
+					Weight = Product.getJsonInt(jsonStr, "weight")
 				
 				#]
 				}
@@ -273,7 +284,8 @@ QActor cargoservice context ctx_cargoservice {
 				#]
 				}
 			if	[#
-					// Weight+ TotWeight <MAXLOAD
+					
+					Weight + TotWeight <= MAXLOAD
 					
 				#] 
 				{
@@ -284,7 +296,7 @@ QActor cargoservice context ctx_cargoservice {
 //				//delay 1000 // pickup time (known)
 			}
 			else {
-				replyTo loadrequest with loadrejected: loadrejected($M)
+				replyTo loadrequest with loadrejected: loadrejected("too_heavy")
 			}
 //			forward cargoservicestatusgui -m updategui: updategui(M)
 //			

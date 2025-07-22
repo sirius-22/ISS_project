@@ -19,6 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
+import main.java.domain.*
 
 class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -29,6 +30,10 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				
+				var Weight: Float = 0.0f
+		
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
@@ -91,6 +96,14 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 											Name = payloadArg(0)
 										
 						}
+						if( 
+									!Name.equals("NONE")
+						 ){answer("loadrequest", "loadrejected", "loadrejected("no_slots")"   )  
+						}
+						else
+						 {answer("loadrequest", "loadaccepted", "loadaccepted($Name)"   )  
+						 request("loadcontainer", "loadcontainer($Name)" ,"cargorobot" )  
+						 }
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -122,7 +135,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						if( checkMsgContent( Term.createTerm("product(JSonString)"), Term.createTerm("getProductAnswer(jsonString)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-													Weight = payloadArg(0)
+													val jsonString = payloadArg(0)
+													Weight = Product.getJsonInt(jsonStr, "weight")
 												
 						}
 						request("totalWeightReq", "totalWeightReq(M)" ,"slotmanagement_mock" )  
@@ -143,13 +157,14 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 												
 						}
 						if( 
-											// Weight+ TotWeight <MAXLOAD
+											
+											Weight + TotWeight <= MAXLOAD
 											
 						 ){answer("loadrequest", "loadaccepted", "loadaccepted($Slot)"   )  
 						request("loadcontainer", "loadcontainer($Slot)" ,"cargorobot" )  
 						}
 						else
-						 {answer("loadrequest", "loadrejected", "loadrejected($M)"   )  
+						 {answer("loadrequest", "loadrejected", "loadrejected("too_heavy")"   )  
 						 }
 						//genTimer( actor, state )
 					}
