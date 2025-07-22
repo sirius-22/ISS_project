@@ -1,30 +1,23 @@
-System logic_model
+System cargoservice
 
-// MESSAGES AND EVENTS ========================================================
-// ClientSimulator -> ProductService
-Request registrationrequest:	registrationrequest(Weight)
-
-// ProductService -> ClientSimulator
-Reply registrationaccepted: registrationaccepted(PID) for registrationrequest
+//================ MESSAGES AND EVENTS ===================================
 
 // ClientSimulator -> CargoService
 Request loadrequest:	loadrequest(PID)
 
 // CargoService -> ProductService
-Request productdatareq: productdatareq(PID)
+Request getProduct 		: product( PID ) 
 
-// ProductService -> CargoService
-
-Reply productdata: productdata(Weight) for productdatareq
-Reply errorproductdata: errorproductdata(M)  for productdatareq //PID doesn't exist  
+ // ProductService -> CargoService
+Reply   getProductAnswer: product( JSonString ) for getProduct 
 
 // CargoService -> ClientSimulator
 
 Reply loadaccepted:		loadaccepted(Slot) for loadrequest
 Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, no_slots, no_PID }
 
+// slotmanagement in forse
 // CargoService -> SlotManagement
-
 Request freeSlot : freeSlot(M)
 Request totalWeightReq: totalWeightReq(M)
 
@@ -34,6 +27,7 @@ Dispatch updatedatahold : updatedatahold(M)
 Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
 Reply totalWeight : totalWeight(Weight) for totalWeightReq
 
+//
 
 //CargoService -> CargoRobot
 Request loadcontainer:		loadcontainer(Slot)
@@ -77,39 +71,13 @@ Event containerhere : containerhere(M)
 
 // CONTEXTS ===================================================================
 Context ctx_cargoservice		ip [host="localhost" port=11800]
-Context ctx_productservice		ip [host="localhost" port=11801]
-Context ctx_client_simulator	ip [host="localhost" port=11803]
-Context ctx_basicrobot      	ip [host="localhost" port=11810]
+//Context ctx_client_simulator	ip [host="localhost" port=11803]
+Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
+Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
 
 // ACTORS =====================================================================
 ExternalQActor basicrobot context ctx_basicrobot
 ExternalQActor productservice context ctx_productservice
-
-// ACTORS for ctx_client_simulator --------------------------------------------
-/*
- * Test Actor:
- * The client sends a registration request
- */
-QActor client_simulator context ctx_client_simulator {
-	State state_init initial {
-		
-		println("[client_simulator] Sending a registration request to ProductService...")
-		request productservice -m		registrationrequest: registrationrequest(Weight)
-	}
-	Transition t0 whenReply registrationaccepted -> state_handle_load_req
-	
-	State state_handle_load_req{
-		printCurrentMessage
-		onMsg(registrationaccepted: registrationaccepted(PID)) {
-			[#
-				PID = payloadArg(0)
-				
-			#]
-		println("[client_simulator] Sending a load request to CargoService...")
-		request cargoservice -m		loadrequest: loadrequest($PID)
-		}
-	}
-}
 
 // ACTORS for ctx_cargoservice ------------------------------------------------
 
@@ -119,13 +87,14 @@ QActor sonar_mock context ctx_cargoservice{
 	}Goto state_idle
 	
 	State state_idle{ 
+		delay 5000
 		emitlocalstream containerhere : containerhere(M)
 		delay 3000
 		emitlocalstream stopActions : stopActions(M)
 		delay 3000
-	}Goto res
+	}Goto resume
 	
-	State res{
+	State resume{
 		emitlocalstream resumeActions : resumeActions(M)
 		delay 3000
 		
@@ -153,6 +122,7 @@ QActor slotmanagement_mock context ctx_cargoservice{
 		replyTo totalWeightReq with totalWeight : totalWeight($Weight)
 	}
 }
+
 
 
 QActor cargorobot context ctx_cargoservice {
@@ -280,12 +250,12 @@ QActor cargoservice context ctx_cargoservice {
 				PID = payloadArg(0)
 				
 			#]
-			} request productservice -m		productdatareq: productdatareq($PID)
-		}Transition t1 whenReply productdata -> state_handle_product
+			} request productservice -m	 getProduct: getProduct($PID)
+		}Transition t1 whenReply getProductAnswer -> state_handle_product
 		whenInterruptEvent stopActions -> state_handle_stop
 		
 		State state_handle_product{
-			onMsg(productdata: productdata(Weight)){
+			onMsg(getProductAnswer: getProductAnswer(jsonString)){
 				[#
 					Weight = payloadArg(0)
 				
@@ -343,7 +313,3 @@ QActor cargoservice context ctx_cargoservice {
 //	}
 //	Goto state_idle
 }
-
-
-
-
