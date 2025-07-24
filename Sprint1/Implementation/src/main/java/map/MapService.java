@@ -6,7 +6,7 @@ import java.nio.file.*;
 import java.util.*;
 
 public class MapService {
-
+		//Map of map Object -> map of its coordinates "x" ->0 "y" ->0
     private final Map<String, Map<String, Integer>> lookupMap = new HashMap<>();
 
     public MapService(String jsonFilePath) throws IOException {
@@ -19,13 +19,16 @@ public class MapService {
         lookupMap.put("IO", extractCoords(jsonData.getAsJsonObject("IoPort")));
         lookupMap.put("Pickup", extractCoords(jsonData.getAsJsonObject("PickupContainerPosition")));
 
-        // Carica Slots
-        for (JsonElement e : jsonData.getAsJsonArray("Slots")) {
+        // Carica SlotObstacles 
+        //real positiones of the slots
+        for (JsonElement e : jsonData.getAsJsonArray("SlotObstacles")) {
             JsonObject obj = e.getAsJsonObject();
             lookupMap.put(obj.get("name").getAsString(), extractCoords(obj));
         }
 
         // Carica LaydownPositions
+        //we name them as "Slot1", "Slot2", etc.
+        // This is a list of positions where the robot can lay down containers
         for (JsonElement e : jsonData.getAsJsonArray("LaydownPositions")) {
             JsonObject obj = e.getAsJsonObject();
             lookupMap.put(obj.get("name").getAsString(), extractCoords(obj));
@@ -47,7 +50,7 @@ public class MapService {
 //    public static void main(String[] args) throws IOException {
 //        MapService service = new MapService("map.json");
 //        System.out.println(service.getCoordinates("Slot1"));  // {x=2, y=1}
-//        System.out.println(service.getCoordinates("L3"));     // {x=1, y=3}
+//        System.out.println(service.getCoordinates("SlotObstacle3"));     // {x=1, y=3}
 //        System.out.println(service.getCoordinates("IO"));     // {x=0, y=5}
 //    }
 }
