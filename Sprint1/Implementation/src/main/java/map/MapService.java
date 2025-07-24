@@ -1,4 +1,4 @@
-package main.java.map;
+package map;
 
 import com.google.gson.*;
 import java.io.*;
@@ -21,7 +21,7 @@ public class MapService {
 
         // Carica SlotObstacles 
         //real positiones of the slots
-        for (JsonElement e : jsonData.getAsJsonArray("SlotObstacles")) {
+        for (JsonElement e : jsonData.getAsJsonArray("SlotsObstacles")) {
             JsonObject obj = e.getAsJsonObject();
             lookupMap.put(obj.get("name").getAsString(), extractCoords(obj));
         }
@@ -46,11 +46,20 @@ public class MapService {
         return coords;
     }
 
-//    // Per test
+
+    // test
 //    public static void main(String[] args) throws IOException {
 //        MapService service = new MapService("map.json");
-//        System.out.println(service.getCoordinates("Slot1"));  // {x=2, y=1}
-//        System.out.println(service.getCoordinates("SlotObstacle3"));     // {x=1, y=3}
+//
+//        System.out.println("Home:");
+//        System.out.println(service.getCoordinates("Home"));  // {x=0, y=0}
+//        System.out.println("SlotObstacle1:");
+//        System.out.println(service.getCoordinates("SlotObstacle1"));  // {x=2, y=1}
+//        System.out.println("Slot3:");
+//        System.out.println(service.getCoordinates("Slot3"));     // {x=1, y=3}
+//        System.out.println("Io port:");
 //        System.out.println(service.getCoordinates("IO"));     // {x=0, y=5}
+//        System.out.println("Pickup Container Position:");
+//        System.out.println(service.getCoordinates("Pickup")); // {x=0, y=4}
 //    }
 }

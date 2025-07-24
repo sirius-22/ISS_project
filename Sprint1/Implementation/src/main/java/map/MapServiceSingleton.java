@@ -1,4 +1,4 @@
-package main.java.map;
+package map;
 import java.io.IOException;
 
 public class MapServiceSingleton {
