@@ -1,0 +1,17 @@
+{
+  "Home": { "x": 0, "y": 0 },
+  "Slots": [
+    { "name": "Slot1", "x": 2, "y": 1 },
+    { "name": "Slot2", "x": 3, "y": 1 },
+    { "name": "Slot3", "x": 2, "y": 3 },
+    { "name": "Slot4", "x": 3, "y": 3 }
+  ],
+  "LaydownPositions": [
+    { "name": "L1", "x": 1, "y": 1 },
+    { "name": "L2", "x": 4, "y": 1 },
+    { "name": "L3", "x": 1, "y": 3 },
+    { "name": "L4", "x": 4, "y": 3 }
+  ],
+  "IoPort": { "x": 0, "y": 5 },
+  "PickupContainerPosition": { "x": 0, "y": 4 }
+}

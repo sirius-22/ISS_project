@@ -127,47 +127,70 @@ QActor slotmanagement_mock context ctx_cargoservice{
 
 
 QActor cargorobot context ctx_cargoservice {
-	import "main.java.*"
+	import "main.java.map*"
 	State state_init initial {
-		// go at home
 		
-		//map
+		//TODO init map
+		[#
+			val Map = MapServiceSingleton.init("map.json");
+			
+		#]
+		
 		subscribeTo sonar_mock for resumeActions
 		subscribeTo sonar_mock for stopActions
-//		forward cargoservicestatusgui -m updategui: updategui(M)
 		
-		println("CargoRobot | Started ")
+//		forward cargoservicestatusgui -m updategui: updategui(M)
+		//fixed coordinates
+		[#
+			var Homecoords = Map.getInstance().getCoordinates(Home);
+			var Home_X = Homecoords.get("X");
+			var Home_Y = Homecoords.get("Y");
+			var Pupcoords = Map.getInstance().getCoordinates(Pickup);
+			var Pup_X = Pupcoords.get("X");
+			var Pup_Y = Pupcoords.get("Y");
+	
+		#]
+		
+		
+		println("[CargoRobot] | Started ") color blue
 
 	}
 	Goto state_engage
 	
 	State state_engage{
 		delay 3000
-		request basicrobot -m engage : engage("cargorobot")
-		
-		
-	}Transition t1 whenReply engagedone -> state_idle
-					whenReply engagerefused ->state_engage
+		println("[Cargorobot] | Requests engage to basicrobot ") color blue
+		request basicrobot -m engage : engage("cargorobot") //arg=owner
+	}Transition t1 whenReply engagedone -> returnHOME //to be sure of the initial position
+					whenReply engagerefused ->state_engage //retry
 	
 	State state_idle {
 //		forward cargoservicestatusgui -m updategui: updategui(M)
-		
+		println("[Cargorobot] | Idle ") color blue
 	}
 	Transition t0	//whenTime 5000		-> state_idle
 					whenRequest loadcontainer	-> state_move_cont
 					whenInterruptEvent stopActions -> state_wait_resume
 					
 	State state_wait_resume{
+		println("[Cargorobot] | Stops ") color red
 		emit alarm : alarm(STOP) 
 	}Transition t1 whenEvent resumeActions -> state_resume
 	
 	State state_resume{
+		println("[Cagorobot] | Resume ") color red
 		returnFromInterrupt
 	}
 	
 	State state_move_cont {
 		onMsg(loadcontainer: movecontainer(Slot)){
-			[# var Slot =  payloadArg(0) #]
+			[# var SlotName =  payloadArg(0)
+			
+			var coords = Map.getCoordinates(SlotName);
+			var X = coords.get("x");
+			var Y = coords.get("y");
+				
+			#]
 		}
 		println("[Cargorobot] Moving container to slot $Slot...")
 		// TODO
@@ -178,7 +201,7 @@ QActor cargorobot context ctx_cargoservice {
 		//request basicrobot -m step : step(M)
 		//forward basicrobot -m cmd : cmd(M)
 		//request basicrobot -m doplan : doplan(MOVES)
-		request basicrobot -m moverobot : moverobot(MOVES)
+		request basicrobot -m moverobot : moverobot($X,$Y)// coordinates
 		
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		
@@ -187,8 +210,12 @@ QActor cargorobot context ctx_cargoservice {
 					whenReply moverobotfailed -> goto_IO_port
 					
 		State returnHOME{
+			println("Cargorobot | returningHome") color blue
+			request basicrobot -m moverobot : moverobot($Home_X,$Home_Y)
 			
-		}Goto state_idle
+		}Transition t0 whenReply moverobotdone -> state_idle
+						whenReply moverobotfailed -> returnHOME
+						whenInterruptEvent stopActions -> state_wait_resume
 		
 		State goto_IO_port{
 			
