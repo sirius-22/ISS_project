@@ -189,12 +189,12 @@ QActor cargorobot context ctx_cargoservice {
 	}
 	Transition t0	//whenTime 5000		-> state_idle
 					whenInterruptEvent stopActions -> state_wait_resume
-					whenRequest loadcontainer	-> state_move_cont
+					whenRequest loadcontainer	-> goto_IO_port
 					
 					
 	State state_wait_resume{
 		println("[Cargorobot] | Stops ") color red
-		emit alarm : alarm(STOP) 
+		emit alarm : alarm(STOP) //stops basicrobot
 	}Transition t1 whenEvent resumeActions -> state_resume
 	
 	State state_resume{
@@ -239,8 +239,11 @@ QActor cargorobot context ctx_cargoservice {
 						
 		
 		State goto_IO_port{
-			
-		}Goto state_move_cont
+			println("Cargorobot | go to IOport") color blue
+			request basicrobot -m moverobot : moverobot($Pup_X,$Pup_Y)
+		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
+						whenReply moverobotdone -> state_move_cont
+						whenReply moverobotfailed -> returnHOME
 }
 
 QActor cargoservice context ctx_cargoservice {

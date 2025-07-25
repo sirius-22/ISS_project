@@ -76,7 +76,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 interrupthandle(edgeName="t04",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t05",targetState="state_move_cont",cond=whenRequest("loadcontainer"))
+					transition(edgeName="t05",targetState="goto_IO_port",cond=whenRequest("loadcontainer"))
 				}	 
 				state("state_wait_resume") { //this:State
 					action { //it:State
@@ -136,12 +136,16 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("goto_IO_port") { //this:State
 					action { //it:State
+						CommUtils.outblue("Cargorobot | go to IOport")
+						request("moverobot", "moverobot($Pup_X,$Pup_Y)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="state_move_cont", cond=doswitch() )
+					 interrupthandle(edgeName="t012",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t013",targetState="state_move_cont",cond=whenReply("moverobotdone"))
+					transition(edgeName="t014",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 			}
 		}
