@@ -188,8 +188,9 @@ QActor cargorobot context ctx_cargoservice {
 		println("[Cargorobot] | Idle ") color blue
 	}
 	Transition t0	//whenTime 5000		-> state_idle
-					whenRequest loadcontainer	-> state_move_cont
 					whenInterruptEvent stopActions -> state_wait_resume
+					whenRequest loadcontainer	-> state_move_cont
+					
 					
 	State state_wait_resume{
 		println("[Cargorobot] | Stops ") color red
@@ -232,9 +233,10 @@ QActor cargorobot context ctx_cargoservice {
 			println("Cargorobot | returningHome") color blue
 			request basicrobot -m moverobot : moverobot($Home_X,$Home_Y)
 			
-		}Transition t0 whenReply moverobotdone -> state_idle
+		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
+						whenReply moverobotdone -> state_idle
 						whenReply moverobotfailed -> returnHOME
-						whenInterruptEvent stopActions -> state_wait_resume
+						
 		
 		State goto_IO_port{
 			
@@ -266,8 +268,8 @@ QActor cargoservice context ctx_cargoservice {
 		println("[CargoService] Idle...")
 		// wait for messages...
 	}
-	Transition t0	whenRequest loadrequest	-> state_handle_slots 
-					whenInterruptEvent stopActions -> state_handle_stop
+	Transition t0	whenInterruptEvent stopActions -> state_handle_stop
+					whenRequest loadrequest	-> state_handle_slots 
 //					whenEvent distance 			-> state_handle_distance
 
 					
@@ -285,8 +287,9 @@ QActor cargoservice context ctx_cargoservice {
 		println("[CargoService] Richiesta di slot liberi a slotmng...") color blue
 		request slotmanagement_mock -m freeSlot: freeSlot(m)
 		
-	}Transition t1 whenReply slotname -> state_handle_slot_name
-					whenInterruptEvent stopActions -> state_handle_stop
+	}Transition t1  whenInterruptEvent stopActions -> state_handle_stop
+					whenReply slotname -> state_handle_slot_name
+					
 	
 	State state_handle_slot_name{
 		onMsg(slotname : slotname(Name)){
@@ -320,8 +323,8 @@ QActor cargoservice context ctx_cargoservice {
 				
 			#]
 			} request productservice -m	 getProduct: getProduct($PID)
-		}Transition t1 whenReply getProductAnswer -> state_handle_product
-		whenInterruptEvent stopActions -> state_handle_stop
+		}Transition t1  whenInterruptEvent stopActions -> state_handle_stop
+						whenReply getProductAnswer -> state_handle_product
 		
 		State state_handle_product{
 			onMsg(getProductAnswer: getProductAnswer(jsonString)){
@@ -332,8 +335,8 @@ QActor cargoservice context ctx_cargoservice {
 				#]
 				}
 			request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
-			}Transition t4 whenReply totalWeight -> state_handle_weight
-							whenInterruptEvent stopActions -> state_handle_stop
+			}Transition t4 whenInterruptEvent stopActions -> state_handle_stop
+							whenReply totalWeight -> state_handle_weight
 			
 			State state_handle_weight{
 				onMsg(totalWeight: totalWeight(Weight)){
@@ -360,8 +363,9 @@ QActor cargoservice context ctx_cargoservice {
 //			forward cargoservicestatusgui -m updategui: updategui(M)
 //			
 		}
-	Transition t2 whenReply containerloaded -> state_update_hold
-	whenInterruptEvent stopActions -> state_handle_stop
+	Transition t2 whenInterruptEvent stopActions -> state_handle_stop
+				whenReply containerloaded -> state_update_hold
+	
 	
 	State state_update_hold{
 		

@@ -75,8 +75,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t04",targetState="state_move_cont",cond=whenRequest("loadcontainer"))
-					interrupthandle(edgeName="t05",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					 interrupthandle(edgeName="t04",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t05",targetState="state_move_cont",cond=whenRequest("loadcontainer"))
 				}	 
 				state("state_wait_resume") { //this:State
 					action { //it:State
@@ -130,9 +130,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t09",targetState="state_idle",cond=whenReply("moverobotdone"))
-					transition(edgeName="t010",targetState="returnHOME",cond=whenReply("moverobotfailed"))
-					interrupthandle(edgeName="t011",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					 interrupthandle(edgeName="t09",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t010",targetState="state_idle",cond=whenReply("moverobotdone"))
+					transition(edgeName="t011",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 				state("goto_IO_port") { //this:State
 					action { //it:State
