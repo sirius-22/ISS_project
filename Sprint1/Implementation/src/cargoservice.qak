@@ -151,6 +151,8 @@ QActor cargorobot context ctx_cargoservice {
 		[#
 			val Map = MapServiceSingleton.init("map.json");
 			var idle = true
+			var X = 0
+			var Y = 0
 			
 		#]
 	State state_init initial {
@@ -180,8 +182,9 @@ QActor cargorobot context ctx_cargoservice {
 	State state_engage{
 		delay 3000
 		println("[Cargorobot] | Requests engage to basicrobot ") color blue
-		request basicrobot -m engage : engage("cargorobot") //arg=owner
-	}Transition t1 whenReply engagedone -> returnHOME //to be sure of the initial position
+		request basicrobot -m engage : engage(cargorobot) //arg=owner
+	}Transition t1 	whenInterruptEvent stopActions -> state_wait_resume
+					whenReply engagedone -> returnHOME //to be sure of the initial position
 					whenReply engagerefused ->state_engage //retry
 	
 	State state_idle {
@@ -209,8 +212,8 @@ QActor cargorobot context ctx_cargoservice {
 			[# var SlotName =  payloadArg(0)
 			
 			var coords = Map.getCoordinates(SlotName);
-			var X = coords.get("x");
-			var Y = coords.get("y");
+			X = coords.get("x");
+			Y = coords.get("y");
 				
 			#]
 		}
@@ -233,7 +236,11 @@ QActor cargorobot context ctx_cargoservice {
 					
 		State returnHOME{
 			println("Cargorobot | returningHome") color blue
-			request basicrobot -m moverobot : moverobot($Home_X,$Home_Y)
+			[# 
+				X = Home_X
+				Y = Home_Y
+			#]
+			request basicrobot -m moverobot : moverobot($X,$Y)
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone and [#idle#]-> state_idle
@@ -243,7 +250,11 @@ QActor cargorobot context ctx_cargoservice {
 		
 		State goto_IO_port{
 			println("Cargorobot | go to IOport") color blue
-			request basicrobot -m moverobot : moverobot($Pup_X,$Pup_Y)
+			[# 
+				X = Pup_X
+				Y = Pup_Y
+			#]
+			request basicrobot -m moverobot : moverobot($X,$Y)
 			[# idle=false #]
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> state_move_cont

@@ -60,8 +60,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t016",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t017",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
+					 interrupthandle(edgeName="t017",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t018",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
 				}	 
 				state("state_handle_stop") { //this:State
 					action { //it:State
@@ -71,7 +71,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t318",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
+					 transition(edgeName="t319",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
 				}	 
 				state("state_handle_resume") { //this:State
 					action { //it:State
@@ -92,8 +92,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t119",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t120",targetState="state_handle_slot_name",cond=whenReply("slotname"))
+					 interrupthandle(edgeName="t120",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t121",targetState="state_handle_slot_name",cond=whenReply("slotname"))
 				}	 
 				state("state_handle_slot_name") { //this:State
 					action { //it:State
@@ -119,10 +119,10 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t021",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t022",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
+					 interrupthandle(edgeName="t022",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t023",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
 					}))
-					transition(edgeName="t023",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
+					transition(edgeName="t024",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
 					}))
 				}	 
 				state("state_handle_load") { //this:State
@@ -141,8 +141,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t124",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t125",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
+					 interrupthandle(edgeName="t125",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t126",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
 				}	 
 				state("state_handle_product") { //this:State
 					action { //it:State
@@ -159,8 +159,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t426",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t427",targetState="state_handle_weight",cond=whenReply("totalWeight"))
+					 interrupthandle(edgeName="t427",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t428",targetState="state_handle_weight",cond=whenReply("totalWeight"))
 				}	 
 				state("state_handle_weight") { //this:State
 					action { //it:State
@@ -185,8 +185,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t228",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t229",targetState="state_update_hold",cond=whenReply("containerloaded"))
+					 interrupthandle(edgeName="t229",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t230",targetState="state_update_hold",cond=whenReply("containerloaded"))
 				}	 
 				state("state_update_hold") { //this:State
 					action { //it:State
