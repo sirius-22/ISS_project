@@ -31,10 +31,17 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-					val Map = MapServiceSingleton.init("map.json");
+					MapServiceSingleton.init("map.json");
 					var idle = true
 					var X = 0
 					var Y = 0
+					var Map = MapServiceSingleton.getInstance()
+					var Homecoords = Map.getCoordinates("Home");
+					var Home_X = Homecoords.get("X");
+					var Home_Y = Homecoords.get("Y");
+					var Pupcoords = Map.getCoordinates("Pickup");
+					var Pup_X = Pupcoords.get("X");
+					var Pup_Y = Pupcoords.get("Y");
 					
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -42,10 +49,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						subscribeToLocalActor("sonar_mock") 
 						subscribeToLocalActor("sonar_mock") 
 						
-									var Homecoords = Map.getInstance().getCoordinates("Home");
+									var Homecoords = Map.getCoordinates("Home");
 									var Home_X = Homecoords.get("X");
 									var Home_Y = Homecoords.get("Y");
-									var Pupcoords = Map.getInstance().getCoordinates("Pickup");
+									var Pupcoords = Map.getCoordinates("Pickup");
 									var Pup_X = Pupcoords.get("X");
 									var Pup_Y = Pupcoords.get("Y");
 							

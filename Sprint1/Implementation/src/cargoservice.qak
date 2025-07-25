@@ -147,10 +147,17 @@ QActor cargorobot context ctx_cargoservice {
 	import "main.java.map.*"
 		//init map
 		[#
-			val Map = MapServiceSingleton.init("map.json");
+			MapServiceSingleton.init("map.json");
 			var idle = true
 			var X = 0
 			var Y = 0
+			var Map = MapServiceSingleton.getInstance()
+			var Homecoords = Map.getCoordinates("Home");
+			var Home_X = Homecoords.get("X");
+			var Home_Y = Homecoords.get("Y");
+			var Pupcoords = Map.getCoordinates("Pickup");
+			var Pup_X = Pupcoords.get("X");
+			var Pup_Y = Pupcoords.get("Y");
 			
 		#]
 	State state_init initial {
@@ -162,10 +169,10 @@ QActor cargorobot context ctx_cargoservice {
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		//fixed coordinates
 		[#
-			var Homecoords = Map.getInstance().getCoordinates("Home");
+			var Homecoords = Map.getCoordinates("Home");
 			var Home_X = Homecoords.get("X");
 			var Home_Y = Homecoords.get("Y");
-			var Pupcoords = Map.getInstance().getCoordinates("Pickup");
+			var Pupcoords = Map.getCoordinates("Pickup");
 			var Pup_X = Pupcoords.get("X");
 			var Pup_Y = Pupcoords.get("Y");
 	
@@ -265,9 +272,12 @@ QActor cargoservice context ctx_cargoservice {
 		const val MAXLOAD = 30
 		
 		//product weight
-		var Weight: Float = 0.0f
+		var Weight= 0
 		
 		var rejected = false
+		
+		var Name = "NONE"
+		var PID
 
 	#]
 	State state_init initial {
@@ -314,7 +324,7 @@ QActor cargoservice context ctx_cargoservice {
 	State state_handle_slot_name{
 		onMsg(slotname : slotname(Name)){
 		[#
-			var Name = payloadArg(0)
+			Name = payloadArg(0)
 			
 		#]
 		}

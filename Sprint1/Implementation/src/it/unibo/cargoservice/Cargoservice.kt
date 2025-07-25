@@ -34,9 +34,12 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				const val MAXLOAD = 30
 				
 				//product weight
-				var Weight: Float = 0.0f
+				var Weight= 0
 				
 				var rejected = false
+				
+				var Name = "NONE"
+				var PID
 		
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -100,7 +103,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						if( checkMsgContent( Term.createTerm("slotname(Slot)"), Term.createTerm("slotname(Name)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-											var Name = payloadArg(0)
+											Name = payloadArg(0)
 											
 						}
 						if( 
