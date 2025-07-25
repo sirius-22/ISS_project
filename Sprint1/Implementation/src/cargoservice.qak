@@ -75,7 +75,7 @@ Dispatch resume : resume(M)
 Dispatch goto_idle : goto_idle(M)
 
 // CONTEXTS ===================================================================
-Context ctx_cargoservice		ip [host="localhost" port=11800]
+Context ctx_cargoservice		ip [host="localhost" port=8000]
 //Context ctx_client_simulator	ip [host="localhost" port=11803]
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
 Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
@@ -393,6 +393,64 @@ QActor cargoservice context ctx_cargoservice {
 		forward slotmanagement_mock -m updatedatahold: updatedatahold(M)
 		
 	}Goto state_idle
+}	
+	
+QActor external_client context ctx_cargoservice{
+ 	State s0 initial {
+ 		println("$name | STARTS") color cyan
+  	} 
+  	// commenta entrambi quando vuoi mandare richieste con i test
+  	Goto work0
+//  	Goto work1 
+  	
+  	
+  	// cliente che mi manda 4 richieste una dietro l'altra
+  	State work0 {
+ 		println("$name | sends requests") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(17)
+ 		request cargoservice -m loadrequest: loadrequest(17)
+ 		request cargoservice -m loadrequest: loadrequest(17)
+ 		request cargoservice -m loadrequest: loadrequest(17)
+ 		delay 2000
+  	} 
+  	
+  	// client mock che manda 4 richieste spaziate
+  	State work1 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(17)
+ 		delay 2000
+  	} 
+  	Transition t0
+	   whenReply loadaccepted -> work2
+	   whenReply loadrejected  -> work2
+	   
+	   
+	State work2 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(10)
+ 		delay 2000
+  	} 
+  	Transition t0
+	   whenReply loadaccepted -> work3
+	   whenReply loadrejected  -> work3
+	   
+	
+	State work3 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(17)
+ 		delay 2000
+  	} 
+  	Transition t0
+	   whenReply loadaccepted -> work4
+	   whenReply loadrejected  -> work4
+	   
+	
+	State work4 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(17)
+ 		delay 2000
+  	} 
+}
 //	
 //	State state_handle_distance {
 //		onMsg(distance: distance(V)) {
@@ -408,4 +466,4 @@ QActor cargoservice context ctx_cargoservice {
 //		}
 //	}
 //	Goto state_idle
-}
+

@@ -35,7 +35,7 @@ event( containerhere, containerhere(M) ).
 dispatch( resume, resume(M) ).
 dispatch( goto_idle, goto_idle(M) ).
 %====================================================================================
-context(ctx_cargoservice, "localhost",  "TCP", "11800").
+context(ctx_cargoservice, "localhost",  "TCP", "8000").
 context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
 context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
  qactor( basicrobot, ctx_basicrobot, "external").
@@ -48,3 +48,5 @@ context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
  static(cargorobot).
   qactor( cargoservice, ctx_cargoservice, "it.unibo.cargoservice.Cargoservice").
  static(cargoservice).
+  qactor( external_client, ctx_cargoservice, "it.unibo.external_client.External_client").
+ static(external_client).
