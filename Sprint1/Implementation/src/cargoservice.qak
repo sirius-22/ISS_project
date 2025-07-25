@@ -68,6 +68,11 @@ Event stopActions : stopActions(M)
 Event resumeActions : resumeActions(M)
 Event containerhere : containerhere(M)
 
+// autodispatch for interrupt event
+Dispatch resume : resume(M)
+
+// autodispatch for idle state
+Dispatch goto_idle : goto_idle(M)
 
 // CONTEXTS ===================================================================
 Context ctx_cargoservice		ip [host="localhost" port=11800]
@@ -142,13 +147,13 @@ QActor slotmanagement_mock context ctx_cargoservice{
 
 QActor cargorobot context ctx_cargoservice {
 	import "main.java.map*"
-	State state_init initial {
-		
-		//TODO init map
+		//init map
 		[#
 			val Map = MapServiceSingleton.init("map.json");
 			
 		#]
+	State state_init initial {
+		
 		
 		subscribeTo sonar_mock for resumeActions
 		subscribeTo sonar_mock for stopActions
@@ -239,7 +244,7 @@ QActor cargorobot context ctx_cargoservice {
 QActor cargoservice context ctx_cargoservice {
 	import "main.java.domain.*" 
 	[#
-		
+		//product weight
 		var Weight: Float = 0.0f
 
 	#]
@@ -268,13 +273,16 @@ QActor cargoservice context ctx_cargoservice {
 					
 	State state_handle_stop{
 		
+		println("[CargoService] Ho ricevuto un evento di stop dal sonar in attesa di resume...") color yellow
+		
 	}Transition t3 whenEvent resumeActions -> state_handle_resume
 	
 	State state_handle_resume{
+		println("[CargoService] returning from interrupt...") color red
 		returnFromInterrupt
 	}
 	State state_handle_slots{
-		
+		println("[CargoService] Richiesta di slot liberi a slotmng...") color blue
 		request slotmanagement_mock -m freeSlot: freeSlot(m)
 		
 	}Transition t1 whenReply slotname -> state_handle_slot_name
@@ -288,15 +296,20 @@ QActor cargoservice context ctx_cargoservice {
 		#]
 		}
 		if [#
-			!Name.equals("NONE")
+			Name.equals("NONE")
 		#]{
+			println("[CargoService] Non ci sono slot disponibili LOADREJECTED") color red
 			replyTo loadrequest with loadrejected: loadrejected("no_slots")
+			autodispatch goto_idle : goto_idle(idle)
 		}
 		else {
-			replyTo loadrequest with loadaccepted: loadaccepted($Name)
-			request cargorobot -m loadcontainer: loadcontainer($Name)
+			println("[CargoService] slot disponibile $Name continuo i controlli") color red
+			autodispatch resume : resume(next)
 		}
-	}Goto state_handle_load
+	}Transition t0 whenInterruptEvent stopActions -> state_handle_stop
+					whenMsg resume -> state_handle_load
+					whenMsg goto_idle -> state_idle
+	
 	
 	
 	State state_handle_load {

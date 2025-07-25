@@ -30,12 +30,12 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+					val Map = MapServiceSingleton.init("map.json");
+					
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
-						
-									val Map = MapServiceSingleton.init("map.json");
-									
 						subscribeToLocalActor("sonar_mock") 
 						subscribeToLocalActor("sonar_mock") 
 						

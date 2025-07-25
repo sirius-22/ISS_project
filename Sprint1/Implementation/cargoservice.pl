@@ -32,6 +32,8 @@ reply( moverobotfailed, moverobotfailed(PLANDONE,PLANTODO) ).  %%for moverobot
 event( stopActions, stopActions(M) ).
 event( resumeActions, resumeActions(M) ).
 event( containerhere, containerhere(M) ).
+dispatch( resume, resume(M) ).
+dispatch( goto_idle, goto_idle(M) ).
 %====================================================================================
 context(ctx_cargoservice, "localhost",  "TCP", "11800").
 context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
