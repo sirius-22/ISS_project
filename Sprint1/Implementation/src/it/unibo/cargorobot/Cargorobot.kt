@@ -32,6 +32,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
 					val Map = MapServiceSingleton.init("map.json");
+					var idle = true
+					var X = 0
+					var Y = 0
 					
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -58,25 +61,27 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						delay(3000) 
 						CommUtils.outblue("[Cargorobot] | Requests engage to basicrobot ")
-						request("engage", "engage("cargorobot")" ,"basicrobot" )  
+						request("engage", "engage(cargorobot)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t12",targetState="returnHOME",cond=whenReply("engagedone"))
-					transition(edgeName="t13",targetState="state_engage",cond=whenReply("engagerefused"))
+					 interrupthandle(edgeName="t12",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t13",targetState="returnHOME",cond=whenReply("engagedone"))
+					transition(edgeName="t14",targetState="state_engage",cond=whenReply("engagerefused"))
 				}	 
 				state("state_idle") { //this:State
 					action { //it:State
 						CommUtils.outblue("[Cargorobot] | Idle ")
+						idle=true 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t04",targetState="state_move_cont",cond=whenRequest("loadcontainer"))
-					interrupthandle(edgeName="t05",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					 interrupthandle(edgeName="t05",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t06",targetState="goto_IO_port",cond=whenRequest("loadcontainer"))
 				}	 
 				state("state_wait_resume") { //this:State
 					action { //it:State
@@ -87,7 +92,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t16",targetState="state_resume",cond=whenEvent("resumeActions"))
+					 transition(edgeName="t17",targetState="state_resume",cond=whenEvent("resumeActions"))
 				}	 
 				state("state_resume") { //this:State
 					action { //it:State
@@ -106,8 +111,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 								 var SlotName =  payloadArg(0)
 											
 											var coords = Map.getCoordinates(SlotName);
-											var X = coords.get("x");
-											var Y = coords.get("y");
+											X = coords.get("x");
+											Y = coords.get("y");
 												
 						}
 						CommUtils.outblack("[Cargorobot] Moving container to slot $Slot...")
@@ -118,30 +123,44 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t37",targetState="returnHOME",cond=whenReply("moverobotdone"))
-					transition(edgeName="t38",targetState="goto_IO_port",cond=whenReply("moverobotfailed"))
+					 transition(edgeName="t38",targetState="returnHOME",cond=whenReply("moverobotdone"))
+					transition(edgeName="t39",targetState="goto_IO_port",cond=whenReply("moverobotfailed"))
 				}	 
 				state("returnHOME") { //this:State
 					action { //it:State
 						CommUtils.outblue("Cargorobot | returningHome")
-						request("moverobot", "moverobot($Home_X,$Home_Y)" ,"basicrobot" )  
+						 
+										X = Home_X
+										Y = Home_Y
+						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t09",targetState="state_idle",cond=whenReply("moverobotdone"))
-					transition(edgeName="t010",targetState="returnHOME",cond=whenReply("moverobotfailed"))
-					interrupthandle(edgeName="t011",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					 interrupthandle(edgeName="t010",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t011",targetState="state_idle",cond=whenReplyGuarded("moverobotdone",{idle 
+					}))
+					transition(edgeName="t012",targetState="goto_IO_port",cond=whenReplyGuarded("moverobotdone",{!idle 
+					}))
+					transition(edgeName="t013",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 				state("goto_IO_port") { //this:State
 					action { //it:State
+						CommUtils.outblue("Cargorobot | go to IOport")
+						 
+										X = Pup_X
+										Y = Pup_Y
+						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+						 idle=false  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="state_move_cont", cond=doswitch() )
+					 interrupthandle(edgeName="t014",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t015",targetState="state_move_cont",cond=whenReply("moverobotdone"))
+					transition(edgeName="t016",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 			}
 		}

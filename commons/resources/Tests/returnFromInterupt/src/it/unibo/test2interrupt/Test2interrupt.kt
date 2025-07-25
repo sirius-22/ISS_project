@@ -49,7 +49,7 @@ class Test2interrupt ( name: String, scope: CoroutineScope, isconfined: Boolean=
 						CommUtils.outblue("test2interrupt | working aspettendo")
 						delay(20000) 
 						CommUtils.outblue("test2interrupt | non si capisce nullaaa")
-						forward("aaaa", "aaaa(a)" ,name ) 
+						request("testrequest", "testrequest(ciao)" ,"test_reply_after_interrupt" )  
 						CommUtils.outblue("test2interrupt | working dopo il dispatch")
 						//genTimer( actor, state )
 					}
@@ -57,7 +57,7 @@ class Test2interrupt ( name: String, scope: CoroutineScope, isconfined: Boolean=
 					sysaction { //it:State
 					}	 	 
 					 interrupthandle(edgeName="t01",targetState="state_wait_resume",cond=whenEvent("alarm"),interruptedStateTransitions)
-					transition(edgeName="t02",targetState="funzioni",cond=whenDispatch("aaaa"))
+					transition(edgeName="t02",targetState="funzioni",cond=whenReply("ok"))
 				}	 
 				state("funzioni") { //this:State
 					action { //it:State

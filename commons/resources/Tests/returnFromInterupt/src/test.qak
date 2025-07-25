@@ -5,6 +5,10 @@ Event nooalarm : nooalarm(M)
 
 Dispatch aaaa : aaaa(A)
 
+Request testrequest : testrequest(W)
+
+Reply ok : ok(W) for testrequest
+
 Context ctx_testing	ip [host="localhost" port=11800]
 
 QActor test1 context ctx_testing {
@@ -54,11 +58,14 @@ QActor test2interrupt context ctx_testing{
 		println ("test2interrupt | working aspettendo") color blue
 		delay 20000
 		println ("test2interrupt | non si capisce nullaaa") color blue
-		autodispatch aaaa : aaaa(a)
+		//autodispatch aaaa : aaaa(a)
+		request test_reply_after_interrupt -m testrequest:testrequest(ciao)
 		println ("test2interrupt | working dopo il dispatch") color blue
 	}Transition t0	//whenTime
 					 whenInterruptEvent alarm -> state_wait_resume
-					 whenMsg aaaa -> funzioni
+					 whenReply ok -> funzioni
+					 //whenMsg aaaa -> funzioni
+					 
 					
 	State funzioni{
 		println ("test2interrupt | forse funziona") color blue
@@ -81,6 +88,18 @@ QActor test2interrupt context ctx_testing{
 	}
 }
 
+
+QActor test_reply_after_interrupt context ctx_testing{
+	State init initial{
+		println("test reply after int | Start") color yellow
+	}Transition t0 whenRequest testrequest -> idle
+	
+	State idle{
+		println("ricevuta testrequest") color magenta
+		replyTo testrequest with ok:ok(yee)
+		println("inviata reply") color magenta
+	}
+}
 
 // test prof 
 
