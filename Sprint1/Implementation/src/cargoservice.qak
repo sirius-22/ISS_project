@@ -108,8 +108,9 @@ QActor sonar_mock context ctx_cargoservice{
 
 QActor slotmanagement_mock context ctx_cargoservice{
 	[#
-		NUMSLOTS=5
+		const val NUMSLOTS=5
 		var freeSlots=4
+		var Weight = 10
 	#]
 	State state_init initial{
 		//setting Slot status
@@ -126,19 +127,16 @@ QActor slotmanagement_mock context ctx_cargoservice{
 	State state_SlotState{
 		if [#freeSlots>0#]{
 		[#
-			Slot="slot"+NUMSLOTS-freeSlots
+			var Slot="slot"+NUMSLOTS-freeSlots
 		#]
 		replyTo freeSlot with slotname : slotname($Slot)
 		}else {
-			replyTo freeSlot with slotname:slotname("NONE")
+			replyTo freeSlot with slotname:slotname(NONE)
 		}
 	}Goto idle
 					
 	State state_Weight{
-		//TODO mettere qualcosa di sensato in weight
-		[#
-			Weight=10	
-		#]
+		//TODO prendere il peso effettivo
 		replyTo totalWeightReq with totalWeight : totalWeight($Weight)
 	}
 }
@@ -146,7 +144,7 @@ QActor slotmanagement_mock context ctx_cargoservice{
 
 
 QActor cargorobot context ctx_cargoservice {
-	import "main.java.map*"
+	import "main.java.map.*"
 		//init map
 		[#
 			val Map = MapServiceSingleton.init("map.json");
@@ -164,10 +162,10 @@ QActor cargorobot context ctx_cargoservice {
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		//fixed coordinates
 		[#
-			var Homecoords = Map.getInstance().getCoordinates(Home);
+			var Homecoords = Map.getInstance().getCoordinates("Home");
 			var Home_X = Homecoords.get("X");
 			var Home_Y = Homecoords.get("Y");
-			var Pupcoords = Map.getInstance().getCoordinates(Pickup);
+			var Pupcoords = Map.getInstance().getCoordinates("Pickup");
 			var Pup_X = Pupcoords.get("X");
 			var Pup_Y = Pupcoords.get("Y");
 	
@@ -316,7 +314,7 @@ QActor cargoservice context ctx_cargoservice {
 	State state_handle_slot_name{
 		onMsg(slotname : slotname(Name)){
 		[#
-			Name = payloadArg(0)
+			var Name = payloadArg(0)
 			
 		#]
 		}
@@ -324,7 +322,7 @@ QActor cargoservice context ctx_cargoservice {
 			Name.equals("NONE")
 		#]{
 			println("[CargoService] Non ci sono slot disponibili LOADREJECTED") color red
-			replyTo loadrequest with loadrejected: loadrejected("no_slots")
+			replyTo loadrequest with loadrejected: loadrejected(no_slots)
 			[#rejected=true#]
 		}
 		else {
@@ -351,7 +349,8 @@ QActor cargoservice context ctx_cargoservice {
 			onMsg(getProductAnswer: getProductAnswer(jsonString)){
 				[#
 					val jsonString = payloadArg(0)
-					Weight = Product.getJsonInt(jsonStr, "weight")
+					Weight = 2
+					//Product.getJsonInt(jsonStr, "weight")
 				
 				#]
 				}
@@ -362,7 +361,7 @@ QActor cargoservice context ctx_cargoservice {
 		State state_handle_weight{
 				onMsg(totalWeight: totalWeight(Weight)){
 				[#
-					TotWeight = payloadArg(0)
+					var TotWeight = payloadArg(0)
 				
 				#]
 				}
@@ -373,13 +372,13 @@ QActor cargoservice context ctx_cargoservice {
 				#] 
 				{
 			
-				replyTo loadrequest with loadaccepted: loadaccepted($Slot)
-				request cargorobot -m loadcontainer: loadcontainer($Slot)
+				replyTo loadrequest with loadaccepted: loadaccepted($Name)
+				request cargorobot -m loadcontainer: loadcontainer($Name)
 				
 //				//delay 1000 // pickup time (known)
 			}
 			else {
-				replyTo loadrequest with loadrejected: loadrejected("too_heavy")
+				replyTo loadrequest with loadrejected: loadrejected(too_heavy)
 			}
 //			forward cargoservicestatusgui -m updategui: updategui(M)
 //			

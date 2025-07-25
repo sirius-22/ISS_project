@@ -19,7 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import main.java.map*
+import main.java.map.*
 
 class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -42,10 +42,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						subscribeToLocalActor("sonar_mock") 
 						subscribeToLocalActor("sonar_mock") 
 						
-									var Homecoords = Map.getInstance().getCoordinates(Home);
+									var Homecoords = Map.getInstance().getCoordinates("Home");
 									var Home_X = Homecoords.get("X");
 									var Home_Y = Homecoords.get("Y");
-									var Pupcoords = Map.getInstance().getCoordinates(Pickup);
+									var Pupcoords = Map.getInstance().getCoordinates("Pickup");
 									var Pup_X = Pupcoords.get("X");
 									var Pup_Y = Pupcoords.get("Y");
 							

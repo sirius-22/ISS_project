@@ -100,13 +100,13 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						if( checkMsgContent( Term.createTerm("slotname(Slot)"), Term.createTerm("slotname(Name)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-											Name = payloadArg(0)
+											var Name = payloadArg(0)
 											
 						}
 						if( 
 									Name.equals("NONE")
 						 ){CommUtils.outred("[CargoService] Non ci sono slot disponibili LOADREJECTED")
-						answer("loadrequest", "loadrejected", "loadrejected("no_slots")"   )  
+						answer("loadrequest", "loadrejected", "loadrejected(no_slots)"   )  
 						rejected=true 
 						}
 						else
@@ -150,7 +150,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 													val jsonString = payloadArg(0)
-													Weight = Product.getJsonInt(jsonStr, "weight")
+													Weight = 2
+													//Product.getJsonInt(jsonStr, "weight")
 												
 						}
 						request("totalWeightReq", "totalWeightReq(M)" ,"slotmanagement_mock" )  
@@ -167,18 +168,18 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						if( checkMsgContent( Term.createTerm("totalWeight(Weight)"), Term.createTerm("totalWeight(Weight)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-													TotWeight = payloadArg(0)
+													var TotWeight = payloadArg(0)
 												
 						}
 						if( 
 											
 											Weight + TotWeight <= MAXLOAD
 											
-						 ){answer("loadrequest", "loadaccepted", "loadaccepted($Slot)"   )  
-						request("loadcontainer", "loadcontainer($Slot)" ,"cargorobot" )  
+						 ){answer("loadrequest", "loadaccepted", "loadaccepted($Name)"   )  
+						request("loadcontainer", "loadcontainer($Name)" ,"cargorobot" )  
 						}
 						else
-						 {answer("loadrequest", "loadrejected", "loadrejected("too_heavy")"   )  
+						 {answer("loadrequest", "loadrejected", "loadrejected(too_heavy)"   )  
 						 }
 						//genTimer( actor, state )
 					}

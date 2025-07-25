@@ -1,4 +1,4 @@
-package map;
+package main.java.map;
 
 import com.google.gson.*;
 import java.io.*;
