@@ -37,6 +37,7 @@ Come concordato nello sprint precedente, l’obiettivo di questo sprint è lo sv
 Abbiamo deciso di mantenere i requisiti originali in inglese per non correre il rischio di alterarne il significato, tuttavia è necessario specificare che i punti 1 e 5 verranno sviluppati parzialmente appoggiandoci a componenti mock per ```slotmanagement```, ```sonardevice``` e ```leddevice``` che verranno implementati in seguito. 
 
 ## Analisi del problema
+
 ### Cargoservice
 Cargoservice è il componente principale del sistema e avrà il compito di interagire con ogni altra componente affinchè le operazioni da eseguire seguano il giusto ordine e flusso. Essendo, dunque, un componente reattivo e proattivo lo andremo a considerare come attore.
 
@@ -46,7 +47,7 @@ Flusso di operazioni di cargoservice:
 - riceve una request per il carico di un prodotto (```loadrequest```)
 - nel caso in cui ci siano richieste successive vengono accodate finchè la richiesta presa in carico non è stata gestita (come di seguito specificato)
 - legge il PID dal corpo della ```loadrequest```
-- interroga ```slotmanagement``` per sapere se c'è uno slot libero e quale
+- interroga ```slotmanagement``` per sapere se c'è uno slot libero e quale (**)
     - se risposta positiva, ```slotmanagement``` manda il nome dello slot libero e si va avanti
     - se risposta negativa, si rifiuta la request (```loadrejected```)
 - interroghiamo ```productservice``` sull'esistenza di questo PID
@@ -63,7 +64,7 @@ Flusso di operazioni di cargoservice:
 - Da questo momento ```cargoservice``` può gestire una nuova richiesta
  
 (*) nel caso in cui ci fosse in futuro l'opportunità di dover chiedere altre informazioni del prodotto e non solo il peso, rispetta il principio aperto/chiuso
-
+(**) Abbiamo deciso di verificare prima la presenza di slot liberi per evitare una chiamata superflua al db
  I messaggi che si scambiano ```cargoservice``` e ```productservice``` sono i seguenti:
 ```
 // CargoService -> ProductService
@@ -202,4 +203,118 @@ In seguito, la nuova architettura alla fine dell'analisi del problema, ci riserv
 <!--<img src='./logicModel/logic_modelarch.png'>-->
 
 ## Progettazione
+
+Grazie alla modellazione tramite QAK è stato possibile avere uno scheletro del sistema da implementare, a cui sono state semplicemente aggiunte alcune variabili globali per la gestione della logica di business. 
+
+La mappa della stiva che ci è stata fornita dal committente è stata tradotta in formato json:
+
+```json
+    {
+      "Home": { "x": 0, "y": 0 },
+      "SlotsObstacles": [
+        { "name": "SlotObstacle1", "x": 2, "y": 1 },
+        { "name": "SlotObstacle2", "x": 3, "y": 1 },
+        { "name": "SlotObstacle3", "x": 2, "y": 3 },
+        { "name": "SlotObstacle4", "x": 3, "y": 3 }
+      ],
+      "LaydownPositions": [
+        { "name": "Slot1", "x": 1, "y": 1 },
+        { "name": "Slot2", "x": 4, "y": 1 },
+        { "name": "Slot3", "x": 1, "y": 3 },
+        { "name": "Slot4", "x": 4, "y": 3 }
+      ],
+      "IoPort": { "x": 0, "y": 5 },
+      "PickupContainerPosition": { "x": 0, "y": 4 }
+    }
+```
+Ci siamo rese conto che avevamo bisogno di definire ulteriori coordinate per identificare i luoghi in cui si deve spostare il robot.
+
+Abbiamo utilizzato un pojo per leggere il file json e rendere le coordinate facilmente fruibili a cargorobot.
+```java
+    public class MapService {
+		//Map of map Object -> map of its coordinates "x" ->0 "y" ->0
+    private final Map<String, Map<String, Integer>> lookupMap = new HashMap<>();
+
+    public MapService(String jsonFilePath) throws IOException {
+        String content = Files.readString(Paths.get(jsonFilePath));
+        JsonObject jsonData = JsonParser.parseString(content).getAsJsonObject();
+
+        // Carica Home
+        lookupMap.put("Home", extractCoords(jsonData.getAsJsonObject("Home")));
+        // Carica IoPort e PickupContainerPosition
+        lookupMap.put("IO", extractCoords(jsonData.getAsJsonObject("IoPort")));
+        lookupMap.put("Pickup", extractCoords(jsonData.getAsJsonObject("PickupContainerPosition")));
+
+        // Carica SlotObstacles 
+        //real positiones of the slots
+        for (JsonElement e : jsonData.getAsJsonArray("SlotsObstacles")) {
+            JsonObject obj = e.getAsJsonObject();
+            lookupMap.put(obj.get("name").getAsString(), extractCoords(obj));
+        }
+
+        // Carica LaydownPositions
+        //we name them as "Slot1", "Slot2", etc.
+        // This is a list of positions where the robot can lay down containers
+        for (JsonElement e : jsonData.getAsJsonArray("LaydownPositions")) {
+            JsonObject obj = e.getAsJsonObject();
+            lookupMap.put(obj.get("name").getAsString(), extractCoords(obj));
+        }
+    }
+
+    public Map<String, Integer> getCoordinates(String name) {
+        return lookupMap.get(name);
+    }
+
+    private Map<String, Integer> extractCoords(JsonObject obj) {
+        Map<String, Integer> coords = new HashMap<>();
+        coords.put("x", obj.get("x").getAsInt());
+        coords.put("y", obj.get("y").getAsInt());
+        return coords;
+    }
+ ```
+Infine, seguendo il pattern Singleton, è stata creata una classe che restituisce un'istanza di MapService  
+
+```java
+    public class MapServiceSingleton {
+    private static MapService instance;
+
+    public static void init(String jsonPath) throws IOException {
+        if (instance == null) {
+            instance = new MapService(jsonPath);
+        }
+    }
+
+    public static MapService getInstance() {
+        return instance;
+    }
+}
+```
+
+Questa viene utilizzata all'interno di cargotobot nel seguente modo:
+
+```
+	import "main.java.map*"
+		//init map
+		[#
+			val Map = MapServiceSingleton.init("map.json");
+            var Homecoords = Map.getInstance().getCoordinates(Home);
+			var Home_X = Homecoords.get("X");
+			var Home_Y = Homecoords.get("Y");
+        #]
+
+```
+
+## Deployment
+
+1. Andare nella cartella ```Sprint1/Implementation```
+2. Eseguire il comando ```docker load -i basicrobot24.tar``` per caricare l'immagine Docker del basicrobot
+3. Creare la rete ```docker network create iss-network```
+4. Eseguire  il comando ```docker compose -f arch1.yaml up``` per far partire vari componenti del sistema (cargorobot, productservice)
+5. Aprire il browser su ```localhost:8090``` per visualizzare l’ambiente WEnv in cui lavorerà il DDR robot
+7. Eseguire il comando ```./gradlew run``` oppure ```gradle run``` per far partire il resto del sistema cargoservice
+
+Note:
+a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docker
+b. Il sistema cargoservice si appoggia a productservice che ha un database Mongo per la persistenza dei prodotti, questo è già stato riempito con opportuni prodotti di test attraverso il file ```setup_mongo.js```
+
 
