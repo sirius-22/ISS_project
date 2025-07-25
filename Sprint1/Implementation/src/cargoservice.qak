@@ -376,7 +376,7 @@ QActor cargoservice context ctx_cargoservice {
 				replyTo loadrequest with loadaccepted: loadaccepted($Slot)
 				request cargorobot -m loadcontainer: loadcontainer($Slot)
 				
-//				//delay 1000 // pickup time (known)
+//				//delay 1000 // pickup time 
 			}
 			else {
 				replyTo loadrequest with loadrejected: loadrejected("too_heavy")
