@@ -32,6 +32,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
 					val Map = MapServiceSingleton.init("map.json");
+					var idle = true
 					
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -70,6 +71,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("state_idle") { //this:State
 					action { //it:State
 						CommUtils.outblue("[Cargorobot] | Idle ")
+						idle=true 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -131,21 +133,25 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 interrupthandle(edgeName="t09",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t010",targetState="state_idle",cond=whenReply("moverobotdone"))
-					transition(edgeName="t011",targetState="returnHOME",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t010",targetState="state_idle",cond=whenReplyGuarded("moverobotdone",{idle 
+					}))
+					transition(edgeName="t011",targetState="goto_IO_port",cond=whenReplyGuarded("moverobotdone",{!idle 
+					}))
+					transition(edgeName="t012",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 				state("goto_IO_port") { //this:State
 					action { //it:State
 						CommUtils.outblue("Cargorobot | go to IOport")
 						request("moverobot", "moverobot($Pup_X,$Pup_Y)" ,"basicrobot" )  
+						 idle=false  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t012",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t013",targetState="state_move_cont",cond=whenReply("moverobotdone"))
-					transition(edgeName="t014",targetState="returnHOME",cond=whenReply("moverobotfailed"))
+					 interrupthandle(edgeName="t013",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t014",targetState="state_move_cont",cond=whenReply("moverobotdone"))
+					transition(edgeName="t015",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 			}
 		}

@@ -150,6 +150,7 @@ QActor cargorobot context ctx_cargoservice {
 		//init map
 		[#
 			val Map = MapServiceSingleton.init("map.json");
+			var idle = true
 			
 		#]
 	State state_init initial {
@@ -186,6 +187,7 @@ QActor cargorobot context ctx_cargoservice {
 	State state_idle {
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		println("[Cargorobot] | Idle ") color blue
+		[#idle=true#]
 	}
 	Transition t0	//whenTime 5000		-> state_idle
 					whenInterruptEvent stopActions -> state_wait_resume
@@ -234,13 +236,15 @@ QActor cargorobot context ctx_cargoservice {
 			request basicrobot -m moverobot : moverobot($Home_X,$Home_Y)
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-						whenReply moverobotdone -> state_idle
+						whenReply moverobotdone and [#idle#]-> state_idle
+						whenReply moverobotdone and [#!idle#]-> goto_IO_port
 						whenReply moverobotfailed -> returnHOME
 						
 		
 		State goto_IO_port{
 			println("Cargorobot | go to IOport") color blue
 			request basicrobot -m moverobot : moverobot($Pup_X,$Pup_Y)
+			[# idle=false #]
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> state_move_cont
 						whenReply moverobotfailed -> returnHOME
@@ -249,8 +253,12 @@ QActor cargorobot context ctx_cargoservice {
 QActor cargoservice context ctx_cargoservice {
 	import "main.java.domain.*" 
 	[#
+		const val MAXLOAD = 30
+		
 		//product weight
 		var Weight: Float = 0.0f
+		
+		var rejected = false
 
 	#]
 	State state_init initial {
@@ -298,7 +306,7 @@ QActor cargoservice context ctx_cargoservice {
 		onMsg(slotname : slotname(Name)){
 		[#
 			Name = payloadArg(0)
-		
+			
 		#]
 		}
 		if [#
@@ -306,17 +314,16 @@ QActor cargoservice context ctx_cargoservice {
 		#]{
 			println("[CargoService] Non ci sono slot disponibili LOADREJECTED") color red
 			replyTo loadrequest with loadrejected: loadrejected("no_slots")
-			autodispatch goto_idle : goto_idle(idle)
+			[#rejected=true#]
 		}
 		else {
 			println("[CargoService] slot disponibile $Name continuo i controlli") color red
-			autodispatch resume : resume(next)
+			[#rejected=false#]
 		}
+		autodispatch resume : resume(gormiti)
 	}Transition t0 whenInterruptEvent stopActions -> state_handle_stop
-					whenMsg resume -> state_handle_load
-					whenMsg goto_idle -> state_idle
-	
-	
+					whenMsg resume and [#!rejected#] -> state_handle_load
+					whenMsg resume and [#rejected#] -> state_idle
 	
 	State state_handle_load {
 		printCurrentMessage
@@ -341,7 +348,7 @@ QActor cargoservice context ctx_cargoservice {
 			}Transition t4 whenInterruptEvent stopActions -> state_handle_stop
 							whenReply totalWeight -> state_handle_weight
 			
-			State state_handle_weight{
+		State state_handle_weight{
 				onMsg(totalWeight: totalWeight(Weight)){
 				[#
 					TotWeight = payloadArg(0)
