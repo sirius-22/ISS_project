@@ -65,7 +65,7 @@ services:
   
   basicrobot24:
     container_name: basicrobot24
-    image: docker.io/natbodocker/basicrobot24:3.0
+    image: pretty/basicrobot
     #image: basicrobot24:3.0
     mem_limit: 512m
     ports:
