@@ -6,6 +6,7 @@ request( getProduct, product(PID) ).
 reply( getProductAnswer, product(JSonString) ).  %%for getProduct
 reply( loadaccepted, loadaccepted(Slot) ).  %%for loadrequest
 reply( loadrejected, loadrejected(Error) ).  %%for loadrequest
+dispatch( restart, restart(M) ).
 request( freeSlot, freeSlot(M) ).
 request( totalWeightReq, totalWeightReq(M) ).
 dispatch( updatedatahold, updatedatahold(M) ).
@@ -20,6 +21,7 @@ reply( engagedone, engagedone(ARG) ).  %%for engage
 reply( engagerefused, engagerefused(ARG) ).  %%for engage
 dispatch( disengage, disengage(ARG) ).
 dispatch( setdirection, dir(D) ).
+dispatch( setrobotstate, setpos(X,Y,Dir) ).
 request( doplan, doplan(PATH,STEPTIME) ).
 reply( doplandone, doplandone(ARG) ).  %%for doplan
 reply( doplanfailed, doplanfailed(ARG) ).  %%for doplan

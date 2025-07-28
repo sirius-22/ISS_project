@@ -48,6 +48,7 @@ with Diagram('cargoserviceArch', show=False, outformat='png', graph_attr=graphat
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<getProduct<font color="darkgreen"> getProductAnswer</font> &nbsp; >',  fontcolor='magenta') >> productservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<freeSlot<font color="darkgreen"> slotname</font> &nbsp; totalWeightReq<font color="darkgreen"> totalWeight</font> &nbsp; >',  fontcolor='magenta') >> slotmanagement_mock
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<loadcontainer<font color="darkgreen"> containerloaded</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
-     cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<setdirection &nbsp; >',  fontcolor='blue') >> basicrobot
+     cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<setdirection &nbsp; setrobotstate &nbsp; >',  fontcolor='blue') >> basicrobot
+     cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<restart &nbsp; >',  fontcolor='blue') >> sonar_mock
      cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<updatedatahold &nbsp; >',  fontcolor='blue') >> slotmanagement_mock
 diag

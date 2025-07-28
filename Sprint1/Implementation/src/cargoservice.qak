@@ -16,6 +16,9 @@ Reply   getProductAnswer: product( JSonString ) for getProduct
 Reply loadaccepted:		loadaccepted(Slot) for loadrequest
 Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, no_slots, no_PID }
 
+//CargoService--> Sonar
+Dispatch restart:restart(M)
+
 // slotmanagement in forse
 // CargoService -> SlotManagement
 Request freeSlot : freeSlot(M)
@@ -49,6 +52,7 @@ Reply engagerefused : engagerefused(ARG) for engage
 Dispatch disengage    : disengage(ARG)
 
 Dispatch setdirection : dir( D )  //D =up|down|left|right
+Dispatch setrobotstate : setpos(X,Y,Dir)
 
 Request  doplan     : doplan( PATH, STEPTIME )
 Reply doplandone    : doplandone( ARG )    for doplan
@@ -92,13 +96,13 @@ QActor sonar_mock context ctx_cargoservice{
 	}Goto state_idle
 	
 	State state_idle{ 
-		delay 10000
+		delay 5000
 		emitlocalstream containerhere : containerhere(M)
 		println("[sonar_mock] | messaggio containerhere inviato") color magenta
 //		delay 3000
 //		emitlocalstream stopActions : stopActions(M)
 //		delay 3000
-	}Goto resume
+	}Transition t0 whenMsg restart -> resume
 	
 	State resume{
 //		emitlocalstream resumeActions : resumeActions(M)
@@ -198,7 +202,7 @@ QActor cargorobot context ctx_cargoservice {
 	State state_engage{
 		delay 3000
 		println("[Cargorobot] | Requests engage to basicrobot, name: $MyName ") color blue
-		request basicrobot -m engage : engage($MyName, 322) //arg=owner
+		request basicrobot -m engage : engage($MyName, 330) //arg=owner
 	}Transition t1 	whenInterruptEvent stopActions -> state_wait_resume
 					whenReply engagedone -> state_idle //TODO maybe send HOME to be sure of the initial position
 					whenReply engagerefused ->state_engage //retry //TODO mettere un limite al loop?
@@ -248,7 +252,7 @@ QActor cargorobot context ctx_cargoservice {
 		
 		println("[cargoRobot] container transported") color green
 	}Transition t3  whenReply moverobotdone -> at_slot
-					whenReply moverobotfailed -> goto_IO_port
+					//whenReply moverobotfailed -> goto_IO_port
 					
 		State at_slot{
 			println("[cargorobot] arrived at slot, dir:$Dir") color green
@@ -269,11 +273,11 @@ QActor cargorobot context ctx_cargoservice {
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_HOME
-						whenReply moverobotfailed -> returnHOME
+						////whenReply moverobotfailed -> returnHOME
 		
 		State at_HOME{
 			println("[cargorobot] arrived at home, dir: $Dir") color green
-			forward basicrobot -m setdirection : dir($Dir)
+			forward basicrobot -m setrobotstate : setpos($X,$Y,$Dir)
 			
 			autodispatch resume : resume(gormiti)
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
@@ -297,7 +301,7 @@ QActor cargorobot context ctx_cargoservice {
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_IO_port
-						whenReply moverobotfailed -> returnHOME
+						////whenReply moverobotfailed -> returnHOME
 						
 	State at_IO_port{
 		println("[cargorobot] arrived at ioport, dir: $Dir") color green
@@ -488,7 +492,7 @@ QActor cargoservice context ctx_cargoservice {
 	State state_update_hold{
 		
 		forward slotmanagement_mock -m updatedatahold: updatedatahold(M)
-		
+		forward sonar_mock -m restart:restart(M)
 	}Goto state_idle
 }	
 	
