@@ -7,7 +7,7 @@ import java.util.*;
 
 public class MapService {
 		//Map of map Object -> map of its coordinates "x" ->0 "y" ->0
-    private final Map<String, Map<String, Integer>> lookupMap = new HashMap<>();
+    private final Map<String, MapLocation> lookupMap = new HashMap<>();
 
     public MapService(String jsonFilePath) throws IOException {
         String content = Files.readString(Paths.get(jsonFilePath));
@@ -35,16 +35,21 @@ public class MapService {
         }
     }
 
-    public Map<String, Integer> getCoordinates(String name) {
+    public MapLocation getCoordinates(String name) {
         return lookupMap.get(name);
     }
 
-    private Map<String, Integer> extractCoords(JsonObject obj) {
-        Map<String, Integer> coords = new HashMap<>();
+    private MapLocation extractCoords(JsonObject obj) {
+        
+    	Map<String, Integer> coords = new HashMap<>();
         coords.put("x", obj.get("x").getAsInt());
         coords.put("y", obj.get("y").getAsInt());
-        return coords;
+        Aril dir = Aril.valueOf(obj.get("direction").getAsString());
+        MapLocation loc = new MapLocation(coords, dir);
+        return loc;
     }
+    
+    
 
 
     // test

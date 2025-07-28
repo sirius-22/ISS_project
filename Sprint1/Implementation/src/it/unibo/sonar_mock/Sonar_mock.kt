@@ -58,6 +58,7 @@ class Sonar_mock ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
 				}	 
 			}
 		}
