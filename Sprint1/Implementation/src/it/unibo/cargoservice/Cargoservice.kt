@@ -31,15 +31,19 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				const val MAXLOAD = 30
+				val MAXLOAD = 300
 				
 				//product weight
-				var Weight= 0
+				var Weight = 0
 				
 				var rejected = false
 				
 				var Name = "NONE"
-				var PID
+				var PID:Int? = 0
+				
+				var TotWeight = 0!!
+				
+				var JSonString = ""
 		
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -63,8 +67,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t017",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t018",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
+					 interrupthandle(edgeName="t016",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t017",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
 				}	 
 				state("state_handle_stop") { //this:State
 					action { //it:State
@@ -74,7 +78,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t319",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
+					 transition(edgeName="t318",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
 				}	 
 				state("state_handle_resume") { //this:State
 					action { //it:State
@@ -88,6 +92,13 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("state_handle_slots") { //this:State
 					action { //it:State
+						if( checkMsgContent( Term.createTerm("loadrequest(PID)"), Term.createTerm("loadrequest(PID)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+												PID = payloadArg(0).toInt()
+												
+						}
+						CommUtils.outmagenta("[CargoService] | PID = $PID")
 						CommUtils.outblue("[CargoService] Richiesta di slot liberi a slotmng...")
 						request("freeSlot", "freeSlot(m)" ,"slotmanagement_mock" )  
 						//genTimer( actor, state )
@@ -95,8 +106,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t120",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t121",targetState="state_handle_slot_name",cond=whenReply("slotname"))
+					 interrupthandle(edgeName="t119",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t120",targetState="state_handle_slot_name",cond=whenReply("slotname"))
 				}	 
 				state("state_handle_slot_name") { //this:State
 					action { //it:State
@@ -122,61 +133,61 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t022",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t023",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
+					 interrupthandle(edgeName="t021",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t022",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
 					}))
-					transition(edgeName="t024",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
+					transition(edgeName="t023",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
 					}))
 				}	 
 				state("state_handle_load") { //this:State
 					action { //it:State
-						CommUtils.outcyan("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
-						if( checkMsgContent( Term.createTerm("loadrequest(PID)"), Term.createTerm("loadrequest(PID)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												PID = payloadArg(0)
-												
-						}
-						request("getProduct", "getProduct($PID)" ,"productservice" )  
+						CommUtils.outblue("[CargoService] | state_handle_load")
+						request("getProduct", "product($PID)" ,"productservice" )  
+						CommUtils.outgreen("[CargoService] | getProduct sent")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t125",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t126",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
+					 interrupthandle(edgeName="t124",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t125",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
 				}	 
 				state("state_handle_product") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("product(JSonString)"), Term.createTerm("getProductAnswer(jsonString)"), 
+						if( checkMsgContent( Term.createTerm("product(JSonString)"), Term.createTerm("product(JSonString)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-													val jsonString = payloadArg(0)
-													Weight = 2
-													//Product.getJsonInt(jsonStr, "weight")
+													JSonString = payloadArg(0).toString()
 												
 						}
+						CommUtils.outblue("[CargoService] | state_handle_product")
+						CommUtils.outcyan("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						CommUtils.outmagenta("stringa json: $JSonString")
+						
+										var p = Product(JSonString)
+										Weight=p.getWeight()	
+						CommUtils.outgreen("[CargoService] | Weight: $Weight")
 						request("totalWeightReq", "totalWeightReq(M)" ,"slotmanagement_mock" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t427",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t428",targetState="state_handle_weight",cond=whenReply("totalWeight"))
+					 interrupthandle(edgeName="t426",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t427",targetState="state_handle_weight",cond=whenReply("totalWeight"))
 				}	 
 				state("state_handle_weight") { //this:State
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("totalWeight(Weight)"), Term.createTerm("totalWeight(Weight)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-													var TotWeight = payloadArg(0)
+													TotWeight = payloadArg(0).toInt()
 												
 						}
 						if( 
 											
-											Weight + TotWeight <= MAXLOAD
+											Weight.plus(TotWeight) <= MAXLOAD!!
 											
 						 ){answer("loadrequest", "loadaccepted", "loadaccepted($Name)"   )  
 						request("loadcontainer", "loadcontainer($Name)" ,"cargorobot" )  
@@ -189,8 +200,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t229",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t230",targetState="state_update_hold",cond=whenReply("containerloaded"))
+					 interrupthandle(edgeName="t228",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t229",targetState="state_update_hold",cond=whenReply("containerloaded"))
 				}	 
 				state("state_update_hold") { //this:State
 					action { //it:State
