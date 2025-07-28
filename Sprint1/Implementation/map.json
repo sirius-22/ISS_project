@@ -1,17 +1,17 @@
 {
-  "Home": { "x": 0, "y": 0 },
+  "Home": { "x": 0, "y": 0, "direction":"s" },
   "SlotsObstacles": [
-    { "name": "SlotObstacle1", "x": 2, "y": 1 },
-    { "name": "SlotObstacle2", "x": 3, "y": 1 },
-    { "name": "SlotObstacle3", "x": 2, "y": 3 },
-    { "name": "SlotObstacle4", "x": 3, "y": 3 }
+    { "name": "SlotObstacle1", "x": 2, "y": 1 , "direction":"r" },
+    { "name": "SlotObstacle2", "x": 3, "y": 1, "direction":"l" },
+    { "name": "SlotObstacle3", "x": 2, "y": 3, "direction":"r" },
+    { "name": "SlotObstacle4", "x": 3, "y": 3, "direction":"l" }
   ],
   "LaydownPositions": [
-    { "name": "Slot1", "x": 1, "y": 1 },
-    { "name": "Slot2", "x": 4, "y": 1 },
-    { "name": "Slot3", "x": 1, "y": 3 },
-    { "name": "Slot4", "x": 4, "y": 3 }
+    { "name": "Slot1", "x": 1, "y": 1, "direction":"r" },
+    { "name": "Slot2", "x": 1, "y": 3, "direction":"r" },
+    { "name": "Slot3", "x": 4, "y": 1, "direction":"l" },
+    { "name": "Slot4", "x": 4, "y": 3, "direction":"l" }
   ],
-  "IoPort": { "x": 0, "y": 5 },
-  "PickupContainerPosition": { "x": 0, "y": 4 }
+  "IoPort": { "x": 0, "y": 5, "direction":"s" },
+  "PickupContainerPosition": { "x": 0, "y": 4, "direction":"s" }
 }

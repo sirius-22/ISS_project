@@ -51,15 +51,16 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="state_SlotState",cond=whenRequest("freeSlot"))
-					transition(edgeName="t01",targetState="state_Weight",cond=whenRequest("totalWeightReq"))
+					 transition(edgeName="t01",targetState="state_SlotState",cond=whenRequest("freeSlot"))
+					transition(edgeName="t02",targetState="state_Weight",cond=whenRequest("totalWeightReq"))
+					transition(edgeName="t03",targetState="update_hold",cond=whenDispatch("updatedatahold"))
 				}	 
 				state("state_SlotState") { //this:State
 					action { //it:State
 						if( freeSlots>0 
 						 ){
 									var occSlots = NUMSLOTS-freeSlots
-									Slot="slot"+occSlots
+									Slot="Slot"+occSlots
 						answer("freeSlot", "slotname", "slotname($Slot)"   )  
 						}
 						else
@@ -80,6 +81,17 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
+				}	 
+				state("update_hold") { //this:State
+					action { //it:State
+						freeSlots-- 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="idle", cond=doswitch() )
 				}	 
 			}
 		}

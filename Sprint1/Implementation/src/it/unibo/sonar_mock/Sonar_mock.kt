@@ -43,12 +43,13 @@ class Sonar_mock ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						delay(5000) 
 						emitLocalStreamEvent("containerhere", "containerhere(M)" ) 
+						CommUtils.outmagenta("[sonar_mock] | messaggio containerhere inviato")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="resume", cond=doswitch() )
+					 transition(edgeName="t00",targetState="resume",cond=whenDispatch("restart"))
 				}	 
 				state("resume") { //this:State
 					action { //it:State
