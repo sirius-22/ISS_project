@@ -59,7 +59,7 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 						if( freeSlots>0 
 						 ){
 									var occSlots = NUMSLOTS-freeSlots
-									Slot="slot"+occSlots
+									Slot="Slot"+occSlots
 						answer("freeSlot", "slotname", "slotname($Slot)"   )  
 						}
 						else

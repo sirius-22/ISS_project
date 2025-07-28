@@ -36,16 +36,16 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					var X:Int? = 0
 					var Y:Int? = 0
 					var Map = MapServiceSingleton.getInstance()
-					var SlotName = ""
+					var Slot = ""
 					
 				//forward cargoservicestatusgui -m updategui: updategui(M)
 				//fixed coordinates
 					var Homecoords = Map.getCoordinates("Home");
-					var Home_X = Homecoords.get("X");
-					var Home_Y = Homecoords.get("Y");
+					var Home_X = Homecoords.get("x");
+					var Home_Y = Homecoords.get("y");
 					var Pupcoords = Map.getCoordinates("Pickup");
-					var Pup_X = Pupcoords.get("X");
-					var Pup_Y = Pupcoords.get("Y");
+					var Pup_X = Pupcoords.get("x");
+					var Pup_Y = Pupcoords.get("y");
 					
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -109,18 +109,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("state_move_cont") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("loadcontainer(Slot)"), Term.createTerm("movecontainer(SlotName)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								 SlotName =  payloadArg(0)
-											
-											var coords = Map.getCoordinates(SlotName);
-											X = coords.get("x");
-											Y = coords.get("y");
-												
-						}
-						CommUtils.outblack("[Cargorobot] Moving container to slot $SlotName...")
+						
+									
+									var coords = Map.getCoordinates(Slot);
+									X = coords.get("x");
+									Y = coords.get("y");
+										
+						CommUtils.outblue("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-						CommUtils.outblack("[cargoRobot] container transported")
+						CommUtils.outgreen("[cargoRobot] container transported")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -149,10 +146,16 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("goto_IO_port") { //this:State
 					action { //it:State
+						if( checkMsgContent( Term.createTerm("loadcontainer(Slot)"), Term.createTerm("loadcontainer(Slot)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 
+												Slot =  payloadArg(0) 
+						}
 						CommUtils.outblue("Cargorobot | go to IOport")
 						 
 										X = Pup_X
 										Y = Pup_Y
+						CommUtils.outblue("Pup X: $Pup_X, Pup Y: $Pup_Y, X:$X, Y:$Y")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						 idle=false  
 						//genTimer( actor, state )

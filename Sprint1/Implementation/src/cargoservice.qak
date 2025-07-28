@@ -92,8 +92,9 @@ QActor sonar_mock context ctx_cargoservice{
 	}Goto state_idle
 	
 	State state_idle{ 
-		delay 5000
+		delay 10000
 		emitlocalstream containerhere : containerhere(M)
+		println("[sonar_mock] | messaggio containerhere inviato") color magenta
 //		delay 3000
 //		emitlocalstream stopActions : stopActions(M)
 //		delay 3000
@@ -103,7 +104,7 @@ QActor sonar_mock context ctx_cargoservice{
 //		emitlocalstream resumeActions : resumeActions(M)
 //		delay 3000
 		
-	}Goto state_idle
+	}//TODO decommenta Goto state_idle
 }
 
 QActor slotmanagement_mock context ctx_cargoservice{
@@ -129,7 +130,7 @@ QActor slotmanagement_mock context ctx_cargoservice{
 		if [#freeSlots>0#]{
 		[#
 			var occSlots = NUMSLOTS-freeSlots
-			Slot="slot"+occSlots
+			Slot="Slot"+occSlots
 		#]
 		replyTo freeSlot with slotname : slotname($Slot)
 		}else {
@@ -154,16 +155,16 @@ QActor cargorobot context ctx_cargoservice {
 			var X:Int? = 0
 			var Y:Int? = 0
 			var Map = MapServiceSingleton.getInstance()
-			var SlotName = ""
+			var Slot = ""
 			
 		//forward cargoservicestatusgui -m updategui: updategui(M)
 		//fixed coordinates
 			var Homecoords = Map.getCoordinates("Home");
-			var Home_X = Homecoords.get("X");
-			var Home_Y = Homecoords.get("Y");
+			var Home_X = Homecoords.get("x");
+			var Home_Y = Homecoords.get("y");
 			var Pupcoords = Map.getCoordinates("Pickup");
-			var Pup_X = Pupcoords.get("X");
-			var Pup_Y = Pupcoords.get("Y");
+			var Pup_X = Pupcoords.get("x");
+			var Pup_Y = Pupcoords.get("y");
 			
 		#]
 	State state_init initial {
@@ -209,16 +210,16 @@ QActor cargorobot context ctx_cargoservice {
 	}
 	
 	State state_move_cont {
-		onMsg(loadcontainer: movecontainer(SlotName)){
-			[# SlotName =  payloadArg(0)
+		
+			[#
 			
-			var coords = Map.getCoordinates(SlotName);
+			var coords = Map.getCoordinates(Slot);
 			X = coords.get("x");
 			Y = coords.get("y");
 				
 			#]
-		}
-		println("[Cargorobot] Moving container to slot $SlotName...")
+		
+		println("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y") color blue
 		// TODO
 		// pickup 
 		// move 
@@ -231,7 +232,7 @@ QActor cargorobot context ctx_cargoservice {
 		
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		
-		println("[cargoRobot] container transported")
+		println("[cargoRobot] container transported") color green
 	}Transition t3 whenReply moverobotdone -> returnHOME
 					whenReply moverobotfailed -> goto_IO_port
 					
@@ -250,11 +251,16 @@ QActor cargorobot context ctx_cargoservice {
 						
 		
 		State goto_IO_port{
+			onMsg(loadcontainer: loadcontainer(Slot)){
+			[# 
+				Slot =  payloadArg(0) 
+			#]}
 			println("Cargorobot | go to IOport") color blue
 			[# 
 				X = Pup_X
 				Y = Pup_Y
 			#]
+			println("Pup X: $Pup_X, Pup Y: $Pup_Y, X:$X, Y:$Y") color blue
 			request basicrobot -m moverobot : moverobot($X,$Y)
 			[# idle=false #]
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
@@ -278,6 +284,7 @@ QActor cargoservice context ctx_cargoservice {
 		var TotWeight = 0!!
 		
 		var JSonString = ""
+		
 
 	#]
 	State state_init initial {
@@ -396,19 +403,29 @@ QActor cargoservice context ctx_cargoservice {
 				{
 			
 				replyTo loadrequest with loadaccepted: loadaccepted($Name)
-				request cargorobot -m loadcontainer: loadcontainer($Name)
+				[#rejected=false#]
+				println("[Cargoservice] | loadaccepted") color green
 				
 //				//delay 1000 // pickup time (known)
 			}
 			else {
 				replyTo loadrequest with loadrejected: loadrejected(too_heavy)
+				println("[Cargoservice] | loadrejected") color red
+				[#rejected=true#]
+				autodispatch resume:resume(reject)
 			}
 //			forward cargoservicestatusgui -m updategui: updategui(M)
 //			
 		}
 	Transition t2 whenInterruptEvent stopActions -> state_handle_stop
-				whenReply containerloaded -> state_update_hold
+				whenMsg resume -> state_idle
+				whenEvent containerhere and [#!rejected#] -> state_moverobot
+				
 	
+	State state_moverobot{
+		request cargorobot -m loadcontainer: loadcontainer($Name)
+		println("[Cargoservice] | loadcontainer sent with name $Name") color blue
+	}Transition t0 whenReply containerloaded -> state_update_hold
 	
 	State state_update_hold{
 		

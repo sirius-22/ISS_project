@@ -44,6 +44,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				var TotWeight = 0!!
 				
 				var JSonString = ""
+				
 		
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -190,10 +191,14 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 											Weight.plus(TotWeight) <= MAXLOAD!!
 											
 						 ){answer("loadrequest", "loadaccepted", "loadaccepted($Name)"   )  
-						request("loadcontainer", "loadcontainer($Name)" ,"cargorobot" )  
+						rejected=false 
+						CommUtils.outgreen("[Cargoservice] | loadaccepted")
 						}
 						else
 						 {answer("loadrequest", "loadrejected", "loadrejected(too_heavy)"   )  
+						 CommUtils.outred("[Cargoservice] | loadrejected")
+						 rejected=true 
+						 forward("resume", "resume(reject)" ,name ) 
 						 }
 						//genTimer( actor, state )
 					}
@@ -201,7 +206,20 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					sysaction { //it:State
 					}	 	 
 					 interrupthandle(edgeName="t228",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t229",targetState="state_update_hold",cond=whenReply("containerloaded"))
+					transition(edgeName="t229",targetState="state_idle",cond=whenDispatch("resume"))
+					transition(edgeName="t230",targetState="state_moverobot",cond=whenEventGuarded("containerhere",{!rejected 
+					}))
+				}	 
+				state("state_moverobot") { //this:State
+					action { //it:State
+						request("loadcontainer", "loadcontainer($Name)" ,"cargorobot" )  
+						CommUtils.outblue("[Cargoservice] | loadcontainer sent with name $Name")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t031",targetState="state_update_hold",cond=whenReply("containerloaded"))
 				}	 
 				state("state_update_hold") { //this:State
 					action { //it:State
