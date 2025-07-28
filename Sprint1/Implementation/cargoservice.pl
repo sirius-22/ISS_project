@@ -15,7 +15,7 @@ request( loadcontainer, loadcontainer(Slot) ).
 reply( containerloaded, containerloaded(M) ).  %%for loadcontainer
 dispatch( cmd, cmd(M) ).
 event( alarm, alarm(STOP) ).
-request( engage, engage(CALLER) ).
+request( engage, engage(CALLER,STEPTIME) ).
 reply( engagedone, engagedone(ARG) ).  %%for engage
 reply( engagerefused, engagerefused(ARG) ).  %%for engage
 dispatch( disengage, disengage(ARG) ).

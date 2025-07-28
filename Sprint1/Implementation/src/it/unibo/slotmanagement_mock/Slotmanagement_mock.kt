@@ -30,9 +30,10 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				const val NUMSLOTS=5
+				val NUMSLOTS=5
 				var freeSlots=4
 				var Weight = 10
+				var Slot = "NULL"
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
@@ -57,7 +58,8 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 					action { //it:State
 						if( freeSlots>0 
 						 ){
-									var Slot="slot"+NUMSLOTS-freeSlots
+									var occSlots = NUMSLOTS-freeSlots
+									Slot="slot"+occSlots
 						answer("freeSlot", "slotname", "slotname($Slot)"   )  
 						}
 						else

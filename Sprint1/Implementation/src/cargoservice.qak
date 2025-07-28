@@ -42,7 +42,7 @@ Dispatch cmd:			cmd(M)
 Event alarm: 		alarm(STOP) // to stop basicRobot
 
 //basicrobot command
-Request engage : engage(CALLER)
+Request engage : engage(CALLER, STEPTIME)
 Reply engagedone : engagedone(ARG) for engage
 Reply engagerefused : engagerefused(ARG) for engage
 
@@ -94,23 +94,24 @@ QActor sonar_mock context ctx_cargoservice{
 	State state_idle{ 
 		delay 5000
 		emitlocalstream containerhere : containerhere(M)
-		delay 3000
-		emitlocalstream stopActions : stopActions(M)
-		delay 3000
+//		delay 3000
+//		emitlocalstream stopActions : stopActions(M)
+//		delay 3000
 	}Goto resume
 	
 	State resume{
-		emitlocalstream resumeActions : resumeActions(M)
-		delay 3000
+//		emitlocalstream resumeActions : resumeActions(M)
+//		delay 3000
 		
 	}Goto state_idle
 }
 
 QActor slotmanagement_mock context ctx_cargoservice{
 	[#
-		const val NUMSLOTS=5
+		val NUMSLOTS=5
 		var freeSlots=4
 		var Weight = 10
+		var Slot = "NULL"
 	#]
 	State state_init initial{
 		//setting Slot status
@@ -127,7 +128,8 @@ QActor slotmanagement_mock context ctx_cargoservice{
 	State state_SlotState{
 		if [#freeSlots>0#]{
 		[#
-			var Slot="slot"+NUMSLOTS-freeSlots
+			var occSlots = NUMSLOTS-freeSlots
+			Slot="slot"+occSlots
 		#]
 		replyTo freeSlot with slotname : slotname($Slot)
 		}else {
@@ -149,9 +151,13 @@ QActor cargorobot context ctx_cargoservice {
 		[#
 			MapServiceSingleton.init("map.json");
 			var idle = true
-			var X = 0
-			var Y = 0
+			var X:Int? = 0
+			var Y:Int? = 0
 			var Map = MapServiceSingleton.getInstance()
+			var SlotName = ""
+			
+		//forward cargoservicestatusgui -m updategui: updategui(M)
+		//fixed coordinates
 			var Homecoords = Map.getCoordinates("Home");
 			var Home_X = Homecoords.get("X");
 			var Home_Y = Homecoords.get("Y");
@@ -166,18 +172,8 @@ QActor cargorobot context ctx_cargoservice {
 		subscribeTo sonar_mock for resumeActions
 		subscribeTo sonar_mock for stopActions
 		
-//		forward cargoservicestatusgui -m updategui: updategui(M)
-		//fixed coordinates
-		[#
-			var Homecoords = Map.getCoordinates("Home");
-			var Home_X = Homecoords.get("X");
-			var Home_Y = Homecoords.get("Y");
-			var Pupcoords = Map.getCoordinates("Pickup");
-			var Pup_X = Pupcoords.get("X");
-			var Pup_Y = Pupcoords.get("Y");
-	
-		#]
-		
+
+
 		
 		println("[CargoRobot] | Started ") color blue
 
@@ -186,10 +182,10 @@ QActor cargorobot context ctx_cargoservice {
 	
 	State state_engage{
 		delay 3000
-		println("[Cargorobot] | Requests engage to basicrobot ") color blue
-		request basicrobot -m engage : engage(cargorobot) //arg=owner
+		println("[Cargorobot] | Requests engage to basicrobot, name: $MyName ") color blue
+		request basicrobot -m engage : engage($MyName, 330) //arg=owner
 	}Transition t1 	whenInterruptEvent stopActions -> state_wait_resume
-					whenReply engagedone -> returnHOME //to be sure of the initial position
+					whenReply engagedone -> state_idle //to be sure of the initial position
 					whenReply engagerefused ->state_engage //retry
 	
 	State state_idle {
@@ -213,8 +209,8 @@ QActor cargorobot context ctx_cargoservice {
 	}
 	
 	State state_move_cont {
-		onMsg(loadcontainer: movecontainer(Slot)){
-			[# var SlotName =  payloadArg(0)
+		onMsg(loadcontainer: movecontainer(SlotName)){
+			[# SlotName =  payloadArg(0)
 			
 			var coords = Map.getCoordinates(SlotName);
 			X = coords.get("x");
@@ -222,7 +218,7 @@ QActor cargorobot context ctx_cargoservice {
 				
 			#]
 		}
-		println("[Cargorobot] Moving container to slot $Slot...")
+		println("[Cargorobot] Moving container to slot $SlotName...")
 		// TODO
 		// pickup 
 		// move 
@@ -240,7 +236,7 @@ QActor cargorobot context ctx_cargoservice {
 					whenReply moverobotfailed -> goto_IO_port
 					
 		State returnHOME{
-			println("Cargorobot | returningHome") color blue
+			println("Cargorobot | returningHome, state: $idle") color blue
 			[# 
 				X = Home_X
 				Y = Home_Y
@@ -250,7 +246,7 @@ QActor cargorobot context ctx_cargoservice {
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone and [#idle#]-> state_idle
 						whenReply moverobotdone and [#!idle#]-> goto_IO_port
-						whenReply moverobotfailed -> returnHOME
+						//whenReply moverobotfailed -> returnHOME
 						
 		
 		State goto_IO_port{
@@ -269,15 +265,19 @@ QActor cargorobot context ctx_cargoservice {
 QActor cargoservice context ctx_cargoservice {
 	import "main.java.domain.*" 
 	[#
-		const val MAXLOAD = 30
+		val MAXLOAD = 300
 		
 		//product weight
-		var Weight= 0
+		var Weight = 0
 		
 		var rejected = false
 		
 		var Name = "NONE"
-		var PID
+		var PID:Int? = 0
+		
+		var TotWeight = 0!!
+		
+		var JSonString = ""
 
 	#]
 	State state_init initial {
@@ -314,6 +314,13 @@ QActor cargoservice context ctx_cargoservice {
 		returnFromInterrupt
 	}
 	State state_handle_slots{
+		onMsg(loadrequest: loadrequest(PID)) {
+			[#
+				PID = payloadArg(0).toInt()
+				
+			#]
+			}
+			println("[CargoService] | PID = $PID") color magenta
 		println("[CargoService] Richiesta di slot liberi a slotmng...") color blue
 		request slotmanagement_mock -m freeSlot: freeSlot(m)
 		
@@ -345,25 +352,30 @@ QActor cargoservice context ctx_cargoservice {
 					whenMsg resume and [#rejected#] -> state_idle
 	
 	State state_handle_load {
-		printCurrentMessage
-		onMsg(loadrequest: loadrequest(PID)) {
-			[#
-				PID = payloadArg(0)
-				
-			#]
-			} request productservice -m	 getProduct: getProduct($PID)
+		println("[CargoService] | state_handle_load") color blue
+		
+			request productservice -m	 getProduct: product($PID)
+			println("[CargoService] | getProduct sent") color green
 		}Transition t1  whenInterruptEvent stopActions -> state_handle_stop
 						whenReply getProductAnswer -> state_handle_product
 		
 		State state_handle_product{
-			onMsg(getProductAnswer: getProductAnswer(jsonString)){
+			onMsg(getProductAnswer: product(JSonString)){
 				[#
-					val jsonString = payloadArg(0)
-					Weight = 2
-					//Product.getJsonInt(jsonStr, "weight")
+					JSonString = payloadArg(0).toString()
 				
 				#]
 				}
+			println("[CargoService] | state_handle_product") color blue
+			printCurrentMessage
+			
+			//TODO gestire errore PID inesistente
+			println("stringa json: $JSonString") color magenta
+			[#
+				var p = Product(JSonString)
+				Weight=p.getWeight()	
+			#]
+			println("[CargoService] | Weight: $Weight") color green
 			request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
 			}Transition t4 whenInterruptEvent stopActions -> state_handle_stop
 							whenReply totalWeight -> state_handle_weight
@@ -371,13 +383,14 @@ QActor cargoservice context ctx_cargoservice {
 		State state_handle_weight{
 				onMsg(totalWeight: totalWeight(Weight)){
 				[#
-					var TotWeight = payloadArg(0)
+					TotWeight = payloadArg(0).toInt()
 				
 				#]
 				}
+				
 			if	[#
 					
-					Weight + TotWeight <= MAXLOAD
+					Weight.plus(TotWeight) <= MAXLOAD!!
 					
 				#] 
 				{
@@ -407,6 +420,7 @@ QActor cargoservice context ctx_cargoservice {
 QActor external_client context ctx_cargoservice{
  	State s0 initial {
  		println("$name | STARTS") color cyan
+ 		delay 5000
   	} 
   	// commenta entrambi quando vuoi mandare richieste con i test
   	Goto work0
@@ -416,17 +430,14 @@ QActor external_client context ctx_cargoservice{
   	// cliente che mi manda 4 richieste una dietro l'altra
   	State work0 {
  		println("$name | sends requests") color cyan
- 		request cargoservice -m loadrequest: loadrequest(17)
- 		request cargoservice -m loadrequest: loadrequest(17)
- 		request cargoservice -m loadrequest: loadrequest(17)
- 		request cargoservice -m loadrequest: loadrequest(17)
+ 		request cargoservice -m loadrequest: loadrequest(23)
  		delay 2000
   	} 
   	
   	// client mock che manda 4 richieste spaziate
   	State work1 {
  		println("$name | sends request") color cyan
- 		request cargoservice -m loadrequest: loadrequest(17)
+ 		request cargoservice -m loadrequest: loadrequest(23)
  		delay 2000
   	} 
   	Transition t0

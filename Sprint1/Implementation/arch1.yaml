@@ -43,7 +43,7 @@ services:
     image: docker.io/natbodocker/cargoserviceqak:1.0
     environment:
       - MONGO_HOST=mongodb
-      - SERVICE_IP=192.168.1.18
+      - SERVICE_IP=192.168.1.189
     ports:
       - 8111:8111/tcp
       - 8111:8111/udp

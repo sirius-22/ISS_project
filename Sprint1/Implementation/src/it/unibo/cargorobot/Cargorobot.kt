@@ -33,9 +33,13 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		
 					MapServiceSingleton.init("map.json");
 					var idle = true
-					var X = 0
-					var Y = 0
+					var X:Int? = 0
+					var Y:Int? = 0
 					var Map = MapServiceSingleton.getInstance()
+					var SlotName = ""
+					
+				//forward cargoservicestatusgui -m updategui: updategui(M)
+				//fixed coordinates
 					var Homecoords = Map.getCoordinates("Home");
 					var Home_X = Homecoords.get("X");
 					var Home_Y = Homecoords.get("Y");
@@ -48,14 +52,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						subscribeToLocalActor("sonar_mock") 
 						subscribeToLocalActor("sonar_mock") 
-						
-									var Homecoords = Map.getCoordinates("Home");
-									var Home_X = Homecoords.get("X");
-									var Home_Y = Homecoords.get("Y");
-									var Pupcoords = Map.getCoordinates("Pickup");
-									var Pup_X = Pupcoords.get("X");
-									var Pup_Y = Pupcoords.get("Y");
-							
 						CommUtils.outblue("[CargoRobot] | Started ")
 						//genTimer( actor, state )
 					}
@@ -67,15 +63,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("state_engage") { //this:State
 					action { //it:State
 						delay(3000) 
-						CommUtils.outblue("[Cargorobot] | Requests engage to basicrobot ")
-						request("engage", "engage(cargorobot)" ,"basicrobot" )  
+						CommUtils.outblue("[Cargorobot] | Requests engage to basicrobot, name: $MyName ")
+						request("engage", "engage($MyName,330)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
 					 interrupthandle(edgeName="t12",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t13",targetState="returnHOME",cond=whenReply("engagedone"))
+					transition(edgeName="t13",targetState="state_idle",cond=whenReply("engagedone"))
 					transition(edgeName="t14",targetState="state_engage",cond=whenReply("engagerefused"))
 				}	 
 				state("state_idle") { //this:State
@@ -113,16 +109,16 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("state_move_cont") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("loadcontainer(Slot)"), Term.createTerm("movecontainer(Slot)"), 
+						if( checkMsgContent( Term.createTerm("loadcontainer(Slot)"), Term.createTerm("movecontainer(SlotName)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								 var SlotName =  payloadArg(0)
+								 SlotName =  payloadArg(0)
 											
 											var coords = Map.getCoordinates(SlotName);
 											X = coords.get("x");
 											Y = coords.get("y");
 												
 						}
-						CommUtils.outblack("[Cargorobot] Moving container to slot $Slot...")
+						CommUtils.outblack("[Cargorobot] Moving container to slot $SlotName...")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						CommUtils.outblack("[cargoRobot] container transported")
 						//genTimer( actor, state )
@@ -135,7 +131,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("returnHOME") { //this:State
 					action { //it:State
-						CommUtils.outblue("Cargorobot | returningHome")
+						CommUtils.outblue("Cargorobot | returningHome, state: $idle")
 						 
 										X = Home_X
 										Y = Home_Y
@@ -150,7 +146,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}))
 					transition(edgeName="t012",targetState="goto_IO_port",cond=whenReplyGuarded("moverobotdone",{!idle 
 					}))
-					transition(edgeName="t013",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 				state("goto_IO_port") { //this:State
 					action { //it:State
@@ -165,9 +160,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t014",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t015",targetState="state_move_cont",cond=whenReply("moverobotdone"))
-					transition(edgeName="t016",targetState="returnHOME",cond=whenReply("moverobotfailed"))
+					 interrupthandle(edgeName="t013",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t014",targetState="state_move_cont",cond=whenReply("moverobotdone"))
+					transition(edgeName="t015",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 			}
 		}
