@@ -284,7 +284,7 @@ QActor cargoservice context ctx_cargoservice {
 		var TotWeight = 0!!
 		
 		var JSonString = ""
-		
+		var PName = ""
 
 	#]
 	State state_init initial {
@@ -376,15 +376,27 @@ QActor cargoservice context ctx_cargoservice {
 			println("[CargoService] | state_handle_product") color blue
 			printCurrentMessage
 			
-			//TODO gestire errore PID inesistente
 			println("stringa json: $JSonString") color magenta
 			[#
 				var p = Product(JSonString)
 				Weight=p.getWeight()	
+				PName = p.getName()
 			#]
 			println("[CargoService] | Weight: $Weight") color green
-			request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
+			
+			//gestire errore PID inesistente
+			if [# (Weight == 0 && PName == "wrong" ) #]{
+				println("[CargoService] | PID inesistente: loadrejected") color red
+				[# rejected = true#]
+				replyTo loadrequest with loadrejected: loadrejected(no_PID)
+				autodispatch resume : resume(rejected)
+			}else{
+				println("[CargoService] | Prodotto trovato e peso registrato, continuo i controlli...") color green
+				[# rejected = false#]
+				request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
+			}
 			}Transition t4 whenInterruptEvent stopActions -> state_handle_stop
+							whenMsg resume -> state_idle
 							whenReply totalWeight -> state_handle_weight
 			
 		State state_handle_weight{
@@ -406,7 +418,7 @@ QActor cargoservice context ctx_cargoservice {
 				[#rejected=false#]
 				println("[Cargoservice] | loadaccepted") color green
 				
-//				//delay 1000 // pickup time (known)
+//				//delay 1000 // pickup time 
 			}
 			else {
 				replyTo loadrequest with loadrejected: loadrejected(too_heavy)
