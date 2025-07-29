@@ -101,6 +101,19 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition(edgeName="t045",targetState="work5",cond=whenReply("loadaccepted"))
+					transition(edgeName="t046",targetState="work5",cond=whenReply("loadrejected"))
+				}	 
+				state("work5") { //this:State
+					action { //it:State
+						CommUtils.outcyan("$name | sends request")
+						request("loadrequest", "loadrequest(17)" ,"cargoservice" )  
+						delay(2000) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
 				}	 
 			}
 		}

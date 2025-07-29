@@ -166,7 +166,7 @@ QActor cargorobot context ctx_cargoservice {
 			var Y:Int? = 0
 			var Dir = ""
 			var Map = MapServiceSingleton.getInstance()
-			var Slot = ""
+			var SlotName = ""
 			
 			
 		//forward cargoservicestatusgui -m updategui: updategui(M)
@@ -230,14 +230,14 @@ QActor cargorobot context ctx_cargoservice {
 	State state_move_cont {
 			[#
 			
-			var location = Map.getCoordinates(Slot);
+			var location = Map.getCoordinates(SlotName);
 			var coords = location.getCoords();
 			X = coords.get("x");
 			Y = coords.get("y");
 			Dir=location.getFacingDir();
 			#]
 		
-		println("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y") color blue
+		println("[Cargorobot] Moving container to slot $SlotName... X:$X, Y:$Y") color blue
 		// TODO
 		// pickup 
 		// move 
@@ -263,21 +263,20 @@ QActor cargorobot context ctx_cargoservice {
 						whenMsg resume -> state_finalize
 		
 		State returnHOME{
-			println("Cargorobot | returningHome, state: $idle") color blue
 			[# 
 				X = Home_X
 				Y = Home_Y
 				Dir = Homedir
 			#]
+			println("Cargorobot | returningHome, state: $idle") color blue
 			request basicrobot -m moverobot : moverobot($X,$Y)
-			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_HOME
-						////whenReply moverobotfailed -> returnHOME
+						//whenReply moverobotfailed -> returnHOME
 		
 		State at_HOME{
 			println("[cargorobot] arrived at home, dir: $Dir") color green
-			forward basicrobot -m setrobotstate : setpos($X,$Y,$Dir)
+			forward basicrobot -m setdirection: dir($Dir)
 			
 			autodispatch resume : resume(gormiti)
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
@@ -287,7 +286,7 @@ QActor cargorobot context ctx_cargoservice {
 		State goto_IO_port{
 			onMsg(loadcontainer: loadcontainer(Slot)){
 			[# 
-				Slot =  payloadArg(0) 
+				SlotName =  payloadArg(0) 
 			#]}//TODO vedi se da problemi quando arrivi allo stato senza loadcontainer
 			println("Cargorobot | go to IOport") color blue
 			[# 
@@ -301,7 +300,7 @@ QActor cargorobot context ctx_cargoservice {
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_IO_port
-						////whenReply moverobotfailed -> returnHOME
+						//whenReply moverobotfailed -> returnHOME
 						
 	State at_IO_port{
 		println("[cargorobot] arrived at ioport, dir: $Dir") color green
@@ -543,10 +542,19 @@ QActor external_client context ctx_cargoservice{
 	   whenReply loadaccepted -> work4
 	   whenReply loadrejected  -> work4
 	   
-	
 	State work4 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(1)
+ 		delay 2000
+  	} 
+  	Transition t0
+	   whenReply loadaccepted -> work5
+	   whenReply loadrejected  -> work5
+	   
+	
+	State work5 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(17)
  		delay 2000
   	} 
 }

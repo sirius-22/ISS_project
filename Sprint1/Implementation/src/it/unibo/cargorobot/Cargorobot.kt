@@ -37,7 +37,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					var Y:Int? = 0
 					var Dir = ""
 					var Map = MapServiceSingleton.getInstance()
-					var Slot = ""
+					var SlotName = ""
 					
 					
 				//forward cargoservicestatusgui -m updategui: updategui(M)
@@ -120,12 +120,12 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						
 									
-									var location = Map.getCoordinates(Slot);
+									var location = Map.getCoordinates(SlotName);
 									var coords = location.getCoords();
 									X = coords.get("x");
 									Y = coords.get("y");
 									Dir=location.getFacingDir();
-						CommUtils.outblue("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y")
+						CommUtils.outblue("[Cargorobot] Moving container to slot $SlotName... X:$X, Y:$Y")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						CommUtils.outgreen("[cargoRobot] container transported")
 						//genTimer( actor, state )
@@ -151,11 +151,11 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("returnHOME") { //this:State
 					action { //it:State
-						CommUtils.outblue("Cargorobot | returningHome, state: $idle")
 						 
 										X = Home_X
 										Y = Home_Y
 										Dir = Homedir
+						CommUtils.outblue("Cargorobot | returningHome, state: $idle")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
@@ -168,7 +168,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("at_HOME") { //this:State
 					action { //it:State
 						CommUtils.outgreen("[cargorobot] arrived at home, dir: $Dir")
-						forward("setrobotstate", "setpos($X,$Y,$Dir)" ,"basicrobot" ) 
+						forward("setdirection", "dir($Dir)" ,"basicrobot" ) 
 						forward("resume", "resume(gormiti)" ,name ) 
 						//genTimer( actor, state )
 					}
@@ -186,7 +186,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						if( checkMsgContent( Term.createTerm("loadcontainer(Slot)"), Term.createTerm("loadcontainer(Slot)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 
-												Slot =  payloadArg(0) 
+												SlotName =  payloadArg(0) 
 						}
 						CommUtils.outblue("Cargorobot | go to IOport")
 						 
