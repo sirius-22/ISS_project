@@ -209,23 +209,24 @@ Grazie alla modellazione tramite QAK è stato possibile avere uno scheletro del 
 La mappa della stiva che ci è stata fornita dal committente è stata tradotta in formato json:
 
 ```json
-    {
-      "Home": { "x": 0, "y": 0 },
-      "SlotsObstacles": [
-        { "name": "SlotObstacle1", "x": 2, "y": 1 },
-        { "name": "SlotObstacle2", "x": 3, "y": 1 },
-        { "name": "SlotObstacle3", "x": 2, "y": 3 },
-        { "name": "SlotObstacle4", "x": 3, "y": 3 }
-      ],
-      "LaydownPositions": [
-        { "name": "Slot1", "x": 1, "y": 1 },
-        { "name": "Slot2", "x": 4, "y": 1 },
-        { "name": "Slot3", "x": 1, "y": 3 },
-        { "name": "Slot4", "x": 4, "y": 3 }
-      ],
-      "IoPort": { "x": 0, "y": 5 },
-      "PickupContainerPosition": { "x": 0, "y": 4 }
-    }
+{
+  "Home": { "x": 0, "y": 0, "direction":"s" },
+  "SlotsObstacles": [
+    { "name": "SlotObstacle1", "x": 2, "y": 1 , "direction":"r" },
+    { "name": "SlotObstacle2", "x": 3, "y": 1, "direction":"l" },
+    { "name": "SlotObstacle3", "x": 2, "y": 3, "direction":"r" },
+    { "name": "SlotObstacle4", "x": 3, "y": 3, "direction":"l" }
+  ],
+  "LaydownPositions": [
+    { "name": "Slot1", "x": 1, "y": 1, "direction":"r" },
+    { "name": "Slot2", "x": 1, "y": 3, "direction":"r" },
+    { "name": "Slot3", "x": 4, "y": 1, "direction":"l" },
+    { "name": "Slot4", "x": 4, "y": 3, "direction":"l" }
+  ],
+  "IoPort": { "x": 0, "y": 5, "direction":"s" },
+  "PickupContainerPosition": { "x": 0, "y": 4, "direction":"s" }
+}
+
 ```
 Ci siamo rese conto che avevamo bisogno di definire ulteriori coordinate per identificare i luoghi in cui si deve spostare il robot.
 
@@ -233,7 +234,7 @@ Abbiamo utilizzato un pojo per leggere il file json e rendere le coordinate faci
 ```java
     public class MapService {
 		//Map of map Object -> map of its coordinates "x" ->0 "y" ->0
-    private final Map<String, Map<String, Integer>> lookupMap = new HashMap<>();
+    private final Map<String, MapLocation> lookupMap = new HashMap<>();
 
     public MapService(String jsonFilePath) throws IOException {
         String content = Files.readString(Paths.get(jsonFilePath));
@@ -261,16 +262,20 @@ Abbiamo utilizzato un pojo per leggere il file json e rendere le coordinate faci
         }
     }
 
-    public Map<String, Integer> getCoordinates(String name) {
+    public MapLocation getCoordinates(String name) {
         return lookupMap.get(name);
     }
 
-    private Map<String, Integer> extractCoords(JsonObject obj) {
-        Map<String, Integer> coords = new HashMap<>();
+    private MapLocation extractCoords(JsonObject obj) {
+        
+    	Map<String, Integer> coords = new HashMap<>();
         coords.put("x", obj.get("x").getAsInt());
         coords.put("y", obj.get("y").getAsInt());
-        return coords;
+        Aril dir = Aril.valueOf(obj.get("direction").getAsString());
+        MapLocation loc = new MapLocation(coords, dir);
+        return loc;
     }
+    
  ```
 Infine, seguendo il pattern Singleton, è stata creata una classe che restituisce un'istanza di MapService  
 
@@ -296,10 +301,15 @@ Questa viene utilizzata all'interno di cargotobot nel seguente modo:
 	import "main.java.map*"
 		//init map
 		[#
-			val Map = MapServiceSingleton.init("map.json");
-            var Homecoords = Map.getInstance().getCoordinates(Home);
-			var Home_X = Homecoords.get("X");
-			var Home_Y = Homecoords.get("Y");
+			MapServiceSingleton.init("map.json");
+			var Map = MapServiceSingleton.getInstance()
+
+			// Home Coordinates
+			var HomeLoc = Map.getCoordinates("Home");
+			var Homecoords = HomeLoc.getCoords();
+			var Home_X = Homecoords.get("x");
+			var Home_Y = Homecoords.get("y");
+			var Homedir = HomeLoc.getFacingDir()
         #]
 
 ```
@@ -313,8 +323,9 @@ Questa viene utilizzata all'interno di cargotobot nel seguente modo:
 5. Aprire il browser su ```localhost:8090``` per visualizzare l’ambiente WEnv in cui lavorerà il DDR robot
 7. Eseguire il comando ```./gradlew run``` oppure ```gradle run``` per far partire il resto del sistema cargoservice
 
-Note:
-a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docker
+*Note:*
+
+a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docker </br>
 b. Il sistema cargoservice si appoggia a productservice che ha un database Mongo per la persistenza dei prodotti, questo è già stato riempito con opportuni prodotti di test attraverso il file ```setup_mongo.js```
 
 
