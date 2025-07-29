@@ -41,7 +41,7 @@ class Sonar_mock ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("state_idle") { //this:State
 					action { //it:State
-						delay(5000) 
+						delay(10000) 
 						emitLocalStreamEvent("containerhere", "containerhere(M)" ) 
 						CommUtils.outmagenta("[sonar_mock] | messaggio containerhere inviato")
 						//genTimer( actor, state )
@@ -49,16 +49,32 @@ class Sonar_mock ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="resume",cond=whenDispatch("restart"))
+					 transition(edgeName="t00",targetState="test_interrupt",cond=whenDispatch("sonaractivate"))
+					transition(edgeName="t01",targetState="resume",cond=whenDispatch("restart"))
 				}	 
 				state("resume") { //this:State
 					action { //it:State
+						CommUtils.outred("[sonar_mock] | resume actions")
+						emitLocalStreamEvent("resumeActions", "resumeActions(M)" ) 
+						delay(3000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
 					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
+				}	 
+				state("test_interrupt") { //this:State
+					action { //it:State
+						CommUtils.outred("[sonar_mock] | Interrupt, stop actions")
+						emitLocalStreamEvent("stopActions", "stopActions(M)" ) 
+						delay(10000) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="resume", cond=doswitch() )
 				}	 
 			}
 		}

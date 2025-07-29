@@ -51,9 +51,9 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t01",targetState="state_SlotState",cond=whenRequest("freeSlot"))
-					transition(edgeName="t02",targetState="state_Weight",cond=whenRequest("totalWeightReq"))
-					transition(edgeName="t03",targetState="update_hold",cond=whenDispatch("updatedatahold"))
+					 transition(edgeName="t02",targetState="state_SlotState",cond=whenRequest("freeSlot"))
+					transition(edgeName="t03",targetState="state_Weight",cond=whenRequest("totalWeightReq"))
+					transition(edgeName="t04",targetState="update_hold",cond=whenDispatch("updatedatahold"))
 				}	 
 				state("state_SlotState") { //this:State
 					action { //it:State
@@ -75,6 +75,8 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 				}	 
 				state("state_Weight") { //this:State
 					action { //it:State
+						Weight++ 
+						CommUtils.outyellow("[slotmanagement_mock] | state_weight $Weight")
 						answer("totalWeightReq", "totalWeight", "totalWeight($Weight)"   )  
 						//genTimer( actor, state )
 					}

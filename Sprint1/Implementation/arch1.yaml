@@ -22,6 +22,8 @@ services:
       - EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false   # Disabilita la modalità di auto-conservazione per testare l'auto-rimozione delle istanze
       - EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS=60
       - EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS=120
+    networks:
+      - iss-network
 
 
  #------ PRODUCTSERVICE -------------

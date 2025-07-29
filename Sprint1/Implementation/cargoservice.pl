@@ -34,6 +34,7 @@ reply( moverobotfailed, moverobotfailed(PLANDONE,PLANTODO) ).  %%for moverobot
 event( stopActions, stopActions(M) ).
 event( resumeActions, resumeActions(M) ).
 event( containerhere, containerhere(M) ).
+dispatch( sonaractivate, sonaractivate(A) ).
 dispatch( resume, resume(M) ).
 dispatch( goto_idle, goto_idle(M) ).
 %====================================================================================
