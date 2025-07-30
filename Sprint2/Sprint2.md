@@ -75,7 +75,7 @@ Flusso di operazioni di slotmanagement:
 Si noti come anche nel flusso di operazioni ```slotmanagement``` assume solo comportamenti passivi, giustificando maggiormente la nostra scelta di renderlo un componente POJO.
 
 
-*NOTE*
+*NOTE* : <br>
 (*) in futuro potrebbe caricare direttamente lo stato della stiva desiderato attraverso un file di configurazione.
 Per rendere più agevole questo passaggio verrà implemenatta un interfaccia [FORSE DA METTERE IN IMPLEMENTAZIONE]
 
