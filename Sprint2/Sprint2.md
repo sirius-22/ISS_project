@@ -1,7 +1,7 @@
 # Sprint2
 
 ## Architettura iniziale dello sprint
-<img src='../Sprint1/logicModel/logic_modelarch.png'>
+<img src='../commons/resources/logicModels/Sprint1/cargoservicearch.png'>
 
 ## Obiettivi
 
@@ -24,7 +24,7 @@ Abbiamo deciso di mantenere i requisiti originali in inglese per non correre il 
 ## Analisi del problema
 
 ### sonardevice
-Il sensore sonar deve essere in grado di effettuare misurazioni per la rilevazione di container o malfunzionamenti. Essendo, dunque, un componente reattivo e proattivo lo andremo a considerare come attore.
+Il ```sonardevice``` deve essere in grado di effettuare misurazioni per la rilevazione di container o malfunzionamenti. Essendo, dunque, un componente **reattivo** e **proattivo** lo andremo a considerare come attore.
 
 Flusso di operazioni di sonardevice:
 - nella fase di inizializzazione il ```sonardevice``` attiva il sensore fisico
@@ -51,12 +51,34 @@ d > dfree -> mafunzionamento-->
 
 
 
-
-
-
-
-
 ### slotmanagement
+
+In fase di prima modellazione, negli Sprint precedenti, avevamo rappresentato ```slotmanagement``` come un attore autonomo, poiché responsabile della gestione degli slot e del calcolo del peso in stiva. Tuttavia, durante la fase di progettazione di ```slotmanagement_mock```, ci siamo rese conto che ```slotmanagement``` non ha comportamenti autonomi né la necessità di reagire ad eventi in modo asincrono.
+
+Abbiamo quindi deciso di refattorizzare ```slotmanagement``` come POJO, ovvero un componente passivo accessibile come oggetto Java semplice, gestito direttamente da cargoservice.
+
+Tale cambiamento è giustificato da:
+
+- l’assenza di stato interno reattivo o concorrenza;
+
+- la necessità di mantenere semplice l’architettura;
+
+- il principio You Aren’t Gonna Need It (YAGNI).
+
+Flusso di operazioni di slotmanagement:
+- In fase di inizializzazione ```slotmanagement``` Inizializza gli slot e azzera il peso totale all'interno della stiva (```TotalWeight```).(*)
+- Quando ```CargoService``` chiede se ci sono slot disponibili riceve risposta da ```slotmanagement``` (```freeSlot```)
+- Quando ```CargoService``` chiede il peso totale della stiva viene calcolato e mandato (```totalWeightReq```)
+- Quando ```CargoService``` manda una richiesta di aggiornamento della Stiva ```slotmanagement``` cambia il suo stato interno di conseguenza (```updateHold(Product,SlotName)```)
+- Quando ```CargoService``` chiede lo stato della stiva questo venga mandato (```getHoldState()```)
+
+Si noti come anche nel flusso di operazioni ```slotmanagement``` assume solo comportamenti passivi, giustificando maggiormente la nostra scelta di renderlo un componente POJO.
+
+
+*NOTE*
+(*) in futuro potrebbe caricare direttamente lo stato della stiva desiderato attraverso un file di configurazione.
+Per rendere più agevole questo passaggio verrà implemenatta un interfaccia [FORSE DA METTERE IN IMPLEMENTAZIONE]
+
 
 
 ### Modello
