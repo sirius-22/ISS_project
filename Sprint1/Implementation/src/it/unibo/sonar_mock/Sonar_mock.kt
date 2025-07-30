@@ -24,41 +24,55 @@ class Sonar_mock ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
 
 	override fun getInitialState() : String{
-		return "init"
+		return "s0"
 	}
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				var counter = 0	
 		return { //this:ActionBasciFsm
-				state("init") { //this:State
+				state("s0") { //this:State
 					action { //it:State
+						CommUtils.outyellow("$name | STARTS")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
+					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
-				state("state_idle") { //this:State
+				state("work") { //this:State
 					action { //it:State
-						delay(5000) 
-						emitLocalStreamEvent("containerhere", "containerhere(M)" ) 
-						CommUtils.outmagenta("[sonar_mock] | messaggio containerhere inviato")
+						delay(10000) 
+						emitLocalStreamEvent("containerhere", "containerhere(si)" ) 
+						 counter ++  
+						delay(8000) 
+						CommUtils.outmagenta("$name | $counter")
+						if(  counter == 2  
+						 ){CommUtils.outred("$name | STOP INTERRUPT $counter")
+						emitLocalStreamEvent("stopActions", "stopActions(si)" ) 
+						delay(8000) 
+						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
+				 	 		stateTimer = TimerActor("timer_work", 
+				 	 					  scope, context!!, "local_tout_"+name+"_work", 5000.toLong() )  //OCT2023
 					}	 	 
-					 transition(edgeName="t00",targetState="resume",cond=whenDispatch("restart"))
+					 transition(edgeName="t00",targetState="resume",cond=whenTimeout("local_tout_"+name+"_work"))   
 				}	 
 				state("resume") { //this:State
 					action { //it:State
+						CommUtils.outgreen("$name | resume actions")
+						emitLocalStreamEvent("resumeActions", "resumeActions(si)" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="state_idle", cond=doswitch() )
+					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
 			}
 		}

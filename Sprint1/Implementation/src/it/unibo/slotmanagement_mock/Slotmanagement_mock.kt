@@ -75,6 +75,8 @@ class Slotmanagement_mock ( name: String, scope: CoroutineScope, isconfined: Boo
 				}	 
 				state("state_Weight") { //this:State
 					action { //it:State
+						Weight++ 
+						CommUtils.outyellow("[slotmanagement_mock] | state_weight $Weight")
 						answer("totalWeightReq", "totalWeight", "totalWeight($Weight)"   )  
 						//genTimer( actor, state )
 					}
