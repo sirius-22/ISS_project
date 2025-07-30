@@ -1,0 +1,224 @@
+System io_devices
+
+mqttBroker "192.168.1.214" : 1883 eventTopic "logkb"
+/*
+ * ----------------------------------------------------------------
+ * ATTENZIONE: MODIFICARE GLI IP  ... ANCHE IN logback.xml
+ * 
+ * MODIFICARE subscribeTo sonarsimul for sonardata
+ * 
+ * ALLA FINE GUARDARE il contenuto di app_sonarled2025.log
+ * e i log mediante KIBANA sull'indice INDEX=cell-* (logstash.conf)
+ * 
+ * Per eliminare tutti i logo su logstash eseguire in cygwin64 Terminal
+ * curl -X POST "http://localhost:9200/INDEX/_delete_by_query" -H 'Content-Type: application/json' -d'
+	{
+	  "query": {
+	    "match_all": {}
+	}
+	}'
+ * ----------------------------------------------------------------
+ */   
+/*
+=============================================================================
+Costruire un sistema basato su un sonar e un led che opera come segue.
+Prefissate due distanze D1 e D2 con 0 < D2 < D1,
+quando il sonar rileva una distanza D:
+
+ - se D > D1: il led deve essere spento
+ - se D < D1 e D > D2 :   il led blinks
+ - se D < D2 : il led rimane acceso
+=============================================================================
+*/
+
+/*
+-------------------------------------------------------------------------------------
+Il logging avviene sia su FILE locale  
+sia su logstash che l'appender definito in logback.xml pone su 192.168.1.132:5044
+ 
+Il file logstash.conf DEFINISCE index  => "cells-"       
+
+I log sono stringhe strutturate JSON 
+		{"source":"...","category":"sonarled","message":"mind(distance(..))"}
+
+
+Per 'pulire' l'indice su logstash eseguire  (A sta per *):
+curl -X POST "http://localhost:9200/cell-A/_delete_by_query" -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "match_all": {}
+   }
+}' 
+       
+-------------------------------------------------------------------------------------
+INFO di log sono anche emesse come eventi qak in sintassi Prolog
+
+ */
+Event sonardata      : distance(D)   //emitted  by sonardevice or (better) by datacleaner
+Event unibologprolog : unibologprolog(SOURCE,CATEG,CONTENT)  //emiited by mind
+
+Dispatch doblink : doblink(X)
+ 
+Context ctx_raspdevice ip [ host= "localhost" port= 8128 ]
+
+/*
+ * ledPython25Blink.py blinks per 0.9 sec
+ * sonar.py emette un valore ogni sec
+ * delay   ha come valore minimo 1msec
+ */
+
+QActor mind context ctx_raspdevice{
+	[# 
+		var D = 0  
+		val D1 = 10
+		val D2 = 6
+   	 	val logger = LoggerFactory.getLogger("mind_actor") 
+ 	 	
+ 	 	
+ 	 	fun getCurrentDateTimeString(): String {
+		    val currentDateTime = java.time.LocalDateTime.now()
+		    val formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss") //I : non vanno bene per Prolog
+		    return currentDateTime.format(formatter)
+		}
+ 	   
+ 	   /*
+	   * Pulizia del log file locale definito in logback.xml
+	   */
+	  clearlog("./logs/app_sonarled2025.log")   
+ 	#]		
+	State s0 initial{
+		delay 1000 //Give time to sonarsensor to start  in order to subscribe
+		println("$name |  start") 
+		//subscribeTo sonardevice for sonardata
+		subscribeTo sonarsimul for sonardata
+ 	}
+	Goto work
+	
+	State work{
+		
+	}
+	Transition t0
+		whenEvent sonardata   -> handleSonardata
+         
+	State handleSonardata{
+		onMsg( sonardata : distance(X) ){
+			[#  D = payloadArg(0).toInt() #]
+ 			println("$name | handleSonardata D=$D D2=$D2 D1=$D1") color cyan
+			if [#  D < D2  #] { 
+				println("$name | ledon") color magenta
+				[# machineExec("python ledPython25On.py") #]
+			}
+			if [# D >= D1  #] { 
+				println("$name | ledoff") color magenta
+				[# Runtime.getRuntime().exec("python ledPython25Off.py") #]
+			}
+			if [# D < D1 && D >= D2 #] { 
+				//println("do blink ... ") color cyan
+				autodispatch doblink : doblink(ok)
+			} 
+			/* 
+			 * Emette la INFO log di contenuto :mind(distance($D)) e categoria sonarled
+			 */
+ 			[# logger.info(  sysUtil.logStr(name,"mind(distance($D))","sonarled")  ) #]
+			/*
+			 * Emette un evento di log unibologprolog 
+			 * che può essere gestito da unibologger che percepisce sulla topic logkb
+			 */
+ 			 emit unibologprolog : unibologprolog($MyName,sonarled,distance($D)) 
+		} 
+	} 
+	Transition t0 
+		whenMsg doblink       -> blink
+		whenEvent sonardata   -> handleSonardata
+
+    State blink{
+ 			/*
+			 * Emette un evento di log unibologprolog 
+			 * che può essere gestito da unibologger che percepisce sulla topic logkb
+			 */
+	   [# val T = "'"+getCurrentDateTimeString()+"'" #]
+		println("$name | blinking $T")  color magenta
+//		emit unibologprolog : unibologprolog($MyName,sonarled, blinksat($T)) 
+ 
+		
+		[#  machineExec("python ledPython25Blink.py") #]
+    }
+ 	Transition t0 //in un sec fa circa 3 blink
+		whenEvent sonardata  -> handleSonardata  
+	
+ }
+
+ /* 
+ * Emette uno stream di dati 
+ * I subscribers possono esser solo attori locali (come mind)
+*/
+ 
+QActor sonardevice context ctx_raspdevice{
+[# 
+	lateinit var reader : java.io.BufferedReader
+    lateinit var p : Process	
+    var Distance = 0
+#]	
+	State s0 initial{
+		println("$name | start") 
+	 	[#
+			p       = Runtime.getRuntime().exec("python sonar.py")
+			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	
+		#]		
+	}
+	Goto readSonarData
+	
+	State readSonarData{
+	[# 
+		var data = reader.readLine()
+		//CommUtils.outyellow("$name with python: data = $data"   ) 
+		if( data != null ){
+		try{ 
+			val vd = data.toFloat()
+			val v  = vd.toInt()
+			if( v <= 100 ){	//A first filter ...
+				Distance = v				
+			}else Distance = 0
+		}catch(e: Exception){
+			CommUtils.outred("$name readSonarDataERROR: $e "   )
+		}
+		}//if
+		
+	#]	
+		if [# Distance > 0 #] { 
+		    println("$name with python: data = $data"   ) color yellow
+			emitlocalstream sonardata : distance($Distance)			 
+		}
+		/*
+		 * Il sonar fisico (sonar.py)  emette un dato una volta al secondo 
+		 */
+		 
+	}
+	Goto readSonarData
+}//sonardevice
+
+ 
+
+QActor sonarsimul  context ctx_raspdevice{
+	State s0 initial{
+		
+	}
+	Goto work
+	//------10-----6-----
+	State work{
+		emitlocalstream sonardata      : distance(20)
+	    delay 1000
+		emitlocalstream sonardata      : distance(10)
+	    delay 1000
+		emitlocalstream sonardata      : distance(8)
+	    delay 1000
+		emitlocalstream sonardata      : distance(8)
+	    delay 1000
+		emitlocalstream sonardata      : distance(5)
+	    	
+	}
+}
+ 
+
+
+
