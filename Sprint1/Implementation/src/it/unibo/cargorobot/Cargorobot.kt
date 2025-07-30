@@ -82,9 +82,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t15",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t16",targetState="state_idle",cond=whenReply("engagedone"))
-					transition(edgeName="t17",targetState="state_engage",cond=whenReply("engagerefused"))
+					 interrupthandle(edgeName="t14",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t15",targetState="state_idle",cond=whenReply("engagedone"))
+					transition(edgeName="t16",targetState="state_engage",cond=whenReply("engagerefused"))
 				}	 
 				state("state_idle") { //this:State
 					action { //it:State
@@ -97,8 +97,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t08",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t09",targetState="goto_IO_port",cond=whenRequest("loadcontainer"))
+					 interrupthandle(edgeName="t07",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t08",targetState="goto_IO_port",cond=whenRequest("loadcontainer"))
 				}	 
 				state("state_wait_resume") { //this:State
 					action { //it:State
@@ -109,9 +109,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t110",targetState="state_resume",cond=whenEvent("resumeActions"))
-					transition(edgeName="t111",targetState="mexEater",cond=whenReply("moverobotdone"))
-					transition(edgeName="t112",targetState="mexEater",cond=whenReply("moverobotfailed"))
+					 transition(edgeName="t19",targetState="state_resume",cond=whenEvent("resumeActions"))
+					transition(edgeName="t110",targetState="mexEater",cond=whenReply("moverobotdone"))
+					transition(edgeName="t111",targetState="mexEater",cond=whenReply("moverobotfailed"))
 				}	 
 				state("mexEater") { //this:State
 					action { //it:State
@@ -121,7 +121,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t113",targetState="state_resume",cond=whenEvent("resumeActions"))
+					 transition(edgeName="t112",targetState="state_resume",cond=whenEvent("resumeActions"))
 				}	 
 				state("state_resume") { //this:State
 					action { //it:State
@@ -156,7 +156,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t314",targetState="at_slot",cond=whenReply("moverobotdone"))
+					 transition(edgeName="t313",targetState="at_slot",cond=whenReply("moverobotdone"))
+					transition(edgeName="t314",targetState="goto_IO_port",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_slot") { //this:State
 					action { //it:State
@@ -190,6 +191,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 interrupthandle(edgeName="t017",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
 					transition(edgeName="t018",targetState="at_HOME",cond=whenReply("moverobotdone"))
+					transition(edgeName="t019",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_HOME") { //this:State
 					action { //it:State
@@ -202,10 +204,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t019",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t020",targetState="state_idle",cond=whenDispatchGuarded("resume",{idle 
+					 interrupthandle(edgeName="t020",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t021",targetState="state_idle",cond=whenDispatchGuarded("resume",{idle 
 					}))
-					transition(edgeName="t021",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{!idle 
+					transition(edgeName="t022",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{!idle 
 					}))
 				}	 
 				state("goto_IO_port") { //this:State
@@ -228,8 +230,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t022",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t023",targetState="at_IO_port",cond=whenReply("moverobotdone"))
+					 interrupthandle(edgeName="t023",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t024",targetState="at_IO_port",cond=whenReply("moverobotdone"))
+					transition(edgeName="t025",targetState="returnHOME",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_IO_port") { //this:State
 					action { //it:State
@@ -242,8 +245,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t024",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t025",targetState="state_move_cont",cond=whenDispatch("resume"))
+					 interrupthandle(edgeName="t026",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t027",targetState="state_move_cont",cond=whenDispatch("resume"))
 				}	 
 				state("state_finalize") { //this:State
 					action { //it:State

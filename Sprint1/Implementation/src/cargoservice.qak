@@ -98,32 +98,68 @@ ExternalQActor productservice context ctx_productservice
 
 // ----------- SONAR MOCK -----------------------------------------------------
 QActor sonar_mock context ctx_cargoservice{
-	State init initial{
-		
-	}Goto state_idle
 	
-	State state_idle{ 
-		delay 10000
-		emitlocalstream containerhere : containerhere(M)
-		println("[sonar_mock] | messaggio containerhere inviato") color magenta
-	}Transition t0 whenMsg sonaractivate -> test_interrupt
-					whenMsg restart -> resume
-					
-					
+// VERSIONE PRECEDENTE
+//	State init initial{
+//		
+//	}Goto state_idle
+//	
+//	State state_idle{ 
+//		delay 10000
+//		emitlocalstream containerhere : containerhere(M)
+//		println("[sonar_mock] | messaggio containerhere inviato") color magenta
+//	}Transition t0 whenMsg sonaractivate -> test_interrupt
+//					whenMsg restart -> resume
+//					
+//					
+//	
+//	State resume{
+//		println("[sonar_mock] | resume actions") color red
+//		emitlocalstream resumeActions : resumeActions(M)
+//		delay 3000
+//		
+//	}Goto state_idle
+//	
+//	State test_interrupt{
+//		println("[sonar_mock] | Interrupt, stop actions") color red
+//		emitlocalstream stopActions : stopActions(M)
+//		delay 10000
+//		
+//	}Goto resume
+
+[#
+		var counter = 0	
+	#]
 	
+ 	State s0 initial {
+ 		println("$name | STARTS") color yellow
+  	} 
+  	Goto work
+  	
+
+  	State work {
+  		
+  		delay 10000
+  		emitlocalstream containerhere : containerhere(si) 
+  		[# counter ++ #]
+ 		delay 8000
+  		
+  		println("$name | $counter") color magenta
+  		if [# counter == 2 #] {
+  			
+	    	println("$name | STOP INTERRUPT $counter") color red 	// DEBUG
+	 		emitlocalstream stopActions : stopActions(si) 
+	 		
+	 		delay 8000
+  		}
+  	} Transition t0 whenTime 5000 -> resume
+
 	State resume{
-		println("[sonar_mock] | resume actions") color red
-		emitlocalstream resumeActions : resumeActions(M)
-		delay 3000
+	 		println("$name | resume actions") color green 	// DEBUG
+	 		emitlocalstream resumeActions : resumeActions(si)
 		
-	}Goto state_idle
-	
-	State test_interrupt{
-		println("[sonar_mock] | Interrupt, stop actions") color red
-		emitlocalstream stopActions : stopActions(M)
-		delay 10000
-		
-	}Goto resume
+	}Goto work
+
 }
 
 
@@ -288,21 +324,14 @@ QActor cargorobot context ctx_cargoservice {
 			#]
 		
 		println("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y") color blue
-		// TODO
-		// pickup 
-		// move 
-		// store
-		
-		//request basicrobot -m step : step(M)
-		//forward basicrobot -m cmd : cmd(M)
-		//request basicrobot -m doplan : doplan(MOVES)
+
 		request basicrobot -m moverobot : moverobot($X,$Y)// coordinates
 		[#robotIsMoving = true#]
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		
 		println("[cargoRobot] container transported") color green
 	}Transition t3  whenReply moverobotdone -> at_slot
-					//whenReply moverobotfailed -> goto_IO_port
+					whenReply moverobotfailed -> goto_IO_port
 					
 		State at_slot{
 			println("[cargorobot] arrived at slot, dir:$Dir") color green
@@ -326,7 +355,7 @@ QActor cargorobot context ctx_cargoservice {
 			[#robotIsMoving=true#]
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_HOME
-						////whenReply moverobotfailed -> returnHOME
+						whenReply moverobotfailed -> returnHOME
 		
 		State at_HOME{
 			
@@ -359,7 +388,7 @@ QActor cargorobot context ctx_cargoservice {
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_IO_port
-						////whenReply moverobotfailed -> returnHOME
+						whenReply moverobotfailed -> returnHOME
 						
 	State at_IO_port{
 		println("[cargorobot] arrived at ioport, dir: $Dir") color green
