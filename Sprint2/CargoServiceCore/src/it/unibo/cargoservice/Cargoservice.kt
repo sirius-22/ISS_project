@@ -20,6 +20,7 @@ import org.json.simple.JSONObject
 
 //User imports JAN2024
 import main.java.domain.*
+import main.java.hold.*
 
 class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -45,6 +46,11 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				
 				var JSonString = ""
 				var PName = "" 
+				
+				// SlotManagenegement
+				
+				var SlotMng = SlotManagement()
+				var SlotName = "NONE"
 		
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
@@ -68,8 +74,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t028",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t029",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
+					 interrupthandle(edgeName="t025",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t026",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
 				}	 
 				state("state_handle_stop") { //this:State
 					action { //it:State
@@ -79,7 +85,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t330",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
+					 transition(edgeName="t327",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
 				}	 
 				state("state_handle_resume") { //this:State
 					action { //it:State
@@ -101,31 +107,26 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						}
 						CommUtils.outmagenta("[CargoService] | PID = $PID")
 						CommUtils.outblue("[CargoService] Richiesta di slot liberi a slotmng...")
-						request("freeSlot", "freeSlot(m)" ,"slotmanagement_mock" )  
+						 SlotName = SlotMng.freeSlot() 
+						forward("resume", "resume(gormiti)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t131",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t132",targetState="state_handle_slot_name",cond=whenReply("slotname"))
+					 interrupthandle(edgeName="t128",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t129",targetState="state_handle_slot_name",cond=whenDispatch("resume"))
 				}	 
 				state("state_handle_slot_name") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("slotname(Slot)"), Term.createTerm("slotname(Name)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-											Name = payloadArg(0)
-											
-						}
 						if( 
-									Name.equals("NONE")
+									SlotName.equals("NONE")
 						 ){CommUtils.outred("[CargoService] Non ci sono slot disponibili LOADREJECTED")
 						answer("loadrequest", "loadrejected", "loadrejected(no_slots)"   )  
 						rejected=true 
 						}
 						else
-						 {CommUtils.outred("[CargoService] slot disponibile $Name continuo i controlli")
+						 {CommUtils.outred("[CargoService] slot disponibile $SlotName continuo i controlli")
 						 rejected=false 
 						 }
 						forward("resume", "resume(gormiti)" ,name ) 
@@ -134,10 +135,10 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t033",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t034",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
+					 interrupthandle(edgeName="t030",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t031",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
 					}))
-					transition(edgeName="t035",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
+					transition(edgeName="t032",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
 					}))
 				}	 
 				state("state_handle_load") { //this:State
@@ -150,8 +151,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t136",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t137",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
+					 interrupthandle(edgeName="t133",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t134",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
 				}	 
 				state("state_handle_product") { //this:State
 					action { //it:State
@@ -173,30 +174,26 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 						 ){CommUtils.outred("[CargoService] | PID inesistente: loadrejected")
 						 rejected = true 
 						answer("loadrequest", "loadrejected", "loadrejected(no_PID)"   )  
-						forward("resume", "resume(rejected)" ,name ) 
 						}
 						else
 						 {CommUtils.outgreen("[CargoService] | Prodotto trovato e peso registrato, continuo i controlli...")
 						  rejected = false 
-						 request("totalWeightReq", "totalWeightReq(M)" ,"slotmanagement_mock" )  
+						  TotWeight = SlotMng.totalWeightReq() 
 						 }
+						forward("resume", "resume(gormiti)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t438",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t439",targetState="state_idle",cond=whenDispatch("resume"))
-					transition(edgeName="t440",targetState="state_handle_weight",cond=whenReply("totalWeight"))
+					 interrupthandle(edgeName="t435",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t436",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
+					}))
+					transition(edgeName="t437",targetState="state_handle_weight",cond=whenDispatchGuarded("resume",{! rejected  
+					}))
 				}	 
 				state("state_handle_weight") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("totalWeight(Weight)"), Term.createTerm("totalWeight(Weight)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-													TotWeight = payloadArg(0).toInt()
-												
-						}
 						if( 
 											
 											Weight.plus(TotWeight) <= MAXLOAD!!
@@ -216,9 +213,9 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t241",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t242",targetState="state_idle",cond=whenDispatch("resume"))
-					transition(edgeName="t243",targetState="state_moverobot",cond=whenEventGuarded("containerhere",{!rejected 
+					 interrupthandle(edgeName="t238",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t239",targetState="state_idle",cond=whenDispatch("resume"))
+					transition(edgeName="t240",targetState="state_moverobot",cond=whenEventGuarded("containerhere",{!rejected 
 					}))
 				}	 
 				state("state_moverobot") { //this:State
@@ -230,11 +227,16 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t044",targetState="state_update_hold",cond=whenReply("containerloaded"))
+					 transition(edgeName="t041",targetState="state_update_hold",cond=whenReply("containerloaded"))
 				}	 
 				state("state_update_hold") { //this:State
 					action { //it:State
-						forward("updatedatahold", "updatedatahold(M)" ,"slotmanagement_mock" ) 
+						CommUtils.outyellow("[Cargoservice] | aggiornamento stiva, Dati = PID:$PID, Weight:$Weight, PName:$PName, SlotName:$SlotName")
+							
+									val safeWeight = requireNotNull(Weight)
+									var prod = Product(PID!!, PName, safeWeight)
+									SlotMng.updateHold(prod, SlotName)
+									
 						forward("sonaractivate", "sonaractivate(A)" ,"sonar_mock" ) 
 						forward("restart", "restart(M)" ,"sonar_mock" ) 
 						//genTimer( actor, state )

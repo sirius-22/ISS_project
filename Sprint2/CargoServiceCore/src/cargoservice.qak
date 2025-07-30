@@ -19,16 +19,17 @@ Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, n
 //CargoService--> Sonar
 Dispatch restart:restart(M)
 
-// slotmanagement in forse
-// CargoService -> SlotManagement
-Request freeSlot : freeSlot(M)
-Request totalWeightReq: totalWeightReq(M)
-
-Dispatch updatedatahold : updatedatahold(M)
-// SlotManagement -> CargoService
-
-Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
-Reply totalWeight : totalWeight(Weight) for totalWeightReq
+/* NOT NEEDED ANYMORE */
+//// slotmanagement in forse
+//// CargoService -> SlotManagement
+//Request freeSlot : freeSlot(M)
+//Request totalWeightReq: totalWeightReq(M)
+//
+//Dispatch updatedatahold : updatedatahold(M)
+//// SlotManagement -> CargoService
+//
+//Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
+//Reply totalWeight : totalWeight(Weight) for totalWeightReq
 
 //
 
@@ -168,54 +169,54 @@ QActor sonar_mock context ctx_cargoservice{
 
 // ----------- SLOTMANAGEMENT MOCK -----------------------------------------------------
 
-QActor slotmanagement_mock context ctx_cargoservice{
-	[#
-		val NUMSLOTS=5
-		var freeSlots=4
-		var Weight = 10
-		var Slot = "NULL"
-	#]
-	State state_init initial{
-		//setting Slot status
-		
-	}
-	Goto idle
-	
-	State idle{
-		//TODO transition on Slot update request from cargoservice, not implemented in the mock
-		//(hold update after a load request is executed)
-	}Transition t0 whenRequest freeSlot -> state_SlotState
-					whenRequest totalWeightReq -> state_Weight
-					whenMsg updatedatahold -> update_hold
-	
-	State state_SlotState{
-		if [#freeSlots>0#]{
-		[#
-			var occSlots = NUMSLOTS-freeSlots
-			Slot="Slot"+occSlots
-		#]
-		replyTo freeSlot with slotname : slotname($Slot)
-		}else {
-			replyTo freeSlot with slotname:slotname(NONE)
-		}
-		
-	}Goto idle
-					
-	State state_Weight{
-		//TODO prendere il peso effettivo
-		
-		[#Weight++#]
-		
-		println("[slotmanagement_mock] | state_weight $Weight") color yellow
-		
-		replyTo totalWeightReq with totalWeight : totalWeight($Weight)
-	}Goto idle
-	
-	State update_hold{
-		[#freeSlots--#]
-	}Goto idle
-}
-
+//QActor slotmanagement_mock context ctx_cargoservice{
+//	[#
+//		val NUMSLOTS=5
+//		var freeSlots=4
+//		var Weight = 10
+//		var Slot = "NULL"
+//	#]
+//	State state_init initial{
+//		//setting Slot status
+//		
+//	}
+//	Goto idle
+//	
+//	State idle{
+//		//TODO transition on Slot update request from cargoservice, not implemented in the mock
+//		//(hold update after a load request is executed)
+//	}Transition t0 whenRequest freeSlot -> state_SlotState
+//					whenRequest totalWeightReq -> state_Weight
+//					whenMsg updatedatahold -> update_hold
+//	
+//	State state_SlotState{
+//		if [#freeSlots>0#]{
+//		[#
+//			var occSlots = NUMSLOTS-freeSlots
+//			Slot="Slot"+occSlots
+//		#]
+//		replyTo freeSlot with slotname : slotname($Slot)
+//		}else {
+//			replyTo freeSlot with slotname:slotname(NONE)
+//		}
+//		
+//	}Goto idle
+//					
+//	State state_Weight{
+//		//TODO prendere il peso effettivo
+//		
+//		[#Weight++#]
+//		
+//		println("[slotmanagement_mock] | state_weight $Weight") color yellow
+//		
+//		replyTo totalWeightReq with totalWeight : totalWeight($Weight)
+//	}Goto idle
+//	
+//	State update_hold{
+//		[#freeSlots--#]
+//	}Goto idle
+//}
+//
 
 
 
@@ -419,6 +420,7 @@ QActor cargorobot context ctx_cargoservice {
 // ----------- CARGOSERVICE -----------------------------------------------------
 QActor cargoservice context ctx_cargoservice {
 	import "main.java.domain.*" 
+	import "main.java.hold.*"
 	[#
 		val MAXLOAD = 600
 		
@@ -434,6 +436,11 @@ QActor cargoservice context ctx_cargoservice {
 		
 		var JSonString = ""
 		var PName = "" 
+		
+		// SlotManagenegement
+		
+		var SlotMng = SlotManagement()
+		var SlotName = "NONE"
 
 	#]
 	State state_init initial {
@@ -478,28 +485,25 @@ QActor cargoservice context ctx_cargoservice {
 			}
 			println("[CargoService] | PID = $PID") color magenta
 		println("[CargoService] Richiesta di slot liberi a slotmng...") color blue
-		request slotmanagement_mock -m freeSlot: freeSlot(m)
 		
+		//request slotmanagement_mock -m freeSlot: freeSlot(m)
+		[# SlotName = SlotMng.freeSlot()#]
+		
+		autodispatch resume : resume(gormiti)
 	}Transition t1  whenInterruptEvent stopActions -> state_handle_stop
-					whenReply slotname -> state_handle_slot_name
+					whenMsg resume -> state_handle_slot_name
 					
 	
 	State state_handle_slot_name{
-		onMsg(slotname : slotname(Name)){
-		[#
-			Name = payloadArg(0)
-			
-		#]
-		}
 		if [#
-			Name.equals("NONE")
+			SlotName.equals("NONE")
 		#]{
 			println("[CargoService] Non ci sono slot disponibili LOADREJECTED") color red
 			replyTo loadrequest with loadrejected: loadrejected(no_slots)
 			[#rejected=true#]
 		}
 		else {
-			println("[CargoService] slot disponibile $Name continuo i controlli") color red
+			println("[CargoService] slot disponibile $SlotName continuo i controlli") color red
 			[#rejected=false#]
 		}
 		autodispatch resume : resume(gormiti)
@@ -539,23 +543,22 @@ QActor cargoservice context ctx_cargoservice {
 			println("[CargoService] | PID inesistente: loadrejected") color red
 			[# rejected = true#]
 			replyTo loadrequest with loadrejected: loadrejected(no_PID)
-			autodispatch resume : resume(rejected)
 		}else{
 			println("[CargoService] | Prodotto trovato e peso registrato, continuo i controlli...") color green
 			[# rejected = false#]
-			request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
+			
+			//request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
+			[# TotWeight = SlotMng.totalWeightReq()#]
+			
+			
 		}
+		autodispatch resume : resume(gormiti)
 	}Transition t4 whenInterruptEvent stopActions -> state_handle_stop
-							whenMsg resume -> state_idle
-							whenReply totalWeight -> state_handle_weight
+							whenMsg resume and [#rejected#]-> state_idle
+							whenMsg resume and [#! rejected #] -> state_handle_weight
 
 		State state_handle_weight{
-				onMsg(totalWeight: totalWeight(Weight)){
-				[#
-					TotWeight = payloadArg(0).toInt()
 				
-				#]
-				}				
 			if	[#
 					
 					Weight.plus(TotWeight) <= MAXLOAD!!
@@ -589,8 +592,14 @@ QActor cargoservice context ctx_cargoservice {
 	}Transition t0 whenReply containerloaded -> state_update_hold
 	
 	State state_update_hold{
-		
-		forward slotmanagement_mock -m updatedatahold: updatedatahold(M)
+		//forward slotmanagement_mock -m updatedatahold: updatedatahold(M)
+println("[Cargoservice] | aggiornamento stiva, Dati = PID:$PID, Weight:$Weight, PName:$PName, SlotName:$SlotName") color yellow
+		[#	
+			val safeWeight = requireNotNull(Weight)
+			var prod = Product(PID!!, PName, safeWeight)
+			SlotMng.updateHold(prod, SlotName)
+			
+			#]
 		forward sonar_mock -m sonaractivate: sonaractivate(A)
 		forward sonar_mock -m restart:restart(M)
 	}Goto state_idle

@@ -7,11 +7,6 @@ reply( getProductAnswer, product(JSonString) ).  %%for getProduct
 reply( loadaccepted, loadaccepted(Slot) ).  %%for loadrequest
 reply( loadrejected, loadrejected(Error) ).  %%for loadrequest
 dispatch( restart, restart(M) ).
-request( freeSlot, freeSlot(M) ).
-request( totalWeightReq, totalWeightReq(M) ).
-dispatch( updatedatahold, updatedatahold(M) ).
-reply( slotname, slotname(Slot) ).  %%for freeSlot
-reply( totalWeight, totalWeight(Weight) ).  %%for totalWeightReq
 request( loadcontainer, loadcontainer(Slot) ).
 reply( containerloaded, containerloaded(M) ).  %%for loadcontainer
 dispatch( cmd, cmd(M) ).
@@ -45,8 +40,6 @@ context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
   qactor( productservice, ctx_productservice, "external").
   qactor( sonar_mock, ctx_cargoservice, "it.unibo.sonar_mock.Sonar_mock").
  static(sonar_mock).
-  qactor( slotmanagement_mock, ctx_cargoservice, "it.unibo.slotmanagement_mock.Slotmanagement_mock").
- static(slotmanagement_mock).
   qactor( cargorobot, ctx_cargoservice, "it.unibo.cargorobot.Cargorobot").
  static(cargorobot).
   qactor( cargoservice, ctx_cargoservice, "it.unibo.cargoservice.Cargoservice").

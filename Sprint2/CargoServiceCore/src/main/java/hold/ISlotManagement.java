@@ -10,9 +10,9 @@ public interface ISlotManagement {
 
     /**
      * Checks if there is at least one free slot in the hold.
-     * @return true if at least one slot is empty, false otherwise
+     * @return the name of a free slot if at least one slot is empty, or "NONE" otherwise
      */
-    boolean freeSlot();
+    String freeSlot();
 
     /**
      * Returns the total weight of all products currently stored in the hold.

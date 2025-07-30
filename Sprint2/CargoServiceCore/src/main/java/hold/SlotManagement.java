@@ -86,12 +86,18 @@ public class SlotManagement implements ISlotManagement {
     }
 
     /**
-     * @return true if there is at least one empty slot
+     * @return the name of a free slot or "NONE" if no slot is available
      */
     @Override
-    public boolean freeSlot() {
-        return slots.values().stream().anyMatch(p -> p == null);
+    public String freeSlot() {
+        return slots.entrySet()
+                    .stream()
+                    .filter(entry -> entry.getValue() == null)
+                    .map(Map.Entry::getKey)
+                    .findFirst()
+                    .orElse("NONE");
     }
+
 
     /**
      * @return the total weight of all products in the hold
