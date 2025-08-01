@@ -314,7 +314,7 @@ Questa viene utilizzata all'interno di cargotobot nel seguente modo:
 
 ```
 
-## Architettura finale Sprint1
+## Architettura finale
 Al seguito della progettazione l'architetture definitiva dello Sprint è la seguente.
 
 ![Immagine architettura Implementazione](./Implementation/cargoservicearch.png)
