@@ -39,7 +39,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				
 				var rejected = false
 				
-				var Name = "NONE"
+				//var Name = "NONE"
 				var PID:Int? = 0
 				
 				var TotWeight = 0!!
@@ -74,8 +74,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t025",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t026",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
+					 interrupthandle(edgeName="t029",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t030",targetState="state_handle_slots",cond=whenRequest("loadrequest"))
 				}	 
 				state("state_handle_stop") { //this:State
 					action { //it:State
@@ -85,7 +85,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t327",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
+					 transition(edgeName="t331",targetState="state_handle_resume",cond=whenEvent("resumeActions"))
 				}	 
 				state("state_handle_resume") { //this:State
 					action { //it:State
@@ -114,8 +114,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t128",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t129",targetState="state_handle_slot_name",cond=whenDispatch("resume"))
+					 interrupthandle(edgeName="t132",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t133",targetState="state_handle_slot_name",cond=whenDispatch("resume"))
 				}	 
 				state("state_handle_slot_name") { //this:State
 					action { //it:State
@@ -135,10 +135,10 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t030",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t031",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
+					 interrupthandle(edgeName="t034",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t035",targetState="state_handle_load",cond=whenDispatchGuarded("resume",{!rejected 
 					}))
-					transition(edgeName="t032",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
+					transition(edgeName="t036",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
 					}))
 				}	 
 				state("state_handle_load") { //this:State
@@ -151,8 +151,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t133",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t134",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
+					 interrupthandle(edgeName="t137",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t138",targetState="state_handle_product",cond=whenReply("getProductAnswer"))
 				}	 
 				state("state_handle_product") { //this:State
 					action { //it:State
@@ -186,10 +186,10 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t435",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t436",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
+					 interrupthandle(edgeName="t439",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t440",targetState="state_idle",cond=whenDispatchGuarded("resume",{rejected 
 					}))
-					transition(edgeName="t437",targetState="state_handle_weight",cond=whenDispatchGuarded("resume",{! rejected  
+					transition(edgeName="t441",targetState="state_handle_weight",cond=whenDispatchGuarded("resume",{! rejected  
 					}))
 				}	 
 				state("state_handle_weight") { //this:State
@@ -198,7 +198,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 											
 											Weight.plus(TotWeight) <= MAXLOAD!!
 											
-						 ){answer("loadrequest", "loadaccepted", "loadaccepted($Name)"   )  
+						 ){answer("loadrequest", "loadaccepted", "loadaccepted($SlotName)"   )  
 						rejected=false 
 						CommUtils.outgreen("[Cargoservice] | loadaccepted")
 						}
@@ -213,21 +213,21 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t238",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t239",targetState="state_idle",cond=whenDispatch("resume"))
-					transition(edgeName="t240",targetState="state_moverobot",cond=whenEventGuarded("containerhere",{!rejected 
+					 interrupthandle(edgeName="t242",targetState="state_handle_stop",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t243",targetState="state_idle",cond=whenDispatch("resume"))
+					transition(edgeName="t244",targetState="state_moverobot",cond=whenEventGuarded("containerhere",{!rejected 
 					}))
 				}	 
 				state("state_moverobot") { //this:State
 					action { //it:State
-						request("loadcontainer", "loadcontainer($Name)" ,"cargorobot" )  
-						CommUtils.outblue("[Cargoservice] | loadcontainer sent with name $Name")
+						request("loadcontainer", "loadcontainer($SlotName)" ,"cargorobot" )  
+						CommUtils.outblue("[Cargoservice] | loadcontainer sent with name $SlotName")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t041",targetState="state_update_hold",cond=whenReply("containerloaded"))
+					 transition(edgeName="t045",targetState="state_update_hold",cond=whenReply("containerloaded"))
 				}	 
 				state("state_update_hold") { //this:State
 					action { //it:State

@@ -93,7 +93,7 @@ ExternalQActor productservice context ctx_productservice
 
 // ACTORS for ctx_cargoservice ------------------------------------------------
 
-
+// ---------- SONARDEVICE -----------------------------------------------------
 
 
 
@@ -235,6 +235,7 @@ QActor cargorobot context ctx_cargoservice {
 			var robotIsMoving = false
 			var PlanDone = ""
 			var PlanToDo = ""
+			var inceppato =false
 			
 			
 		//forward cargoservicestatusgui -m updategui: updategui(M)
@@ -298,15 +299,22 @@ QActor cargorobot context ctx_cargoservice {
 					
 	State mexEater {
 		println("[Cargorobot] | Gnam gnam ") color cyan
-	}Transition t1 whenEvent resumeActions -> state_resume
-	
-	
+		autodispatch resume : resume(gormiti)
+	}Transition t1 whenEvent resumeActions  -> state_resume
+					whenMsg resume and [#inceppato#] -> state_resume_inceppato
+					
+	State state_resume_inceppato{
+		[#inceppato=false#]
+		request basicrobot -m moverobot : moverobot($X,$Y)
+	}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
+					whenReply moverobotdone -> at_HOME
 
 
 	
 	State state_resume{
 		println("[Cagorobot] | Resume ") color red
 		if [#robotIsMoving#]{
+			forward basicrobot -m setdirection : dir(up)
 			request basicrobot -m moverobot : moverobot($X,$Y)
 			println("[Cagorobot] | facciamo ripartire il robot con coordinate X:$X, Y:$Y ") color yellow
 		}
@@ -325,9 +333,9 @@ QActor cargorobot context ctx_cargoservice {
 			#]
 		
 		println("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y") color blue
-
-		request basicrobot -m moverobot : moverobot($X,$Y)// coordinates
 		[#robotIsMoving = true#]
+		request basicrobot -m moverobot : moverobot($X,$Y)// coordinates
+
 //		forward cargoservicestatusgui -m updategui: updategui(M)
 		
 		println("[cargoRobot] container transported") color green
@@ -338,7 +346,7 @@ QActor cargorobot context ctx_cargoservice {
 			println("[cargorobot] arrived at slot, dir:$Dir") color green
 			[#robotIsMoving = false#]
 			delay 1000 //to unload
-			forward basicrobot -m setdirection : dir($Dir)
+			//forward basicrobot -m setdirection : dir($Dir)
 			delay 2000 //to unload
 			autodispatch resume : resume(gormiti)
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
@@ -351,19 +359,29 @@ QActor cargorobot context ctx_cargoservice {
 				Y = Home_Y
 				Dir = Homedir
 			#]
+			[#robotIsMoving=true#]
+			
+			println("Cargorobot | returningHome, X:$X  Y: $Y ") color magenta
 			request basicrobot -m moverobot : moverobot($X,$Y)
 			
-			[#robotIsMoving=true#]
+			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_HOME
-						whenReply moverobotfailed -> returnHOME
+						whenReply moverobotfailed -> failed
+		State failed {
+			println("Cargorobot | failed, retry ") color magenta
+			
+			[# inceppato =true #]
+			emit alarm : alarm(aaaaa)
+			
+		}Transition t0 whenReply moverobotfailed ->  mexEater
 		
 		State at_HOME{
 			
 			[#robotIsMoving=false#]
 			println("[cargorobot] arrived at home, dir: $Dir") color green
 //			forward basicrobot -m setrobotstate : setpos($X,$Y,$Dir)
-			forward basicrobot -m setdirection : dir($Dir)
+			//forward basicrobot -m setdirection : dir($Dir)
 			
 			autodispatch resume : resume(gormiti)
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
@@ -380,12 +398,13 @@ QActor cargorobot context ctx_cargoservice {
 				X = Pup_X
 				Y = Pup_Y
 				Dir = Pupdir
+				
+				idle=false 
+				robotIsMoving = true
 			#]
 			request basicrobot -m moverobot : moverobot($X,$Y)
 			
-			[# idle=false 
-				robotIsMoving = true
-			#]
+
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_IO_port
@@ -429,7 +448,7 @@ QActor cargoservice context ctx_cargoservice {
 		
 		var rejected = false
 		
-		var Name = "NONE"
+		//var Name = "NONE"
 		var PID:Int? = 0
 		
 		var TotWeight = 0!!
@@ -566,7 +585,7 @@ QActor cargoservice context ctx_cargoservice {
 				#] 
 				{
 			
-				replyTo loadrequest with loadaccepted: loadaccepted($Name)
+				replyTo loadrequest with loadaccepted: loadaccepted($SlotName)
 				[#rejected=false#]
 				println("[Cargoservice] | loadaccepted") color green
 				
@@ -587,8 +606,8 @@ QActor cargoservice context ctx_cargoservice {
 				
 	
 	State state_moverobot{
-		request cargorobot -m loadcontainer: loadcontainer($Name)
-		println("[Cargoservice] | loadcontainer sent with name $Name") color blue
+		request cargorobot -m loadcontainer: loadcontainer($SlotName)
+		println("[Cargoservice] | loadcontainer sent with name $SlotName") color blue
 	}Transition t0 whenReply containerloaded -> state_update_hold
 	
 	State state_update_hold{
