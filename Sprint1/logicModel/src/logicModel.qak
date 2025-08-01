@@ -33,6 +33,8 @@ Dispatch updatedatahold : updatedatahold(M)
 
 Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
 Reply totalWeight : totalWeight(Weight) for totalWeightReq
+
+
 //CargoService -> CargoRobot
 Request loadcontainer:		loadcontainer(Slot)
 
