@@ -15,7 +15,7 @@ Reply   getProductAnswer: product( JSonString ) for getProduct
 
 Reply loadaccepted:		loadaccepted(Slot) for loadrequest
 Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, no_slots, no_PID }
-
+ 
 //CargoService--> Sonar
 Dispatch restart:restart(M)
 

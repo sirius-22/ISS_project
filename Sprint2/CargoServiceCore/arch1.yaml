@@ -88,3 +88,5 @@ services:
 networks:
   iss-network:
     external: true
+
+# Docker compose -f arch1.yaml up 

@@ -1,2 +1,13 @@
 **/.settings/
 **/.gradle/
+
+**/build/
+
+// Ignore all .class files
+**/*.class
+// .properties files
+**/*.properties
+// Ignore all .log files
+**/*.log
+// .project files
+**/.project
