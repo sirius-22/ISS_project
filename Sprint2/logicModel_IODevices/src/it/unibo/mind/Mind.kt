@@ -61,6 +61,7 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 				}	 
 				state("work") { //this:State
 					action { //it:State
+						CommUtils.outcyan("$name | waiting data...")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

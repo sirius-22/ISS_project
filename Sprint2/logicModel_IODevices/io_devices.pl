@@ -11,5 +11,7 @@ context(ctx_raspdevice, "localhost",  "TCP", "8128").
  static(mind).
   qactor( sonardevice, ctx_raspdevice, "it.unibo.sonardevice.Sonardevice").
  static(sonardevice).
+  qactor( leddevice, ctx_raspdevice, "it.unibo.leddevice.Leddevice").
+ static(leddevice).
   qactor( sonarsimul, ctx_raspdevice, "it.unibo.sonarsimul.Sonarsimul").
  static(sonarsimul).

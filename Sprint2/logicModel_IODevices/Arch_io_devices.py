@@ -28,6 +28,7 @@ with Diagram('io_devicesArch', show=False, outformat='png', graph_attr=graphattr
      with Cluster('ctx_raspdevice', graph_attr=nodeattr):
           mind=Custom('mind','./qakicons/symActorWithobjSmall.png')
           sonardevice=Custom('sonardevice','./qakicons/symActorWithobjSmall.png')
+          leddevice=Custom('leddevice','./qakicons/symActorWithobjSmall.png')
           sonarsimul=Custom('sonarsimul','./qakicons/symActorWithobjSmall.png')
      sonarsimul >> Edge( label='sonardata', **eventedgeattr, decorate='true', fontcolor='red') >> mind
      mind >> Edge( label='unibologprolog', **eventedgeattr, decorate='true', fontcolor='red') >> sys

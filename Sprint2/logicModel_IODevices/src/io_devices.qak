@@ -95,7 +95,7 @@ QActor mind context ctx_raspdevice{
 	Goto work
 	
 	State work{
-		
+		println("$name | waiting data...") color cyan 
 	}
 	Transition t0
 		whenEvent sonardata   -> handleSonardata
@@ -197,6 +197,11 @@ QActor sonardevice context ctx_raspdevice{
 	Goto readSonarData
 }//sonardevice
 
+QActor leddevice context ctx_raspdevice{
+	State init initial{
+		
+	}
+}
  
 
 QActor sonarsimul  context ctx_raspdevice{
