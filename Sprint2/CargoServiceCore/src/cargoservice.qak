@@ -84,8 +84,8 @@ Dispatch goto_idle : goto_idle(M)
 // CONTEXTS ===================================================================
 Context ctx_cargoservice		ip [host="localhost" port=8000]
 //Context ctx_client_simulator	ip [host="localhost" port=11803]
-Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
-Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
+Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
+Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
 
 // ACTORS =====================================================================
 ExternalQActor basicrobot context ctx_basicrobot
@@ -235,7 +235,7 @@ QActor cargorobot context ctx_cargoservice {
 			var robotIsMoving = false
 			var PlanDone = ""
 			var PlanToDo = ""
-			var inceppato =false
+			//var inceppato =false
 			
 			
 		//forward cargoservicestatusgui -m updategui: updategui(M)
@@ -301,13 +301,13 @@ QActor cargorobot context ctx_cargoservice {
 		println("[Cargorobot] | Gnam gnam ") color cyan
 		autodispatch resume : resume(gormiti)
 	}Transition t1 whenEvent resumeActions  -> state_resume
-					whenMsg resume and [#inceppato#] -> state_resume_inceppato
+					//whenMsg resume and [#inceppato#] -> state_resume_inceppato
 					
-	State state_resume_inceppato{
-		[#inceppato=false#]
-		request basicrobot -m moverobot : moverobot($X,$Y)
-	}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-					whenReply moverobotdone -> at_HOME
+//	State state_resume_inceppato{
+//		[#inceppato=false#]
+//		request basicrobot -m moverobot : moverobot($X,$Y)
+//	}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
+//					whenReply moverobotdone -> at_HOME
 
 
 	
@@ -367,14 +367,15 @@ QActor cargorobot context ctx_cargoservice {
 			
 		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
 						whenReply moverobotdone -> at_HOME
-						whenReply moverobotfailed -> failed
-		State failed {
-			println("Cargorobot | failed, retry ") color magenta
-			
-			[# inceppato =true #]
-			emit alarm : alarm(aaaaa)
-			
-		}Transition t0 whenReply moverobotfailed ->  mexEater
+						//whenReply moverobotfailed -> failed
+		// proving debug
+//		State failed {
+//			println("Cargorobot | failed, retry ") color magenta
+//			
+//			[# inceppato =true #]
+//			emit alarm : alarm(aaaaa)
+//			
+//		}Transition t0 whenReply moverobotfailed ->  mexEater
 		
 		State at_HOME{
 			
