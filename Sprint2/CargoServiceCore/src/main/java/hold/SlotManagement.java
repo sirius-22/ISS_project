@@ -1,6 +1,8 @@
 package main.java.hold;
 
 import main.java.domain.Product;
+import main.java.exceptions.HoldUpdateException;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -116,15 +118,15 @@ public class SlotManagement implements ISlotManagement {
      * @return true if successful, false if slot does not exist
      */
     @Override
-    public boolean updateHold(Product product, String slotName) {
+    public void updateHold(Product product, String slotName) throws HoldUpdateException {
         if (!slots.containsKey(slotName)) {
-            return false;
+            throw new HoldUpdateException("Slot '" + slotName + "' does not exist.");
         }
 
         // Remove old product weight if present
         Product oldProduct = slots.get(slotName);
         if (oldProduct != null) {
-            totalWeight -= oldProduct.getWeight();
+        	throw new HoldUpdateException("Slot '" + slotName + "' is already occupied");
         }
 
         // Insert new product
@@ -134,8 +136,8 @@ public class SlotManagement implements ISlotManagement {
         if (product != null) {
             totalWeight += product.getWeight();
         }
-        return true;
     }
+
 
     /**
      * Return the hold state as either text or JSON.
