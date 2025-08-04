@@ -62,8 +62,8 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t041",targetState="work2",cond=whenReply("loadaccepted"))
-					transition(edgeName="t042",targetState="work2",cond=whenReply("loadrejected"))
+					 transition(edgeName="t040",targetState="work2",cond=whenReply("loadaccepted"))
+					transition(edgeName="t041",targetState="work2",cond=whenReply("loadrejected"))
 				}	 
 				state("work2") { //this:State
 					action { //it:State
@@ -75,8 +75,8 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t043",targetState="work3",cond=whenReply("loadaccepted"))
-					transition(edgeName="t044",targetState="work3",cond=whenReply("loadrejected"))
+					 transition(edgeName="t042",targetState="work3",cond=whenReply("loadaccepted"))
+					transition(edgeName="t043",targetState="work3",cond=whenReply("loadrejected"))
 				}	 
 				state("work3") { //this:State
 					action { //it:State
@@ -88,8 +88,8 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t045",targetState="work4",cond=whenReply("loadaccepted"))
-					transition(edgeName="t046",targetState="work4",cond=whenReply("loadrejected"))
+					 transition(edgeName="t044",targetState="work4",cond=whenReply("loadaccepted"))
+					transition(edgeName="t045",targetState="work4",cond=whenReply("loadrejected"))
 				}	 
 				state("work4") { //this:State
 					action { //it:State

@@ -85,8 +85,27 @@ services:
     networks:
       - iss-network
   
+  #------ CARGOSERVICECORE -------------
+  cargoservicecore:
+    container_name: cargoservicecore
+    image: cargoservice:1.0
+    mem_limit: 512m
+    ports:
+      - "8000:8000/tcp"
+      - "8000:8000/udp"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SERVICE_HOST=172.31.64.1
+      - SERVICE_IP=172.31.64.1
+      - MQTTBROKER=mosquitto
+    depends_on:
+      - mosquitto
+      - eureka
+    networks:
+      - iss-network
+
 networks:
   iss-network:
     external: true
 
-# Docker compose -f arch1.yaml up 
+# docker compose -f arch2.yaml up 
