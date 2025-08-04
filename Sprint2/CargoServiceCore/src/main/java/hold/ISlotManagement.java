@@ -26,7 +26,7 @@ public interface ISlotManagement {
      * @param slotName the name of the slot (e.g., "Slot1")
      * @return true if update was successful, false if the slot does not exist
      */
-    boolean updateHold(Product product, String slotName);
+    void updateHold(Product product, String slotName);
 
     /**
      * Returns the state of the hold either as plain text or JSON.
