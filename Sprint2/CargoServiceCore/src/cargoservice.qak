@@ -82,18 +82,24 @@ Dispatch resume : resume(M)
 Dispatch goto_idle : goto_idle(M)
 
 // CONTEXTS ===================================================================
-Context ctx_cargoservice		ip [host="localhost" port=8000]
+Context ctx_cargoservice ip [host="localhost" port=8000]
 //Context ctx_client_simulator	ip [host="localhost" port=11803]
+<<<<<<< Updated upstream
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
 Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
+=======
+Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
+Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
+//Context ctx_raspdevice ip [ host= "localhost" port= 8128 ] -> cambiare host in 127.0.0.1
+>>>>>>> Stashed changes
 
 // ACTORS =====================================================================
 ExternalQActor basicrobot context ctx_basicrobot
 ExternalQActor productservice context ctx_productservice
+//ExternalQActor sonar context ctx_raspdevice
 
 // ACTORS for ctx_cargoservice ------------------------------------------------
 
-// ---------- SONARDEVICE -----------------------------------------------------
 
 
 
@@ -128,7 +134,7 @@ QActor sonar_mock context ctx_cargoservice{
 //		
 //	}Goto resume
 
-[#
+	[#
 		var counter = 0	
 	#]
 	
@@ -257,6 +263,8 @@ QActor cargorobot context ctx_cargoservice {
 	State state_init initial {
 		
 		
+//		subscribeTo sonar for resumeActions
+//		subscribeTo sonar for stopActions
 		subscribeTo sonar_mock for resumeActions
 		subscribeTo sonar_mock for stopActions
 		
