@@ -84,14 +84,13 @@ Dispatch goto_idle : goto_idle(M)
 // CONTEXTS ===================================================================
 Context ctx_cargoservice ip [host="localhost" port=8000]
 //Context ctx_client_simulator	ip [host="localhost" port=11803]
-<<<<<<< Updated upstream
+
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
 Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
-=======
+
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
 Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
 //Context ctx_raspdevice ip [ host= "localhost" port= 8128 ] -> cambiare host in 127.0.0.1
->>>>>>> Stashed changes
 
 // ACTORS =====================================================================
 ExternalQActor basicrobot context ctx_basicrobot

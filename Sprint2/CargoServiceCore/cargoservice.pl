@@ -36,6 +36,8 @@ dispatch( goto_idle, goto_idle(M) ).
 context(ctx_cargoservice, "localhost",  "TCP", "8000").
 context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
 context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
+context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
+context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
  qactor( basicrobot, ctx_basicrobot, "external").
   qactor( productservice, ctx_productservice, "external").
   qactor( sonar_mock, ctx_cargoservice, "it.unibo.sonar_mock.Sonar_mock").

@@ -34,6 +34,10 @@ with Diagram('cargoserviceArch', show=False, outformat='png', graph_attr=graphat
           basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
      with Cluster('ctx_productservice', graph_attr=nodeattr):
           productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
+     with Cluster('ctx_basicrobot', graph_attr=nodeattr):
+          basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
+     with Cluster('ctx_productservice', graph_attr=nodeattr):
+          productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
      sonar_mock >> Edge( label='resumeActions', **eventedgeattr, decorate='true', fontcolor='red') >> cargorobot
      sonar_mock >> Edge( label='stopActions', **eventedgeattr, decorate='true', fontcolor='red') >> cargorobot
      cargorobot >> Edge( label='alarm', **eventedgeattr, decorate='true', fontcolor='red') >> sys
