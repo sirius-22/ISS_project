@@ -57,9 +57,22 @@ INFO di log sono anche emesse come eventi qak in sintassi Prolog
 Event sonardata      : distance(D)   //emitted  by sonardevice or (better) by datacleaner
 Event unibologprolog : unibologprolog(SOURCE,CATEG,CONTENT)  //emiited by mind
 
+// Sonardevice -> cargoservicecore
+Event stopActions : stopActions(M)
+Event resumeActions : resumeActions(M)
+Event containerhere : containerhere(M)
+
+
+//Sonardevice -> leddevice
+Event ledon : ledon(M)
+Event ledoff : ledoff(M)
+
+
 Dispatch doblink : doblink(X)
  
 Context ctx_raspdevice ip [ host= "localhost" port= 8128 ]
+//Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
+
 
 /*
  * ledPython25Blink.py blinks per 0.9 sec
@@ -70,8 +83,20 @@ Context ctx_raspdevice ip [ host= "localhost" port= 8128 ]
 QActor mind context ctx_raspdevice{
 	[# 
 		var D = 0  
-		val D1 = 10
-		val D2 = 6
+		val D_FREE = 20
+		val countConfr = 1
+		val fault = false
+		
+		//0 = containerhere
+		//1 = stopActions
+		//2 = resumeActions
+		
+		val prevInterval = -1
+		val currentInterval = -1
+		
+		
+		
+		
    	 	val logger = LoggerFactory.getLogger("mind_actor") 
  	 	
  	 	
@@ -85,7 +110,9 @@ QActor mind context ctx_raspdevice{
 	   * Pulizia del log file locale definito in logback.xml
 	   */
 	  clearlog("./logs/app_sonarled2025.log")   
- 	#]		
+ 	#]	
+ 	
+ 		
 	State s0 initial{
 		delay 1000 //Give time to sonarsensor to start  in order to subscribe
 		println("$name |  start") 
@@ -103,14 +130,25 @@ QActor mind context ctx_raspdevice{
 	State handleSonardata{
 		onMsg( sonardata : distance(X) ){
 			[#  D = payloadArg(0).toInt() #]
- 			println("$name | handleSonardata D=$D D2=$D2 D1=$D1") color cyan
-			if [#  D < D2  #] { 
-				println("$name | ledon") color magenta
-				[# machineExec("python ledPython25On.py") #]
+			
+			
+ 			println("$name | handleSonardata D=$D") color cyan
+			if [#  D < D_FREE/2  #] {
+				 
+				[# currentInterval = 0#] //caso contaierhere
+				
+				if [# currentInterval == prevInterval #]{
+					
+				}
+				
+				println("$name | misurazione $countConfr") color magenta
+				 
 			}
+			
+			// mando mex a led -> comando da mandare poi nel led [# machineExec("python ledPython25On.py") #]
 			if [# D >= D1  #] { 
 				println("$name | ledoff") color magenta
-				[# Runtime.getRuntime().exec("python ledPython25Off.py") #]
+				// mando mex a led -> comando da mandare poi al led [# Runtime.getRuntime().exec("python ledPython25Off.py") #]
 			}
 			if [# D < D1 && D >= D2 #] { 
 				//println("do blink ... ") color cyan
@@ -197,7 +235,7 @@ QActor sonardevice context ctx_raspdevice{
 	Goto readSonarData
 }//sonardevice
 
-QActor leddevice context ctx_raspdevice{
+QActor leddevice_mock context ctx_raspdevice{
 	State init initial{
 		
 	}

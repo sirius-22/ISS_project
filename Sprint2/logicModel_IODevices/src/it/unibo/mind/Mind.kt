@@ -31,8 +31,20 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		 
 				var D = 0  
-				val D1 = 10
-				val D2 = 6
+				val D_FREE = 20
+				val countConfr = 1
+				val fault = false
+				
+				//0 = containerhere
+				//1 = stopActions
+				//2 = resumeActions
+				
+				val prevInterval = -1
+				val currentInterval = -1
+				
+				
+				
+				
 		   	 	val logger = LoggerFactory.getLogger("mind_actor") 
 		 	 	
 		 	 	
@@ -74,14 +86,15 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 						if( checkMsgContent( Term.createTerm("distance(D)"), Term.createTerm("distance(X)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								  D = payloadArg(0).toInt()  
-								CommUtils.outcyan("$name | handleSonardata D=$D D2=$D2 D1=$D1")
-								if(   D < D2   
-								 ){CommUtils.outmagenta("$name | ledon")
-								 machineExec("python ledPython25On.py")  
+								CommUtils.outcyan("$name | handleSonardata D=$D")
+								if(   D < D_FREE/2   
+								 ){ currentInterval = 0 
+								if(  currentInterval == prevInterval  
+								 ){}
+								CommUtils.outmagenta("$name | misurazione $countConfr")
 								}
 								if(  D >= D1   
 								 ){CommUtils.outmagenta("$name | ledoff")
-								 Runtime.getRuntime().exec("python ledPython25Off.py")  
 								}
 								if(  D < D1 && D >= D2  
 								 ){forward("doblink", "doblink(ok)" ,name ) 
