@@ -85,17 +85,23 @@ Dispatch goto_idle : goto_idle(M)
 Context ctx_cargoservice ip [host="localhost" port=8000]
 //Context ctx_client_simulator	ip [host="localhost" port=11803]
 
-Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
-Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
-
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
 Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
-//Context ctx_raspdevice ip [ host= "localhost" port= 8128 ] -> cambiare host in 127.0.0.1
+
+//per containerizzazione su docker e iodevice attivato su stessa macchina
+Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
+
+//se si usa facendo partire il sonar sulla stessa macchina (no container)
+//Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
+
+//togliere tutto il contesto di raspdevice se si usa il sonar_mock
+
 
 // ACTORS =====================================================================
 ExternalQActor basicrobot context ctx_basicrobot
 ExternalQActor productservice context ctx_productservice
-//ExternalQActor sonar context ctx_raspdevice
+//togliere se si usa sonar_mock
+ExternalQActor sonar context ctx_raspdevice
 
 // ACTORS for ctx_cargoservice ------------------------------------------------
 
@@ -103,70 +109,70 @@ ExternalQActor productservice context ctx_productservice
 
 
 // ----------- SONAR MOCK -----------------------------------------------------
-QActor sonar_mock context ctx_cargoservice{
-	
-// VERSIONE PRECEDENTE
-//	State init initial{
-//		
-//	}Goto state_idle
+//QActor sonar_mock context ctx_cargoservice{
 //	
-//	State state_idle{ 
-//		delay 10000
-//		emitlocalstream containerhere : containerhere(M)
-//		println("[sonar_mock] | messaggio containerhere inviato") color magenta
-//	}Transition t0 whenMsg sonaractivate -> test_interrupt
-//					whenMsg restart -> resume
-//					
-//					
-//	
+//// VERSIONE PRECEDENTE
+////	State init initial{
+////		
+////	}Goto state_idle
+////	
+////	State state_idle{ 
+////		delay 10000
+////		emitlocalstream containerhere : containerhere(M)
+////		println("[sonar_mock] | messaggio containerhere inviato") color magenta
+////	}Transition t0 whenMsg sonaractivate -> test_interrupt
+////					whenMsg restart -> resume
+////					
+////					
+////	
+////	State resume{
+////		println("[sonar_mock] | resume actions") color red
+////		emitlocalstream resumeActions : resumeActions(M)
+////		delay 3000
+////		
+////	}Goto state_idle
+////	
+////	State test_interrupt{
+////		println("[sonar_mock] | Interrupt, stop actions") color red
+////		emitlocalstream stopActions : stopActions(M)
+////		delay 10000
+////		
+////	}Goto resume
+//
+//	[#
+//		var counter = 0	
+//	#]
+////	
+// 	State s0 initial {
+// 		println("$name | STARTS") color yellow
+//  	} 
+//  	Goto work
+//  	
+//
+//  	State work {
+//  		
+//  		delay 10000
+//  		emitlocalstream containerhere : containerhere(si) 
+//  		[# counter ++ #]
+// 		delay 8000
+//  		
+//  		println("$name | $counter") color magenta
+//  		if [# counter == 2 #] {
+//  			
+//	    	println("$name | STOP INTERRUPT $counter") color red 	// DEBUG
+//	 		emitlocalstream stopActions : stopActions(si) 
+//	 		
+//	 		delay 8000
+//  		}
+//  	} Transition t0 whenTime 5000 -> resume
+//
 //	State resume{
-//		println("[sonar_mock] | resume actions") color red
-//		emitlocalstream resumeActions : resumeActions(M)
-//		delay 3000
+//	 		println("$name | resume actions") color green 	// DEBUG
+//	 		emitlocalstream resumeActions : resumeActions(si)
 //		
-//	}Goto state_idle
-//	
-//	State test_interrupt{
-//		println("[sonar_mock] | Interrupt, stop actions") color red
-//		emitlocalstream stopActions : stopActions(M)
-//		delay 10000
-//		
-//	}Goto resume
-
-	[#
-		var counter = 0	
-	#]
-	
- 	State s0 initial {
- 		println("$name | STARTS") color yellow
-  	} 
-  	Goto work
-  	
-
-  	State work {
-  		
-  		delay 10000
-  		emitlocalstream containerhere : containerhere(si) 
-  		[# counter ++ #]
- 		delay 8000
-  		
-  		println("$name | $counter") color magenta
-  		if [# counter == 2 #] {
-  			
-	    	println("$name | STOP INTERRUPT $counter") color red 	// DEBUG
-	 		emitlocalstream stopActions : stopActions(si) 
-	 		
-	 		delay 8000
-  		}
-  	} Transition t0 whenTime 5000 -> resume
-
-	State resume{
-	 		println("$name | resume actions") color green 	// DEBUG
-	 		emitlocalstream resumeActions : resumeActions(si)
-		
-	}Goto work
-
-}
+//	}Goto work
+//
+//}
 
 
 
@@ -262,10 +268,8 @@ QActor cargorobot context ctx_cargoservice {
 	State state_init initial {
 		
 		
-//		subscribeTo sonar for resumeActions
-//		subscribeTo sonar for stopActions
-		subscribeTo sonar_mock for resumeActions
-		subscribeTo sonar_mock for stopActions
+//		subscribeTo sonar_mock for resumeActions
+//		subscribeTo sonar_mock for stopActions
 		
 
 		discardMsg Off
@@ -475,10 +479,11 @@ QActor cargoservice context ctx_cargoservice {
 //			//initial status
 //		#]
 	
-		subscribeTo sonar_mock for resumeActions
-		subscribeTo sonar_mock for stopActions
-		subscribeTo sonar_mock for containerhere
+//		subscribeTo sonar_mock for resumeActions
+//		subscribeTo sonar_mock for stopActions
+//		subscribeTo sonar_mock for containerhere
 //		println("[CargoService] Reset")
+
 //		
 		discardMsg Off
 	}
@@ -620,15 +625,21 @@ QActor cargoservice context ctx_cargoservice {
 	
 	State state_update_hold{
 		//forward slotmanagement_mock -m updatedatahold: updatedatahold(M)
-println("[Cargoservice] | aggiornamento stiva, Dati = PID:$PID, Weight:$Weight, PName:$PName, SlotName:$SlotName") color yellow
+		println("[Cargoservice] | aggiornamento stiva, Dati = PID:$PID, Weight:$Weight, PName:$PName, SlotName:$SlotName") color yellow
 		[#	
 			val safeWeight = requireNotNull(Weight)
 			var prod = Product(PID!!, PName, safeWeight)
 			SlotMng.updateHold(prod, SlotName)
 			
-			#]
-		forward sonar_mock -m sonaractivate: sonaractivate(A)
-		forward sonar_mock -m restart:restart(M)
+		#]
+		//se si usa il sonar_mock
+//		forward sonar_mock -m sonaractivate: sonaractivate(A)
+//		forward sonar_mock -m restart:restart(M)
+
+
+		//se si usa il contesto raspdevice
+		forward sonar -m sonaractivate: sonaractivate(A)
+		forward sonar -m restart:restart(M)
 	}Goto state_idle
 }	
 	

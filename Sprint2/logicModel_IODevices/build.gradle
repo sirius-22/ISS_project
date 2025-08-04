@@ -69,6 +69,9 @@ dependencies {
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation group: 'org.json', name: 'json', version: '20180130'
 
+    // gson library for JSON parsing
+    implementation 'com.google.code.gson:gson:2.10.1'
+
     /* COAP ********************************************************************************* */
     // https://mvnrepository.com/artifact/org.eclipse.californium/californium-core
     implementation group: 'org.eclipse.californium', name: 'californium-core', version: '3.5.0'
@@ -104,23 +107,14 @@ dependencies {
 }
 	
 sourceSets {
-    main {
-        java {
-            srcDirs = ['src/main/java']
-        }
-        resources {
-            srcDirs = ['src/main/resources']
-        }
-    }
-    test{
-        java {
-            srcDirs += ['src/test/java']
-        }    
-        resources {
-            srcDirs = ['src/test/resources']
-        }
-    }
- } 
+    main.java.srcDirs += 'src'
+    main.java.srcDirs += 'src/main/java'
+    main.java.srcDirs += 'src/main/kotlin'
+    main.java.srcDirs += 'src/main/resources'
+    test.java.srcDirs += 'src/main/java/test'		//test is specific
+    test.java.srcDirs += 'src/main/kotlin/test'
+}
+  
 
 eclipse {
     classpath {
@@ -129,9 +123,10 @@ eclipse {
  }
 
 
+
 application {
     //Define the main class for the application.
-    mainClassName    = 'TODO'
+    mainClassName    = 'it.unibo.ctx_raspdevice.MainCtx_raspdeviceKt'
 }
  
  jar {
@@ -154,9 +149,9 @@ task dovesiamo {
 
 distributions {
     main {
-        distributionBaseName = 'io_devices'
+        distributionBaseName = 'cargoservice'
         contents { 
-             from './io_devices.pl'
+             from './cargoservice.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
         }
@@ -167,6 +162,6 @@ task run0(type: JavaExec) {
     group = "Execution"
     description = "Run the main class with JavaExecTask"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'TODO'
+    main = 'it.unibo.ctx_raspdevice.MainCtx_raspdeviceKt'
 }
 

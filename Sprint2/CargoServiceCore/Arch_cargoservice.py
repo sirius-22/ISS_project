@@ -26,7 +26,6 @@ with Diagram('cargoserviceArch', show=False, outformat='png', graph_attr=graphat
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_cargoservice', graph_attr=nodeattr):
-          sonar_mock=Custom('sonar_mock','./qakicons/symActorWithobjSmall.png')
           cargorobot=Custom('cargorobot','./qakicons/symActorWithobjSmall.png')
           cargoservice=Custom('cargoservice','./qakicons/symActorWithobjSmall.png')
           external_client=Custom('external_client','./qakicons/symActorWithobjSmall.png')
@@ -34,22 +33,16 @@ with Diagram('cargoserviceArch', show=False, outformat='png', graph_attr=graphat
           basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
      with Cluster('ctx_productservice', graph_attr=nodeattr):
           productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
-     with Cluster('ctx_basicrobot', graph_attr=nodeattr):
-          basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
-     with Cluster('ctx_productservice', graph_attr=nodeattr):
-          productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
-     sonar_mock >> Edge( label='resumeActions', **eventedgeattr, decorate='true', fontcolor='red') >> cargorobot
-     sonar_mock >> Edge( label='stopActions', **eventedgeattr, decorate='true', fontcolor='red') >> cargorobot
+     with Cluster('ctx_raspdevice', graph_attr=nodeattr):
+          sonar=Custom('sonar(ext)','./qakicons/externalQActor.png')
      cargorobot >> Edge( label='alarm', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='resumeActions', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
-     sonar_mock >> Edge( label='resumeActions', **eventedgeattr, decorate='true', fontcolor='red') >> cargoservice
-     sonar_mock >> Edge( label='stopActions', **eventedgeattr, decorate='true', fontcolor='red') >> cargoservice
-     sonar_mock >> Edge( label='containerhere', **eventedgeattr, decorate='true', fontcolor='red') >> cargoservice
      sys >> Edge( label='resumeActions', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
+     sys >> Edge( label='containerhere', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice
      cargorobot >> Edge(color='magenta', style='solid', decorate='true', label='<engage<font color="darkgreen"> engagedone engagerefused</font> &nbsp; moverobot<font color="darkgreen"> moverobotdone moverobotfailed</font> &nbsp; >',  fontcolor='magenta') >> basicrobot
      external_client >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<getProduct<font color="darkgreen"> getProductAnswer</font> &nbsp; >',  fontcolor='magenta') >> productservice
      cargoservice >> Edge(color='magenta', style='solid', decorate='true', label='<loadcontainer<font color="darkgreen"> containerloaded</font> &nbsp; >',  fontcolor='magenta') >> cargorobot
+     cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<sonaractivate &nbsp; restart &nbsp; >',  fontcolor='blue') >> sonar
      cargorobot >> Edge(color='blue', style='solid',  decorate='true', label='<setdirection &nbsp; >',  fontcolor='blue') >> basicrobot
-     cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<sonaractivate &nbsp; restart &nbsp; >',  fontcolor='blue') >> sonar_mock
 diag
