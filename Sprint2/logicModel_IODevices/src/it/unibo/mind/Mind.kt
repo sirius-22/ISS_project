@@ -32,32 +32,10 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 		 
 				var D = 0  
 				val D_FREE = 20
-				val countConfr = 1
-				val fault = false
+				var counter = 0
 				
-				//0 = containerhere
-				//1 = stopActions
-				//2 = resumeActions
-				
-				val prevInterval = -1
-				val currentInterval = -1
-				
-				
-				
-				
-		   	 	val logger = LoggerFactory.getLogger("mind_actor") 
-		 	 	
-		 	 	
-		 	 	fun getCurrentDateTimeString(): String {
-				    val currentDateTime = java.time.LocalDateTime.now()
-				    val formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss") //I : non vanno bene per Prolog
-				    return currentDateTime.format(formatter)
-				}
-		 	   
-		 	   /*
-			   * Pulizia del log file locale definito in logback.xml
-			   */
-			  clearlog("./logs/app_sonarled2025.log")   
+				var prevInterval = -1
+				var currentInterval = -1
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -69,58 +47,113 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="work", cond=doswitch() )
+					 transition(edgeName="t00",targetState="work",cond=whenEvent("sonardata"))
 				}	 
 				state("work") { //this:State
 					action { //it:State
-						CommUtils.outcyan("$name | waiting data...")
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t00",targetState="handleSonardata",cond=whenEvent("sonardata"))
-				}	 
-				state("handleSonardata") { //this:State
-					action { //it:State
+						CommUtils.outcyan("$name | In stato WORK. In attesa di dati...")
 						if( checkMsgContent( Term.createTerm("distance(D)"), Term.createTerm("distance(X)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								  D = payloadArg(0).toInt()  
-								CommUtils.outcyan("$name | handleSonardata D=$D")
-								if(   D < D_FREE/2   
-								 ){ currentInterval = 0 
-								if(  currentInterval == prevInterval  
-								 ){}
-								CommUtils.outmagenta("$name | misurazione $countConfr")
+								  
+								                D = payloadArg(0).toInt()
+								                
+								                currentInterval = when {
+								                    D < D_FREE / 2 -> 0 // containerhere
+								                    D > D_FREE     -> 1 // fault
+								                    else           -> 2 // free
+								                }
+								
+								                if (currentInterval == prevInterval) {
+								                    counter++
+								                } else {
+								                    counter = 1
+								                    prevInterval = currentInterval
+								                }
+								CommUtils.outcyan("$name | WORK: D=$D, interval=$currentInterval, counter=$counter")
+								if(  counter >= 3 && currentInterval == 0  
+								 ){CommUtils.outgreen("$name | 3 letture CONTAINER consecutive -> EMIT containerhere")
+								emit("containerhere", "containerhere(hereee)" ) 
+								 counter = 0  
 								}
-								if(  D >= D1   
-								 ){CommUtils.outmagenta("$name | ledoff")
-								}
-								if(  D < D1 && D >= D2  
-								 ){forward("doblink", "doblink(ok)" ,name ) 
-								}
-								 logger.info(  sysUtil.logStr(name,"mind(distance($D))","sonarled")  )  
-								emit("unibologprolog", "unibologprolog($MyName,sonarled,distance($D))" ) 
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t01",targetState="blink",cond=whenDispatch("doblink"))
-					transition(edgeName="t02",targetState="handleSonardata",cond=whenEvent("sonardata"))
+					 transition( edgeName="goto",targetState="check_fault_condition", cond=doswitch() )
 				}	 
-				state("blink") { //this:State
+				state("check_fault_condition") { //this:State
 					action { //it:State
-						 val T = "'"+getCurrentDateTimeString()+"'"  
-						CommUtils.outmagenta("$name | blinking $T")
-						  machineExec("python ledPython25Blink.py")  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t03",targetState="handleSonardata",cond=whenEvent("sonardata"))
+					 transition( edgeName="goto",targetState="fault_state", cond=doswitchGuarded({ counter >= 3 && currentInterval == 1  
+					}) )
+					transition( edgeName="goto",targetState="work_wait", cond=doswitchGuarded({! ( counter >= 3 && currentInterval == 1  
+					) }) )
+				}	 
+				state("work_wait") { //this:State
+					action { //it:State
+						CommUtils.outblack("$name | Attendo il prossimo dato...")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t01",targetState="work",cond=whenEvent("sonardata"))
+				}	 
+				state("fault_state") { //this:State
+					action { //it:State
+						CommUtils.outred("$name | In FAULT_STATE....")
+						emit("stopActions", "stopActions(Stop)" ) 
+						 
+						 			// Resetto il contatore quando entro per la prima volta
+						 			// in questo stato
+						 			counter = 0; 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t02",targetState="evaluate_resume",cond=whenEvent("sonardata"))
+				}	 
+				state("evaluate_resume") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("distance(D)"), Term.createTerm("distance(D)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								 D = payloadArg(0).toInt()  
+								if(  D <= D_FREE  
+								 ){ counter++  
+								}
+								else
+								 { counter = 0  
+								 }
+								CommUtils.outred("$name | FAULT_STATE: D=$D, clear_counter=$counter")
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="work_after_resume", cond=doswitchGuarded({ counter >= 3  
+					}) )
+					transition( edgeName="goto",targetState="fault_state", cond=doswitchGuarded({! ( counter >= 3  
+					) }) )
+				}	 
+				state("work_after_resume") { //this:State
+					action { //it:State
+						CommUtils.outgreen("$name | 3 letture 'clear' consecutive. EMIT resumeActions e torno al lavoro.")
+						emit("resumeActions", "resumeActions(okok)" ) 
+						 counter = 0; prevInterval = -1;  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="work_wait", cond=doswitch() )
 				}	 
 			}
 		}

@@ -51,12 +51,11 @@ class Sonardevice ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					action { //it:State
 						 
 								var data = reader.readLine()
-								//CommUtils.outyellow("$name with python: data = $data"   ) 
 								if( data != null ){
 								try{ 
 									val vd = data.toFloat()
 									val v  = vd.toInt()
-									if( v <= 100 ){	//A first filter ...
+									if( v <= 100 ){	//Un primo filtro...
 										Distance = v				
 									}else Distance = 0
 								}catch(e: Exception){

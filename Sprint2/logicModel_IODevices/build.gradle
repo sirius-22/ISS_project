@@ -131,7 +131,7 @@ eclipse {
 
 application {
     //Define the main class for the application.
-    mainClassName    = 'TODO'
+    mainClassName    = 'it.unibo.ctx_raspdevice.MainCtx_raspdeviceKt'
 }
  
  jar {
@@ -167,6 +167,6 @@ task run0(type: JavaExec) {
     group = "Execution"
     description = "Run the main class with JavaExecTask"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'TODO'
+    main = 'it.unibo.ctx_raspdevice.MainCtx_raspdeviceKt'
 }
 

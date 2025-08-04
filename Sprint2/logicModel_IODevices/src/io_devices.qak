@@ -1,197 +1,127 @@
 System io_devices
 
-mqttBroker "192.168.1.214" : 1883 eventTopic "logkb"
-/*
- * ----------------------------------------------------------------
- * ATTENZIONE: MODIFICARE GLI IP  ... ANCHE IN logback.xml
- * 
- * MODIFICARE subscribeTo sonarsimul for sonardata
- * 
- * ALLA FINE GUARDARE il contenuto di app_sonarled2025.log
- * e i log mediante KIBANA sull'indice INDEX=cell-* (logstash.conf)
- * 
- * Per eliminare tutti i logo su logstash eseguire in cygwin64 Terminal
- * curl -X POST "http://localhost:9200/INDEX/_delete_by_query" -H 'Content-Type: application/json' -d'
-	{
-	  "query": {
-	    "match_all": {}
-	}
-	}'
- * ----------------------------------------------------------------
- */   
-/*
-=============================================================================
-Costruire un sistema basato su un sonar e un led che opera come segue.
-Prefissate due distanze D1 e D2 con 0 < D2 < D1,
-quando il sonar rileva una distanza D:
+mqttBroker "broker.hivemq.com" : 1883 eventTopic "unibo/qak/events"
 
- - se D > D1: il led deve essere spento
- - se D < D1 e D > D2 :   il led blinks
- - se D < D2 : il led rimane acceso
-=============================================================================
-*/
+Event sonardata      : distance(D)
 
-/*
--------------------------------------------------------------------------------------
-Il logging avviene sia su FILE locale  
-sia su logstash che l'appender definito in logback.xml pone su 192.168.1.132:5044
- 
-Il file logstash.conf DEFINISCE index  => "cells-"       
+Event stopActions : stopActions(REASON)
+Event resumeActions : resumeActions(REASON)
+Event containerhere : containerhere(INFO)
 
-I log sono stringhe strutturate JSON 
-		{"source":"...","category":"sonarled","message":"mind(distance(..))"}
+Dispatch ledon : ledon(M)
+Dispatch ledoff : ledoff(M)
 
-
-Per 'pulire' l'indice su logstash eseguire  (A sta per *):
-curl -X POST "http://localhost:9200/cell-A/_delete_by_query" -H 'Content-Type: application/json' -d'
-{
-  "query": {
-    "match_all": {}
-   }
-}' 
-       
--------------------------------------------------------------------------------------
-INFO di log sono anche emesse come eventi qak in sintassi Prolog
-
- */
-Event sonardata      : distance(D)   //emitted  by sonardevice or (better) by datacleaner
-Event unibologprolog : unibologprolog(SOURCE,CATEG,CONTENT)  //emiited by mind
-
-// Sonardevice -> cargoservicecore
-Event stopActions : stopActions(M)
-Event resumeActions : resumeActions(M)
-Event containerhere : containerhere(M)
-
-
-//Sonardevice -> leddevice
-Event ledon : ledon(M)
-Event ledoff : ledoff(M)
-
-
-Dispatch doblink : doblink(X)
- 
-Context ctx_raspdevice ip [ host= "localhost" port= 8128 ]
-//Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
-
-
-/*
- * ledPython25Blink.py blinks per 0.9 sec
- * sonar.py emette un valore ogni sec
- * delay   ha come valore minimo 1msec
- */
+Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
 
 QActor mind context ctx_raspdevice{
 	[# 
 		var D = 0  
 		val D_FREE = 20
-		val countConfr = 1
-		val fault = false
+		var counter = 0
 		
-		//0 = containerhere
-		//1 = stopActions
-		//2 = resumeActions
-		
-		val prevInterval = -1
-		val currentInterval = -1
-		
-		
-		
-		
-   	 	val logger = LoggerFactory.getLogger("mind_actor") 
- 	 	
- 	 	
- 	 	fun getCurrentDateTimeString(): String {
-		    val currentDateTime = java.time.LocalDateTime.now()
-		    val formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss") //I : non vanno bene per Prolog
-		    return currentDateTime.format(formatter)
-		}
- 	   
- 	   /*
-	   * Pulizia del log file locale definito in logback.xml
-	   */
-	  clearlog("./logs/app_sonarled2025.log")   
+		var prevInterval = -1
+		var currentInterval = -1
  	#]	
  	
- 		
 	State s0 initial{
-		delay 1000 //Give time to sonarsensor to start  in order to subscribe
+		delay 1000
 		println("$name |  start") 
-		//subscribeTo sonardevice for sonardata
 		subscribeTo sonarsimul for sonardata
- 	}
-	Goto work
-	
-	State work{
-		println("$name | waiting data...") color cyan 
 	}
 	Transition t0
-		whenEvent sonardata   -> handleSonardata
-         
-	State handleSonardata{
-		onMsg( sonardata : distance(X) ){
-			[#  D = payloadArg(0).toInt() #]
-			
-			
- 			println("$name | handleSonardata D=$D") color cyan
-			if [#  D < D_FREE/2  #] {
-				 
-				[# currentInterval = 0#] //caso contaierhere
-				
-				if [# currentInterval == prevInterval #]{
-					
-				}
-				
-				println("$name | misurazione $countConfr") color magenta
-				 
-			}
-			
-			// mando mex a led -> comando da mandare poi nel led [# machineExec("python ledPython25On.py") #]
-			if [# D >= D1  #] { 
-				println("$name | ledoff") color magenta
-				// mando mex a led -> comando da mandare poi al led [# Runtime.getRuntime().exec("python ledPython25Off.py") #]
-			}
-			if [# D < D1 && D >= D2 #] { 
-				//println("do blink ... ") color cyan
-				autodispatch doblink : doblink(ok)
-			} 
-			/* 
-			 * Emette la INFO log di contenuto :mind(distance($D)) e categoria sonarled
-			 */
- 			[# logger.info(  sysUtil.logStr(name,"mind(distance($D))","sonarled")  ) #]
-			/*
-			 * Emette un evento di log unibologprolog 
-			 * che può essere gestito da unibologger che percepisce sulla topic logkb
-			 */
- 			 emit unibologprolog : unibologprolog($MyName,sonarled,distance($D)) 
-		} 
-	} 
-	Transition t0 
-		whenMsg doblink       -> blink
-		whenEvent sonardata   -> handleSonardata
-
-    State blink{
- 			/*
-			 * Emette un evento di log unibologprolog 
-			 * che può essere gestito da unibologger che percepisce sulla topic logkb
-			 */
-	   [# val T = "'"+getCurrentDateTimeString()+"'" #]
-		println("$name | blinking $T")  color magenta
-//		emit unibologprolog : unibologprolog($MyName,sonarled, blinksat($T)) 
- 
-		
-		[#  machineExec("python ledPython25Blink.py") #]
-    }
- 	Transition t0 //in un sec fa circa 3 blink
-		whenEvent sonardata  -> handleSonardata  
+		whenEvent sonardata -> work
 	
- }
+	// STATO OPERATIVO NORMALE
+	State work{
+		println("$name | In stato WORK. In attesa di dati...") color cyan
+		
+		onMsg( sonardata : distance(X) ){
+			[#  
+                D = payloadArg(0).toInt()
+                
+                currentInterval = when {
+                    D < D_FREE / 2 -> 0 // containerhere
+                    D > D_FREE     -> 1 // fault
+                    else           -> 2 // free
+                }
 
- /* 
- * Emette uno stream di dati 
- * I subscribers possono esser solo attori locali (come mind)
-*/
+                if (currentInterval == prevInterval) {
+                    counter++
+                } else {
+                    counter = 1
+                    prevInterval = currentInterval
+                }
+            #]
+ 			println("$name | WORK: D=$D, interval=$currentInterval, counter=$counter") color cyan
+
+			// Emetti eventi se necessario
+			if [# counter >= 3 && currentInterval == 0 #] {
+				println("$name | 3 letture CONTAINER consecutive -> EMIT containerhere") color green
+				emit containerhere : containerhere(hereee)
+				[# counter = 0 #] // Resetta per evitare emissioni multiple
+			}
+		}
+	}
+	// Transizione SENZA attesa che valuta dove andare dopo 'work'
+	Goto check_fault_condition
+
+	// Stato "ponte" che instrada il flusso
+	State check_fault_condition {
+		// Stato vuoto, serve solo per la logica di transizione
+	}
+		// Se la condizione di fault è vera, vai a fault_state
+		Goto fault_state if [# counter >= 3 && currentInterval == 1 #] 
+		// Altrimenti, torna ad attendere dati
+		else work_wait
+
+
+	// STATO DI ATTESA REALE
+	State work_wait {
+		println("$name | Attendo il prossimo dato...")
+	}
+	Transition t0
+		whenEvent sonardata -> work
+
+
+    // STATO DI FAULT: il sistema è fermo
+ 	State fault_state {
+ 		println("$name | In FAULT_STATE....") color red
+ 		emit stopActions: stopActions(Stop)
+ 		[# 
+ 			// Resetto il contatore quando entro per la prima volta
+ 			// in questo stato
+ 			counter = 0; 
+ 		#]
+ 	}
+ 	Transition t0
+ 		whenEvent sonardata -> evaluate_resume
+
+ 	State evaluate_resume {
+ 		onMsg(sonardata : distance(D)) {
+ 			[# D = payloadArg(0).toInt() #]
+ 			
+ 			if [# D <= D_FREE #] {
+ 				[# counter++ #]
+ 			} else {
+ 				[# counter = 0 #]
+ 			}
+ 			println("$name | FAULT_STATE: D=$D, clear_counter=$counter") color red
+ 		}
+ 	}
+ 	// Dopo aver valutato il dato, controlla se uscire dal fault
+ 		Goto work_after_resume if [# counter >= 3 #] else fault_state
+ 	
+ 	// Stato per emettere il resume e resettare le variabili
+ 	State work_after_resume {
+ 		println("$name | 3 letture 'clear' consecutive. EMIT resumeActions e torno al lavoro.") color green
+ 		emit resumeActions : resumeActions(okok)
+ 		[# counter = 0; prevInterval = -1; #]
+ 	}
+ 	Goto work_wait
+
+ }
  
-QActor sonardevice context ctx_raspdevice{
+ QActor sonardevice context ctx_raspdevice{
 [# 
 	lateinit var reader : java.io.BufferedReader
     lateinit var p : Process	
@@ -209,12 +139,11 @@ QActor sonardevice context ctx_raspdevice{
 	State readSonarData{
 	[# 
 		var data = reader.readLine()
-		//CommUtils.outyellow("$name with python: data = $data"   ) 
 		if( data != null ){
 		try{ 
 			val vd = data.toFloat()
 			val v  = vd.toInt()
-			if( v <= 100 ){	//A first filter ...
+			if( v <= 100 ){	//Un primo filtro...
 				Distance = v				
 			}else Distance = 0
 		}catch(e: Exception){
@@ -227,41 +156,50 @@ QActor sonardevice context ctx_raspdevice{
 		    println("$name with python: data = $data"   ) color yellow
 			emitlocalstream sonardata : distance($Distance)			 
 		}
-		/*
-		 * Il sonar fisico (sonar.py)  emette un dato una volta al secondo 
-		 */
-		 
 	}
 	Goto readSonarData
 }//sonardevice
 
+
+
 QActor leddevice_mock context ctx_raspdevice{
 	State init initial{
-		
+		//verrà implementato nel prossimo Sprint
 	}
 }
  
-
+// Simulatore aggiornato per testare la transizione a fault e il resume
 QActor sonarsimul  context ctx_raspdevice{
 	State s0 initial{
-		
+		println("sonarsimul | AVVIATO")
 	}
 	Goto work
-	//------10-----6-----
+	
 	State work{
-		emitlocalstream sonardata      : distance(20)
+		println("sonarsimul | Emetto 25 (per causare FAULT)")
+		emitlocalstream sonardata      : distance(25)
 	    delay 1000
-		emitlocalstream sonardata      : distance(10)
+		emitlocalstream sonardata      : distance(26)
 	    delay 1000
+		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
+	    delay 2000
+
+		println("sonarsimul | Emetto 8 (per causare RESUME)")
+		emitlocalstream sonardata      : distance(8) // lettura clear 1
+	    delay 1000
+		emitlocalstream sonardata      : distance(15)// lettura clear 2
+	    delay 1000
+		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
+	    delay 2000
+	    
+		println("sonarsimul | Emetto 8 (per causare containerhere)")
 		emitlocalstream sonardata      : distance(8)
 	    delay 1000
-		emitlocalstream sonardata      : distance(8)
+		emitlocalstream sonardata      : distance(7)
 	    delay 1000
-		emitlocalstream sonardata      : distance(5)
-	    	
+		emitlocalstream sonardata      : distance(9) // <-- mind emetterà containerhere
+	    delay 2000
+
 	}
+	Goto work
 }
- 
-
-
-

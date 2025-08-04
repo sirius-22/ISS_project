@@ -31,5 +31,7 @@ with Diagram('io_devicesArch', show=False, outformat='png', graph_attr=graphattr
           leddevice_mock=Custom('leddevice_mock','./qakicons/symActorWithobjSmall.png')
           sonarsimul=Custom('sonarsimul','./qakicons/symActorWithobjSmall.png')
      sonarsimul >> Edge( label='sonardata', **eventedgeattr, decorate='true', fontcolor='red') >> mind
-     mind >> Edge( label='unibologprolog', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     mind >> Edge( label='containerhere', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     mind >> Edge( label='stopActions', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     mind >> Edge( label='resumeActions', **eventedgeattr, decorate='true', fontcolor='red') >> sys
 diag

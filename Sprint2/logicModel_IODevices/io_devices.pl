@@ -1,17 +1,15 @@
 %====================================================================================
 % io_devices description   
 %====================================================================================
-mqttBroker("192.168.1.214", "1883", "logkb").
+mqttBroker("broker.hivemq.com", "1883", "unibo/qak/events").
 event( sonardata, distance(D) ).
-event( unibologprolog, unibologprolog(SOURCE,CATEG,CONTENT) ).
-event( stopActions, stopActions(M) ).
-event( resumeActions, resumeActions(M) ).
-event( containerhere, containerhere(M) ).
-event( ledon, ledon(M) ).
-event( ledoff, ledoff(M) ).
-dispatch( doblink, doblink(X) ).
+event( stopActions, stopActions(REASON) ).
+event( resumeActions, resumeActions(REASON) ).
+event( containerhere, containerhere(INFO) ).
+dispatch( ledon, ledon(M) ).
+dispatch( ledoff, ledoff(M) ).
 %====================================================================================
-context(ctx_raspdevice, "localhost",  "TCP", "8128").
+context(ctx_raspdevice, "127.0.0.1",  "TCP", "8128").
  qactor( mind, ctx_raspdevice, "it.unibo.mind.Mind").
  static(mind).
   qactor( sonardevice, ctx_raspdevice, "it.unibo.sonardevice.Sonardevice").
