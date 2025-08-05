@@ -29,7 +29,8 @@ Il ```sonardevice``` deve essere in grado di effettuare misurazioni per la rilev
 Flusso di operazioni di sonardevice:
 - nella fase di inizializzazione il ```sonardevice``` attiva il sensore fisico
 - il sonar continuamente effettua misurazioni, se per 3 secondi la misurazione è consistente (ovvero non cambai significativamente rispetto un margine di errore, da valutare in base all'hardware fornito dal committente) essa viene valutata da ```sonardevice``` nelle seguenti casistiche:
-<br>
+
+
 1. 0 <= D < D_{FREE}/2 -> un container è arrivato alla IO-port dunque il sonardevice dovrà mandare un evento (```containerhere```) per avvisarne la presenza
 2. D > D_{FREE} -> è avvenuto un malfunzionamento del sistema, dunque ```sonardevice``` dovrà mandare un evento (```stopActions```) per interrompere le attività di tutto il sistema. In questo caso ```sonardevice``` aspetta una misurazione D <= D_{FREE} per sbloccare il sistema (```resumeActions```) ignorando le altre casistiche
 
@@ -82,16 +83,43 @@ Per rendere più agevole questo passaggio verrà implementata un'interfaccia [FO
 
 
 ### Modello
+L'analisi confluisce nei seguenti 2 modelli logici.
 
+<img src='./logicModel_IODevices/iodevicearch.png'>
 
 
 ## Piano di testing
 
 
-## Nuova Architettura
-
-
 ## Progettazione
+
+Sulla base dell'analisi effettuata, si procede alla progettazione dettagliata dei componenti.
+
+### sonardevice: un'Architettura a Due Attori
+
+Come emerso dall'analisi, per rispettare il **Principio di Singola Responsabilità (SRP)**, la logica del `sonardevice` viene suddivisa in due attori distinti, entrambi operanti nel contesto `ctx_raspdevice`:
+
+1.  **`sonardevice` (Il Lettore)**: Questo attore ha un unico e specifico compito: interfacciarsi con l'hardware. La sua responsabilità è leggere i dati grezzi dal sensore fisico (tramite lo script `sonar.py` fornito dal committente), effettuare un primo, semplice filtraggio (es. scartare valori palesemente errati) e pubblicare i dati validi in un flusso locale.
+    *   **Scelta Progettuale**: L'uso della primitiva Qak `emitlocalstream` è fondamentale. Questa scelta garantisce che i dati grezzi del sensore vengano trasmessi in modo efficiente e **solo agli attori locali** (nello stesso contesto) che si sono esplicitamente sottoscritti. Questo disaccoppia il lettore hardware dall'elaboratore della logica, permettendo di modificare o sostituire uno dei due senza impattare l'altro.
+
+2.  **`mind` (L'Elaboratore)**: Questo attore rappresenta la "mente" del sistema di rilevamento. Si sottoscrive allo stream di dati generato da `sonardevice` e contiene tutta la logica di business per interpretare tali dati.
+    *   **Scelta Progettuale (Automa a Stati Finiti)**: Il comportamento del `mind` è modellato come un **Automa a Stati Finiti (FSM)**, una delle caratteristiche principali del DSL Qak. Questa scelta è ideale perché il sistema ha comportamenti nettamente diversi a seconda del suo stato interno (operativo normale o in fault).
+        *   **Stato `work`**: Modella il comportamento standard del sistema. Qui, l'attore analizza la sequenza di misurazioni per rilevare la presenza di un container.
+        *   **Stato `fault_state`**: Modella il comportamento anomalo. Una volta entrato in questo stato, la logica di valutazione dei dati cambia radicalmente: l'attore non cerca più container, ma attende unicamente una sequenza di misurazioni che indichino che il guasto è stato risolto, ignorando tutto il resto. L'uso di uno stato esplicito per il fault rende il modello più leggibile, robusto e facile da debuggare rispetto a una gestione basata unicamente su variabili booleane complesse.
+    *   **Gestione della Consistenza**: La logica del "rilevamento per 3 secondi" viene implementata tramite un contatore di misurazioni consecutive all'interno dello stesso intervallo di distanza. Questo approccio è robusto contro letture anomale sporadiche e assicura che un evento venga emesso solo a fronte di una situazione stabile.
+
+### Comunicazione tra Componenti: il Ruolo degli Eventi e di MQTT
+
+La comunicazione verso gli altri componenti del sistema, come `cargoservice` e il `cargorobot`, deve essere flessibile e disaccoppiata.
+
+*   **Scelta Progettuale (Eventi Globali)**: Invece di una comunicazione punto-punto (`Dispatch`), o con la modellazione come eventi locali fatta in precedenza, ma non più possibile, abbiamo scelto di usare gli **Eventi** (`containerhere`, `stopActions`, `resumeActions`). Questa decisione è motivata dalla necessità di una comunicazione **uno-a-molti**. Il `mind` non ha bisogno di conoscere quali e quanti attori sono interessati alle sue notifiche; semplicemente "annuncia" un accadimento significativo al sistema. Qualsiasi componente, presente o futuro, può sottoscriversi a questi eventi senza richiedere alcuna modifica all'attore `mind`. Questo garantisce alta manutenibilità e scalabilità.
+
+*   **Scelta Progettuale (Broker MQTT)**: Per propagare questi eventi globali tra contesti diversi in modo affidabile, l'architettura si appoggia a un **broker MQTT**, dichiarato a livello di sistema nel modello Qak con la direttiva `mqttBroker`.
+    *   **Vantaggi**: Il broker agisce come un intermediario centrale che disaccoppia completamente i componenti a livello di rete. L'infrastruttura Qak gestisce in modo trasparente la connessione al broker e la pubblicazione/sottoscrizione degli eventi. Questo astrae tutta la complessità della comunicazione distribuita, permettendo allo sviluppatore di concentrarsi sulla logica di business usando semplici primitive come `emit` e `whenEvent`, indipendentemente da dove si trovino fisicamente gli attori.
+
+In sintesi, la progettazione adotta un pattern **Publisher/Subscriber** per la comunicazione esterna e un'architettura a **stream di dati locali** per la comunicazione interna, sfruttando appieno le capacità espressive e le astrazioni fornite dal linguaggio Qak per creare un sistema reattivo, modulare e robusto.
+
+
 
 
 
