@@ -262,3 +262,19 @@ Con la trasformazione di `slotmanagement`, il `cargoservice` diventa il gestore 
 
 ## Deployment
 
+1. Andare nella cartella [CargoServiceCore](./CargoServiceCore)
+2. Seguire le [istruzioni](how_to_creare_immagini_docker.md) per caricare l'immagine Docker di cargoservicore
+3. Eseguire il comando ```docker load -i basicrobot24.tar``` per caricare l'immagine Docker del basicrobot
+4. Creare la rete ```docker network create iss-network```
+5. Eseguire  il comando ```docker compose -f arch2.yaml up``` per far partire i componenti del sistema 
+6. Aprire il browser su [localhost:8090](localhost:8090) per visualizzare l’ambiente WEnv in cui lavorerà il DDR robot
+7. Eseguire il comando ```./gradlew run``` oppure ```gradle run``` nella cartella [logicModel_IODevices](./logicModel_IODevices) per far partire il resto del sistema RaspDevice
+
+*Note:*
+
+a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docker </br>
+b. Il sistema cargoservice si appoggia a productservice che ha un database Mongo per la persistenza dei prodotti, questo si può riempire con oppurtuni prodotti di test attraverso il file [setup_mongo.js](setup_mongo.js) (eseguire ```node setup_mongo.js```)
+
+### Raspberry Deployment
+Eseguire fino al punto 6 della sezione precedente
+
