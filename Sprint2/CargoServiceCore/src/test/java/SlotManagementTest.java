@@ -8,7 +8,7 @@ import org.junit.Before;
 import main.java.hold.*;
 import main.java.domain.*;
 
-public class HoldTest {
+public class SlotManagementTest {
 	
 	private ISlotManagement slotManagement;
 
