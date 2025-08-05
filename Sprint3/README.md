@@ -1,7 +1,9 @@
 # Sprint 3
 
 ## Architettura iniziale dello sprint
-<img src='../Sprint2'> TODO
+
+<img src='../Sprint2/logicModel_IODevices/io_devicesarch.png' width="500">
+<img src='../Sprint2/CargoServiceCore/cargoservicearch.png'>
 
 ## Obiettivi
 
