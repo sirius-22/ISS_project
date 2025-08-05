@@ -14,7 +14,7 @@ Dispatch ledoff : ledoff(M)
 Context ctx_raspdevice ip [ host= "localhost" port= 8128 ]
 
 QActor mind context ctx_raspdevice{
-	[# 
+	[#
 		var D = 0  
 		val D_FREE = 20
 		var counter = 0
@@ -28,6 +28,7 @@ QActor mind context ctx_raspdevice{
 		delay 1000
 		println("$name |  start") 
 		
+		subscribe "sonardatatest"
 		//cambiare dopo il testing
 		subscribeTo sonarsimul for sonardata
 		//con
@@ -183,7 +184,7 @@ QActor sonarsimul  context ctx_raspdevice{
 		delay 10000
 		println("sonarsimul | AVVIATO") color magenta
 	}
-	Goto work
+	//Goto work
 	
 	// D_FREE =20
 	
