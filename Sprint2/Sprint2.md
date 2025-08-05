@@ -85,7 +85,7 @@ Per rendere più agevole questo passaggio verrà implementata un'interfaccia [FO
 ### Modello
 L'analisi confluisce nei seguenti 2 modelli logici.
 
-<img src='./logicModel_IODevices/iodevicearch.png'>
+<img src='./logicModel_IODevices/io_devicesarch.png' width="500">
 
 
 ## Piano di testing
