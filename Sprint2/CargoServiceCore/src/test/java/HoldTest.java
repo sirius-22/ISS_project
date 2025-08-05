@@ -13,7 +13,7 @@ public class HoldTest {
 	private ISlotManagement slotManagement;
 
     @Before
-    void setup() {
+    public void setup() {
         // Initialize fresh instance before each test
         slotManagement = new SlotManagement();
     }
@@ -23,7 +23,7 @@ public class HoldTest {
      * freeSlot() must return the first available slot name.
      */
     @Test
-    void testInitialFreeSlotExists() {
+    public void testInitialFreeSlotExists() {
         String free = slotManagement.freeSlot();
         assertFalse(free.equals("NONE"));
     }
@@ -32,7 +32,7 @@ public class HoldTest {
      * totalWeightReq() must return 0 on an empty hold.
      */
     @Test
-    void testInitialWeightIsZero() {
+    public void testInitialWeightIsZero() {
         assertEquals("Total weight should be 0 when no product is stored",0, slotManagement.totalWeightReq());
     }
 
@@ -41,7 +41,7 @@ public class HoldTest {
      * and increase the total weight accordingly.
      */
     @Test
-    void testUpdateHold() {
+    public void testUpdateHold() {
         Product p = new Product(1, "Prod1", 10);
         try {
             slotManagement.updateHold(new Product(1, "ProdA", 10), "Slot1");
@@ -63,7 +63,7 @@ public class HoldTest {
      * freeSlot() should return "NONE" when all slots are filled.
      */
     @Test
-    void testFreeSlotNoneWhenFull() {
+    public void testFreeSlotNoneWhenFull() {
         slotManagement.updateHold(new Product(1, "ProdA", 5), "Slot1");
         slotManagement.updateHold(new Product(2, "ProdB", 5), "Slot2");
         slotManagement.updateHold(new Product(3, "ProdC", 5), "Slot3");
