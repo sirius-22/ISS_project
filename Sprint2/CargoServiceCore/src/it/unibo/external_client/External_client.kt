@@ -41,17 +41,6 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					}	 	 
 					 transition( edgeName="goto",targetState="work1", cond=doswitch() )
 				}	 
-				state("work0") { //this:State
-					action { //it:State
-						CommUtils.outcyan("$name | sends requests")
-						request("loadrequest", "loadrequest(23)" ,"cargoservice" )  
-						delay(2000) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-				}	 
 				state("work1") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
@@ -69,7 +58,7 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
 						request("loadrequest", "loadrequest(21)" ,"cargoservice" )  
-						delay(2000) 
+						delay(10000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -82,7 +71,7 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
 						request("loadrequest", "loadrequest(20)" ,"cargoservice" )  
-						delay(2000) 
+						delay(10000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -95,7 +84,7 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
 						request("loadrequest", "loadrequest(1)" ,"cargoservice" )  
-						delay(2000) 
+						delay(10000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

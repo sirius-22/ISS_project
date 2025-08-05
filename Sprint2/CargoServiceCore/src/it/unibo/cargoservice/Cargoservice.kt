@@ -33,25 +33,16 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
 				val MAXLOAD = 600
-				
-				//product weight
 				var Weight = 0
-				
 				var rejected = false
-				
-				//var Name = "NONE"
 				var PID:Int? = 0
-				
-				var TotWeight = 0!!
-				
+				var TotWeight = 0
 				var JSonString = ""
 				var PName = "" 
 				
-				// SlotManagenegement
-				
+				// SlotManagement is now a POJO, instantiated here
 				var SlotMng = SlotManagement()
 				var SlotName = "NONE"
-		
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
@@ -76,7 +67,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("state_handle_stop") { //this:State
 					action { //it:State
-						CommUtils.outyellow("[CargoService] Ho ricevuto un evento di stop dal sonar in attesa di resume...")
+						CommUtils.outyellow("[CargoService] Received stop event from sonar, waiting for resume...")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -98,14 +89,12 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("loadrequest(PID)"), Term.createTerm("loadrequest(PID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												PID = payloadArg(0).toInt()
-												
+								 PID = payloadArg(0).toInt()  
 						}
 						CommUtils.outmagenta("[CargoService] | PID = $PID")
-						CommUtils.outblue("[CargoService] Richiesta di slot liberi a slotmng...")
-						 SlotName = SlotMng.freeSlot() 
-						forward("resume", "resume(gormiti)" ,name ) 
+						CommUtils.outblue("[CargoService] Checking for free slots...")
+						 SlotName = SlotMng.freeSlot()  
+						forward("resume", "resume(slot_checked)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -116,17 +105,16 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("state_handle_slot_name") { //this:State
 					action { //it:State
-						if( 
-									SlotName.equals("NONE")
-						 ){CommUtils.outred("[CargoService] Non ci sono slot disponibili LOADREJECTED")
+						if(  SlotName.equals("NONE")  
+						 ){CommUtils.outred("[CargoService] No slots available: LOADREJECTED")
 						answer("loadrequest", "loadrejected", "loadrejected(no_slots)"   )  
 						rejected=true 
 						}
 						else
-						 {CommUtils.outred("[CargoService] slot disponibile $SlotName continuo i controlli")
+						 {CommUtils.outred("[CargoService] Slot $SlotName is available. Proceeding with checks.")
 						 rejected=false 
 						 }
-						forward("resume", "resume(gormiti)" ,name ) 
+						forward("resume", "resume(slot_name_handled)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -140,9 +128,8 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("state_handle_load") { //this:State
 					action { //it:State
-						CommUtils.outblue("[CargoService] | state_handle_load")
+						CommUtils.outblue("[CargoService] | Requesting product info...")
 						request("getProduct", "product($PID)" ,"productservice" )  
-						CommUtils.outgreen("[CargoService] | getProduct sent")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -155,29 +142,24 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("product(JSonString)"), Term.createTerm("product(JSonString)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												JSonString = payloadArg(0).toString()		
+								 JSonString = payloadArg(0).toString()  
 						}
-						CommUtils.outblue("[CargoService] | state_handle_product")
-						CommUtils.outcyan("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
 						CommUtils.outmagenta("stringa json: $JSonString")
 						
 									var p = Product(JSonString)
-									Weight=p.getWeight()	
+									Weight = p.getWeight()	
 									PName = p.getName()
-						CommUtils.outgreen("[CargoService] | Weight: $Weight")
 						if(  (Weight == 0 && PName == "wrong" )  
-						 ){CommUtils.outred("[CargoService] | PID inesistente: loadrejected")
-						 rejected = true 
+						 ){CommUtils.outred("[CargoService] | PID does not exist: LOADREJECTED")
+						 rejected = true  
 						answer("loadrequest", "loadrejected", "loadrejected(no_PID)"   )  
 						}
 						else
-						 {CommUtils.outgreen("[CargoService] | Prodotto trovato e peso registrato, continuo i controlli...")
-						  rejected = false 
-						  TotWeight = SlotMng.totalWeightReq() 
+						 {CommUtils.outgreen("[CargoService] | Product found. Weight: $Weight. Checking total weight...")
+						  rejected = false  
+						  TotWeight = SlotMng.totalWeightReq()  
 						 }
-						forward("resume", "resume(gormiti)" ,name ) 
+						forward("resume", "resume(product_handled)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -191,17 +173,14 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("state_handle_weight") { //this:State
 					action { //it:State
-						if( 
-											
-											Weight.plus(TotWeight) <= MAXLOAD!!
-											
+						if(  Weight.plus(TotWeight) <= MAXLOAD  
 						 ){answer("loadrequest", "loadaccepted", "loadaccepted($SlotName)"   )  
 						rejected=false 
-						CommUtils.outgreen("[Cargoservice] | loadaccepted")
+						CommUtils.outgreen("[Cargoservice] | LOADACCEPTED")
 						}
 						else
 						 {answer("loadrequest", "loadrejected", "loadrejected(too_heavy)"   )  
-						 CommUtils.outred("[Cargoservice] | loadrejected")
+						 CommUtils.outred("[Cargoservice] | LOADREJECTED: too heavy")
 						 rejected=true 
 						 forward("resume", "resume(reject)" ,name ) 
 						 }
@@ -218,7 +197,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				state("state_moverobot") { //this:State
 					action { //it:State
 						request("loadcontainer", "loadcontainer($SlotName)" ,"cargorobot" )  
-						CommUtils.outblue("[Cargoservice] | loadcontainer sent with name $SlotName")
+						CommUtils.outblue("[Cargoservice] | loadcontainer request sent for slot $SlotName")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -228,12 +207,11 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 				}	 
 				state("state_update_hold") { //this:State
 					action { //it:State
-						CommUtils.outyellow("[Cargoservice] | aggiornamento stiva, Dati = PID:$PID, Weight:$Weight, PName:$PName, SlotName:$SlotName")
+						CommUtils.outyellow("[Cargoservice] | Updating hold state for slot $SlotName...")
 							
 									val safeWeight = requireNotNull(Weight)
 									var prod = Product(PID!!, PName, safeWeight)
 									SlotMng.updateHold(prod, SlotName)
-									
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

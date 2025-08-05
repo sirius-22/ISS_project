@@ -12,32 +12,13 @@ Request getProduct 		: product( PID )
 Reply   getProductAnswer: product( JSonString ) for getProduct 
 
 // CargoService -> ClientSimulator
-
 Reply loadaccepted:		loadaccepted(Slot) for loadrequest
 Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, no_slots, no_PID }
- 
-//CargoService--> Sonar testing
-//Dispatch restart:restart(M)
 
-/* NOT NEEDED ANYMORE */
-//// slotmanagement in forse
-//// CargoService -> SlotManagement
-//Request freeSlot : freeSlot(M)
-//Request totalWeightReq: totalWeightReq(M)
-//
-//Dispatch updatedatahold : updatedatahold(M)
-//// SlotManagement -> CargoService
-//
-//Reply slotname : slotname(Slot) for freeSlot // Slot = SlotN or NONE
-//Reply totalWeight : totalWeight(Weight) for totalWeightReq
-
-//
-
-//CargoService -> CargoRobot
+// CargoService -> CargoRobot
 Request loadcontainer:		loadcontainer(Slot)
 
 // CargoRobot -> CargoService
-
 Reply containerloaded : containerloaded(M) for loadcontainer
 
 //--------------------------------
@@ -45,14 +26,14 @@ Reply containerloaded : containerloaded(M) for loadcontainer
 Dispatch cmd:			cmd(M)
 Event alarm: 		alarm(STOP) // to stop basicRobot
 
-//basicrobot command
+// basicrobot commands
 Request engage : engage(CALLER, STEPTIME)
 Reply engagedone : engagedone(ARG) for engage
 Reply engagerefused : engagerefused(ARG) for engage
 
 Dispatch disengage    : disengage(ARG)
 
-Dispatch setdirection : dir( D )  //D =up|down|left|right
+Dispatch setdirection : dir( D )  // D = up|down|left|right
 Dispatch setrobotstate : setpos(X,Y,Dir)
 
 Request  doplan     : doplan( PATH, STEPTIME )
@@ -67,175 +48,36 @@ Request moverobot    :  moverobot(TARGETX, TARGETY)
 Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
 Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
 
-// sonar event
-
+// sonar events
 Event stopActions : stopActions(M)
 Event resumeActions : resumeActions(M)
 Event containerhere : containerhere(M)
 
-//TODO da togliere
-//Dispatch sonaractivate : sonaractivate(A)
-
-// autodispatch for interrupt event
+// autodispatch used by actors for internal state transitions
 Dispatch resume : resume(M)
 
-// autodispatch for idle state
-Dispatch goto_idle : goto_idle(M)
 
 // CONTEXTS ===================================================================
 Context ctx_cargoservice ip [host="localhost" port=8000]
-//Context ctx_client_simulator	ip [host="localhost" port=11803]
-
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
 Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
 
-//per containerizzazione su docker e iodevice attivato su stessa macchina
-Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
+// per containerizzazione su docker e iodevice attivato su stessa macchina
+//Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
 
-//se si usa facendo partire il sonar sulla stessa macchina (no container)
-//Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
-
-//togliere tutto il contesto di raspdevice se si usa il sonar_mock
+// se si usa facendo partire il sonar sulla stessa macchina (no container)
+Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
 
 
 // ACTORS =====================================================================
 ExternalQActor basicrobot context ctx_basicrobot
 ExternalQActor productservice context ctx_productservice
-//togliere se si usa sonar_mock
 ExternalQActor sonar context ctx_raspdevice
-
-// ACTORS for ctx_cargoservice ------------------------------------------------
-
-
-
-
-// ----------- SONAR MOCK -----------------------------------------------------
-//QActor sonar_mock context ctx_cargoservice{
-//	
-//// VERSIONE PRECEDENTE
-////	State init initial{
-////		
-////	}Goto state_idle
-////	
-////	State state_idle{ 
-////		delay 10000
-////		emitlocalstream containerhere : containerhere(M)
-////		println("[sonar_mock] | messaggio containerhere inviato") color magenta
-////	}Transition t0 whenMsg sonaractivate -> test_interrupt
-////					whenMsg restart -> resume
-////					
-////					
-////	
-////	State resume{
-////		println("[sonar_mock] | resume actions") color red
-////		emitlocalstream resumeActions : resumeActions(M)
-////		delay 3000
-////		
-////	}Goto state_idle
-////	
-////	State test_interrupt{
-////		println("[sonar_mock] | Interrupt, stop actions") color red
-////		emitlocalstream stopActions : stopActions(M)
-////		delay 10000
-////		
-////	}Goto resume
-//
-//	[#
-//		var counter = 0	
-//	#]
-////	
-// 	State s0 initial {
-// 		println("$name | STARTS") color yellow
-//  	} 
-//  	Goto work
-//  	
-//
-//  	State work {
-//  		
-//  		delay 10000
-//  		emitlocalstream containerhere : containerhere(si) 
-//  		[# counter ++ #]
-// 		delay 8000
-//  		
-//  		println("$name | $counter") color magenta
-//  		if [# counter == 2 #] {
-//  			
-//	    	println("$name | STOP INTERRUPT $counter") color red 	// DEBUG
-//	 		emitlocalstream stopActions : stopActions(si) 
-//	 		
-//	 		delay 8000
-//  		}
-//  	} Transition t0 whenTime 5000 -> resume
-//
-//	State resume{
-//	 		println("$name | resume actions") color green 	// DEBUG
-//	 		emitlocalstream resumeActions : resumeActions(si)
-//		
-//	}Goto work
-//
-//}
-
-
-
-
-
-// ----------- SLOTMANAGEMENT MOCK -----------------------------------------------------
-
-//QActor slotmanagement_mock context ctx_cargoservice{
-//	[#
-//		val NUMSLOTS=5
-//		var freeSlots=4
-//		var Weight = 10
-//		var Slot = "NULL"
-//	#]
-//	State state_init initial{
-//		//setting Slot status
-//		
-//	}
-//	Goto idle
-//	
-//	State idle{
-//		//TODO transition on Slot update request from cargoservice, not implemented in the mock
-//		//(hold update after a load request is executed)
-//	}Transition t0 whenRequest freeSlot -> state_SlotState
-//					whenRequest totalWeightReq -> state_Weight
-//					whenMsg updatedatahold -> update_hold
-//	
-//	State state_SlotState{
-//		if [#freeSlots>0#]{
-//		[#
-//			var occSlots = NUMSLOTS-freeSlots
-//			Slot="Slot"+occSlots
-//		#]
-//		replyTo freeSlot with slotname : slotname($Slot)
-//		}else {
-//			replyTo freeSlot with slotname:slotname(NONE)
-//		}
-//		
-//	}Goto idle
-//					
-//	State state_Weight{
-//		//TODO prendere il peso effettivo
-//		
-//		[#Weight++#]
-//		
-//		println("[slotmanagement_mock] | state_weight $Weight") color yellow
-//		
-//		replyTo totalWeightReq with totalWeight : totalWeight($Weight)
-//	}Goto idle
-//	
-//	State update_hold{
-//		[#freeSlots--#]
-//	}Goto idle
-//}
-//
-
 
 
 // ----------- CARGOROBOT -----------------------------------------------------
 QActor cargorobot context ctx_cargoservice {
 	import "main.java.map.*"
-		//init map
 		[#
 			MapServiceSingleton.init("map.json");
 			var idle = true
@@ -245,13 +87,8 @@ QActor cargorobot context ctx_cargoservice {
 			var Map = MapServiceSingleton.getInstance()
 			var Slot = ""
 			var robotIsMoving = false
-			var PlanDone = ""
-			var PlanToDo = ""
-			//var inceppato =false
 			
-			
-		//forward cargoservicestatusgui -m updategui: updategui(M)
-		//fixed coordinates
+			//fixed coordinates
 			var HomeLoc = Map.getCoordinates("Home");
 			var Homecoords = HomeLoc.getCoords();
 			var Home_X = Homecoords.get("x");
@@ -263,175 +100,145 @@ QActor cargorobot context ctx_cargoservice {
 			var Pup_X = Pupcoords.get("x");
 			var Pup_Y = Pupcoords.get("y");
 			var Pupdir = PupLoc.getFacingDir()
-			
-			
 		#]
 	State state_init initial {
-		
-		
-//		subscribeTo sonar_mock for resumeActions
-//		subscribeTo sonar_mock for stopActions
-		
-
 		discardMsg Off
-		
 		println("[CargoRobot] | Started ") color blue
-
 	}
 	Goto state_engage
 	
 	State state_engage{
 		delay 3000
 		println("[Cargorobot] | Requests engage to basicrobot, name: $MyName ") color blue
-		request basicrobot -m engage : engage($MyName, 330) //arg=owner
-	}Transition t1 	whenInterruptEvent stopActions -> state_wait_resume
-					whenReply engagedone -> state_idle //TODO maybe send HOME to be sure of the initial position
-					whenReply engagerefused ->state_engage //retry //TODO mettere un limite al loop?
+		request basicrobot -m engage : engage($MyName, 330)
+	}
+	Transition t1 	
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenReply engagedone -> state_idle
+		whenReply engagerefused ->state_engage // Retry engage
 	
 	State state_idle {
-//		forward cargoservicestatusgui -m updategui: updategui(M)
 		println("[Cargorobot] | Idle ") color blue
 		[#
 			idle=true
 			robotIsMoving = false
 		#]
 	}
-	Transition t0	//whenTime 5000		-> state_idle
-					whenInterruptEvent stopActions -> state_wait_resume
-					whenRequest loadcontainer	-> goto_IO_port
+	Transition t0
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenRequest loadcontainer	-> goto_IO_port
 					
-					
+	// This state is entered upon a 'stopActions' event. It halts the basic robot.
 	State state_wait_resume{
-		
 		println("[Cargorobot] | Stops ") color red
-		emit alarm : alarm(STOP) //stops basicrobot
-	}Transition t1 whenEvent resumeActions -> state_resume
-					whenReply moverobotdone -> mexEater
-					whenReply moverobotfailed -> mexEater
+		emit alarm : alarm(STOP) // Stops basicrobot
+	}
+	Transition t1 
+		whenEvent resumeActions -> state_resume
+		whenReply moverobotdone -> mexEater // Consume unexpected replies while stopped
+		whenReply moverobotfailed -> mexEater
 					
+	// This state consumes messages that arrive while the robot is stopped,
+	// to prevent them from being processed incorrectly upon resume.
 	State mexEater {
-		println("[Cargorobot] | Gnam gnam ") color cyan
-		autodispatch resume : resume(gormiti)
-	}Transition t1 whenEvent resumeActions  -> state_resume
-					//whenMsg resume and [#inceppato#] -> state_resume_inceppato
-					
-//	State state_resume_inceppato{
-//		[#inceppato=false#]
-//		request basicrobot -m moverobot : moverobot($X,$Y)
-//	}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-//					whenReply moverobotdone -> at_HOME
-
-
+		println("[Cargorobot] | Consuming message while stopped ") color cyan
+		autodispatch resume : resume(consumed)
+	}
+	Transition t1 
+		whenEvent resumeActions -> state_resume
 	
+	// Handles the resume logic after an interrupt
 	State state_resume{
 		println("[Cagorobot] | Resume ") color red
 		if [#robotIsMoving#]{
+			// If the robot was moving, it attempts to continue to its last known target
 			forward basicrobot -m setdirection : dir(up)
 			request basicrobot -m moverobot : moverobot($X,$Y)
-			println("[Cagorobot] | facciamo ripartire il robot con coordinate X:$X, Y:$Y ") color yellow
+			println("[Cagorobot] | Resuming movement to X:$X, Y:$Y ") color yellow
 		}
 		returnFromInterrupt
 	}
 	
 	State state_move_cont {
-			[#
-			
+		[#
 			var location = Map.getCoordinates(Slot);
 			var coords = location.getCoords();
 			X = coords.get("x");
 			Y = coords.get("y");
 			Dir=location.getFacingDir();
-			
-			#]
+		#]
 		
 		println("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y") color blue
 		[#robotIsMoving = true#]
-		request basicrobot -m moverobot : moverobot($X,$Y)// coordinates
-
-//		forward cargoservicestatusgui -m updategui: updategui(M)
-		
-		println("[cargoRobot] container transported") color green
-	}Transition t3  whenReply moverobotdone -> at_slot
-					whenReply moverobotfailed -> goto_IO_port
+		request basicrobot -m moverobot : moverobot($X,$Y)
+	}
+	Transition t3
+		whenReply moverobotdone -> at_slot
+		whenReply moverobotfailed -> goto_IO_port
 					
-		State at_slot{
-			println("[cargorobot] arrived at slot, dir:$Dir") color green
-			[#robotIsMoving = false#]
-			delay 1000 //to unload
-			//forward basicrobot -m setdirection : dir($Dir)
-			delay 2000 //to unload
-			autodispatch resume : resume(gormiti)
-		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-						whenMsg resume -> state_finalize
+	State at_slot{
+		println("[cargorobot] arrived at slot, dir:$Dir") color green
+		[#robotIsMoving = false#]
+		delay 2000 // Simulate unload time
+		autodispatch resume : resume(at_slot)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenMsg resume -> state_finalize
 		
-		State returnHOME{
-			println("Cargorobot | returningHome, state: $idle") color blue
-			[# 
-				X = Home_X
-				Y = Home_Y
-				Dir = Homedir
-			#]
-			[#robotIsMoving=true#]
-			
-			println("Cargorobot | returningHome, X:$X  Y: $Y ") color magenta
-			request basicrobot -m moverobot : moverobot($X,$Y)
-			
-			
-		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-						whenReply moverobotdone -> at_HOME
-						//whenReply moverobotfailed -> failed
-		// proving debug
-//		State failed {
-//			println("Cargorobot | failed, retry ") color magenta
-//			
-//			[# inceppato =true #]
-//			emit alarm : alarm(aaaaa)
-//			
-//		}Transition t0 whenReply moverobotfailed ->  mexEater
+	State returnHOME{
+		println("Cargorobot | returningHome, state: $idle") color blue
+		[# 
+			X = Home_X
+			Y = Home_Y
+			Dir = Homedir
+			robotIsMoving=true
+		#]
+		println("Cargorobot | returningHome, X:$X  Y: $Y ") color magenta
+		request basicrobot -m moverobot : moverobot($X,$Y)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenReply moverobotdone -> at_HOME
 		
-		State at_HOME{
-			
-			[#robotIsMoving=false#]
-			println("[cargorobot] arrived at home, dir: $Dir") color green
-//			forward basicrobot -m setrobotstate : setpos($X,$Y,$Dir)
-			//forward basicrobot -m setdirection : dir($Dir)
-			
-			autodispatch resume : resume(gormiti)
-		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-						whenMsg resume and [#idle#]-> state_idle
-						whenMsg resume and [#!idle#] -> goto_IO_port
+	State at_HOME{
+		[#robotIsMoving=false#]
+		println("[cargorobot] arrived at home, dir: $Dir") color green
+		autodispatch resume : resume(at_home)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenMsg resume and [#idle#]-> state_idle
+		whenMsg resume and [#!idle#] -> goto_IO_port
 		
-		State goto_IO_port{
-			onMsg(loadcontainer: loadcontainer(Slot)){
-			[# 
-				Slot =  payloadArg(0) 
-			#]}//TODO vedi se da problemi quando arrivi allo stato senza loadcontainer
-			println("Cargorobot | go to IOport") color blue
-			[# 
-				X = Pup_X
-				Y = Pup_Y
-				Dir = Pupdir
-				
-				idle=false 
-				robotIsMoving = true
-			#]
-			request basicrobot -m moverobot : moverobot($X,$Y)
-			
-
-			
-		}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-						whenReply moverobotdone -> at_IO_port
-						whenReply moverobotfailed -> returnHOME
+	State goto_IO_port{
+		onMsg(loadcontainer: loadcontainer(Slot)){
+			[# Slot = payloadArg(0) #]
+		}
+		println("Cargorobot | go to IOport") color blue
+		[# 
+			X = Pup_X
+			Y = Pup_Y
+			Dir = Pupdir
+			idle=false 
+			robotIsMoving = true
+		#]
+		request basicrobot -m moverobot : moverobot($X,$Y)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenReply moverobotdone -> at_IO_port
+		whenReply moverobotfailed -> returnHOME
 						
 	State at_IO_port{
 		println("[cargorobot] arrived at ioport, dir: $Dir") color green
 		[#robotIsMoving=false#]
-		//forward basicrobot -m setdirection : dir($Dir)
-		delay 2000 //to load
-		
-		autodispatch resume : resume(gormiti)
-	}Transition t0 whenInterruptEvent stopActions -> state_wait_resume
-					whenMsg resume -> state_move_cont
+		delay 2000 // Simulate load time
+		autodispatch resume : resume(at_ioport)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenMsg resume -> state_move_cont
 					
 	State state_finalize{
 		replyTo loadcontainer with containerloaded: containerloaded(YEE)
@@ -440,13 +247,9 @@ QActor cargorobot context ctx_cargoservice {
 			idle = true
 			robotIsMoving=false
 		#]
-	}Goto returnHOME
+	}
+	Goto returnHOME
 }
-
-
-
-
-
 
 
 // ----------- CARGOSERVICE -----------------------------------------------------
@@ -455,221 +258,157 @@ QActor cargoservice context ctx_cargoservice {
 	import "main.java.hold.*"
 	[#
 		val MAXLOAD = 600
-		
-		//product weight
 		var Weight = 0
-		
 		var rejected = false
-		
-		//var Name = "NONE"
 		var PID:Int? = 0
-		
-		var TotWeight = 0!!
-		
+		var TotWeight = 0
 		var JSonString = ""
 		var PName = "" 
 		
-		// SlotManagenegement
-		
+		// SlotManagement is now a POJO, instantiated here
 		var SlotMng = SlotManagement()
 		var SlotName = "NONE"
-
 	#]
 	State state_init initial {
-//		[#
-//			//initial status
-//		#]
-	
-//		subscribeTo sonar_mock for resumeActions
-//		subscribeTo sonar_mock for stopActions
-//		subscribeTo sonar_mock for containerhere
-//		println("[CargoService] Reset")
-
-//		
 		discardMsg Off
 	}
 	Goto state_idle
-//	
+	
 	State state_idle {
 		println("[CargoService] Idle...")
-		// wait for messages...
 	}
-	Transition t0	whenInterruptEvent stopActions -> state_handle_stop
-					whenRequest loadrequest	-> state_handle_slots 
-//					whenEvent distance 			-> state_handle_distance
-
+	Transition t0
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenRequest loadrequest	-> state_handle_slots 
 					
+	// This state is entered upon a 'stopActions' event.
 	State state_handle_stop{
-		
-		println("[CargoService] Ho ricevuto un evento di stop dal sonar in attesa di resume...") color yellow
-		
-	}Transition t3 whenEvent resumeActions -> state_handle_resume
+		println("[CargoService] Received stop event from sonar, waiting for resume...") color yellow
+	}
+	Transition t3 
+		whenEvent resumeActions -> state_handle_resume
 	
+	// Resumes from the interrupt
 	State state_handle_resume{
 		println("[CargoService] returning from interrupt...") color red
 		returnFromInterrupt
 	}
+
 	State state_handle_slots{
 		onMsg(loadrequest: loadrequest(PID)) {
-			[#
-				PID = payloadArg(0).toInt()
-				
-			#]
-			}
-			println("[CargoService] | PID = $PID") color magenta
-		println("[CargoService] Richiesta di slot liberi a slotmng...") color blue
+			[# PID = payloadArg(0).toInt() #]
+		}
+		println("[CargoService] | PID = $PID") color magenta
+		println("[CargoService] Checking for free slots...") color blue
 		
-		//request slotmanagement_mock -m freeSlot: freeSlot(m)
-		[# SlotName = SlotMng.freeSlot()#]
+		// Direct method call to the POJO
+		[# SlotName = SlotMng.freeSlot() #]
 		
-		autodispatch resume : resume(gormiti)
-	}Transition t1  whenInterruptEvent stopActions -> state_handle_stop
-					whenMsg resume -> state_handle_slot_name
+		autodispatch resume : resume(slot_checked)
+	}
+	Transition t1
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume -> state_handle_slot_name
 					
-	
 	State state_handle_slot_name{
-		if [#
-			SlotName.equals("NONE")
-		#]{
-			println("[CargoService] Non ci sono slot disponibili LOADREJECTED") color red
+		if [# SlotName.equals("NONE") #]{
+			println("[CargoService] No slots available: LOADREJECTED") color red
 			replyTo loadrequest with loadrejected: loadrejected(no_slots)
 			[#rejected=true#]
-		}
-		else {
-			println("[CargoService] slot disponibile $SlotName continuo i controlli") color red
+		} else {
+			println("[CargoService] Slot $SlotName is available. Proceeding with checks.") color red
 			[#rejected=false#]
 		}
-		autodispatch resume : resume(gormiti)
-	}Transition t0 whenInterruptEvent stopActions -> state_handle_stop
-					whenMsg resume and [#!rejected#] -> state_handle_load
-					whenMsg resume and [#rejected#] -> state_idle
+		autodispatch resume : resume(slot_name_handled)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume and [#!rejected#] -> state_handle_load
+		whenMsg resume and [#rejected#] -> state_idle
 	
 	State state_handle_load {
-		println("[CargoService] | state_handle_load") color blue
-		
-			request productservice -m	 getProduct: product($PID)
-			println("[CargoService] | getProduct sent") color green
-		}Transition t1  whenInterruptEvent stopActions -> state_handle_stop
-						whenReply getProductAnswer -> state_handle_product
+		println("[CargoService] | Requesting product info...") color blue
+		request productservice -m getProduct: product($PID)
+	}
+	Transition t1
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenReply getProductAnswer -> state_handle_product
 		
 	State state_handle_product{
 		onMsg(getProductAnswer: product(JSonString)){
-			[#
-				JSonString = payloadArg(0).toString()		
-			#]
+			[# JSonString = payloadArg(0).toString() #]
 		}
-		println("[CargoService] | state_handle_product") color blue
-		printCurrentMessage
-			
 		println("stringa json: $JSonString") color magenta
 		[#
 			var p = Product(JSonString)
-			Weight=p.getWeight()	
+			Weight = p.getWeight()	
 			PName = p.getName()
 		#]
-		println("[CargoService] | Weight: $Weight") color green
 		
-		
-			
-		//gestire errore PID inesistente
+		// Handle non-existent PID
 		if [# (Weight == 0 && PName == "wrong" ) #]{
-			println("[CargoService] | PID inesistente: loadrejected") color red
-			[# rejected = true#]
+			println("[CargoService] | PID does not exist: LOADREJECTED") color red
+			[# rejected = true #]
 			replyTo loadrequest with loadrejected: loadrejected(no_PID)
 		}else{
-			println("[CargoService] | Prodotto trovato e peso registrato, continuo i controlli...") color green
-			[# rejected = false#]
+			println("[CargoService] | Product found. Weight: $Weight. Checking total weight...") color green
+			[# rejected = false #]
 			
-			//request slotmanagement_mock -m totalWeightReq : totalWeightReq(M)
-			[# TotWeight = SlotMng.totalWeightReq()#]
-			
-			
+			// Direct method call to the POJO
+			[# TotWeight = SlotMng.totalWeightReq() #]
 		}
-		autodispatch resume : resume(gormiti)
-	}Transition t4 whenInterruptEvent stopActions -> state_handle_stop
-							whenMsg resume and [#rejected#]-> state_idle
-							whenMsg resume and [#! rejected #] -> state_handle_weight
+		autodispatch resume : resume(product_handled)
+	}
+	Transition t4 
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume and [#rejected#]-> state_idle
+		whenMsg resume and [#! rejected #] -> state_handle_weight
 
-		State state_handle_weight{
-				
-			if	[#
-					
-					Weight.plus(TotWeight) <= MAXLOAD!!
-					
-				#] 
-				{
-			
-				replyTo loadrequest with loadaccepted: loadaccepted($SlotName)
-				[#rejected=false#]
-				println("[Cargoservice] | loadaccepted") color green
-				
-//				//delay 1000 // pickup time 
-			}
-			else {
-				replyTo loadrequest with loadrejected: loadrejected(too_heavy)
-				println("[Cargoservice] | loadrejected") color red
-				[#rejected=true#]
-				autodispatch resume:resume(reject)
-			}
-//			forward cargoservicestatusgui -m updategui: updategui(M)
-//			
+	State state_handle_weight{
+		if [# Weight.plus(TotWeight) <= MAXLOAD #] {
+			replyTo loadrequest with loadaccepted: loadaccepted($SlotName)
+			[#rejected=false#]
+			println("[Cargoservice] | LOADACCEPTED") color green
+		} else {
+			replyTo loadrequest with loadrejected: loadrejected(too_heavy)
+			println("[Cargoservice] | LOADREJECTED: too heavy") color red
+			[#rejected=true#]
+			autodispatch resume:resume(reject)
 		}
-	Transition t2 whenInterruptEvent stopActions -> state_handle_stop
-				whenMsg resume -> state_idle
-				whenEvent containerhere and [#!rejected#] -> state_moverobot
+	}
+	Transition t2 
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume -> state_idle
+		whenEvent containerhere and [#!rejected#] -> state_moverobot
 				
-	
 	State state_moverobot{
 		request cargorobot -m loadcontainer: loadcontainer($SlotName)
-		println("[Cargoservice] | loadcontainer sent with name $SlotName") color blue
-	}Transition t0 whenReply containerloaded -> state_update_hold
+		println("[Cargoservice] | loadcontainer request sent for slot $SlotName") color blue
+	}
+	Transition t0 
+		whenReply containerloaded -> state_update_hold
 	
 	State state_update_hold{
-		//forward slotmanagement_mock -m updatedatahold: updatedatahold(M)
-		println("[Cargoservice] | aggiornamento stiva, Dati = PID:$PID, Weight:$Weight, PName:$PName, SlotName:$SlotName") color yellow
+		println("[Cargoservice] | Updating hold state for slot $SlotName...") color yellow
 		[#	
 			val safeWeight = requireNotNull(Weight)
 			var prod = Product(PID!!, PName, safeWeight)
 			SlotMng.updateHold(prod, SlotName)
-			
 		#]
-		//se si usa il sonar_mock
-//		forward sonar_mock -m sonaractivate: sonaractivate(A)
-//		forward sonar_mock -m restart:restart(M)
-
-
-		//se si usa il contesto raspdevice
-		//forward sonar -m sonaractivate: sonaractivate(A)
-		//forward sonar -m restart:restart(M)
-	}Goto state_idle
+	}
+	Goto state_idle
 }	
 	
 	
-	
-	
-	
-	
-	
-
-// ----------- CLIENT MOCK -----------------------------------------------------
+// ----------- CLIENT SIMULATOR (for testing) --------------------------------
 QActor external_client context ctx_cargoservice{
  	State s0 initial {
  		println("$name | STARTS") color cyan
  		delay 5000
   	} 
-  	// commenta entrambi quando vuoi mandare richieste con i test
   	Goto work1
-//  	Goto work1 
   	
-  	
-  	// cliente che mi manda 4 richieste una dietro l'altra
-  	State work0 {
- 		println("$name | sends requests") color cyan
- 		request cargoservice -m loadrequest: loadrequest(23)
- 		delay 2000
-  	} 
-  	
-  	// client mock che manda 4 richieste spaziate
+  	// A client that sends multiple spaced requests
   	State work1 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(22)
@@ -679,46 +418,27 @@ QActor external_client context ctx_cargoservice{
 	   whenReply loadaccepted -> work2
 	   whenReply loadrejected  -> work2
 	   
-	   
 	State work2 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(21)
- 		delay 2000
+ 		delay 10000
   	} 
   	Transition t0
 	   whenReply loadaccepted -> work3
 	   whenReply loadrejected  -> work3
 	   
-	
 	State work3 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(20)
- 		delay 2000
+ 		delay 10000
   	} 
   	Transition t0
 	   whenReply loadaccepted -> work4
 	   whenReply loadrejected  -> work4
 	   
-	
 	State work4 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(1)
- 		delay 2000
+ 		delay 10000
   	} 
 }
-//	
-//	State state_handle_distance {
-//		onMsg(distance: distance(V)) {
-//			if [# payloadArg(0).toFloat() >= DFREE#] {
-//				// state_handle_stop
-//				forward cargorobot -m stop: stop(M)
-//				forward leddevice -m updateled : updateled("on")
-//			} else {
-//				// state_handle_resume
-//				forward cargorobot -m resume: resume(M)
-//				forward leddevice -m updateled : updateled("off")
-//			}
-//		}
-//	}
-//	Goto state_idle
-

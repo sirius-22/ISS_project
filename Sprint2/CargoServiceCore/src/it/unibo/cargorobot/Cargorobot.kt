@@ -39,13 +39,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					var Map = MapServiceSingleton.getInstance()
 					var Slot = ""
 					var robotIsMoving = false
-					var PlanDone = ""
-					var PlanToDo = ""
-					//var inceppato =false
 					
-					
-				//forward cargoservicestatusgui -m updategui: updategui(M)
-				//fixed coordinates
+					//fixed coordinates
 					var HomeLoc = Map.getCoordinates("Home");
 					var Homecoords = HomeLoc.getCoords();
 					var Home_X = Homecoords.get("x");
@@ -57,8 +52,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					var Pup_X = Pupcoords.get("x");
 					var Pup_Y = Pupcoords.get("y");
 					var Pupdir = PupLoc.getFacingDir()
-					
-					
 		return { //this:ActionBasciFsm
 				state("state_init") { //this:State
 					action { //it:State
@@ -114,8 +107,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("mexEater") { //this:State
 					action { //it:State
-						CommUtils.outcyan("[Cargorobot] | Gnam gnam ")
-						forward("resume", "resume(gormiti)" ,name ) 
+						CommUtils.outcyan("[Cargorobot] | Consuming message while stopped ")
+						forward("resume", "resume(consumed)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -129,7 +122,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						if( robotIsMoving 
 						 ){forward("setdirection", "dir(up)" ,"basicrobot" ) 
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-						CommUtils.outyellow("[Cagorobot] | facciamo ripartire il robot con coordinate X:$X, Y:$Y ")
+						CommUtils.outyellow("[Cagorobot] | Resuming movement to X:$X, Y:$Y ")
 						}
 						returnFromInterrupt(interruptedStateTransitions)
 						//genTimer( actor, state )
@@ -141,17 +134,14 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("state_move_cont") { //this:State
 					action { //it:State
 						
-									
 									var location = Map.getCoordinates(Slot);
 									var coords = location.getCoords();
 									X = coords.get("x");
 									Y = coords.get("y");
 									Dir=location.getFacingDir();
-									
 						CommUtils.outblue("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y")
 						robotIsMoving = true 
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
-						CommUtils.outgreen("[cargoRobot] container transported")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -164,9 +154,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						CommUtils.outgreen("[cargorobot] arrived at slot, dir:$Dir")
 						robotIsMoving = false 
-						delay(1000) 
 						delay(2000) 
-						forward("resume", "resume(gormiti)" ,name ) 
+						forward("resume", "resume(at_slot)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -179,10 +168,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						CommUtils.outblue("Cargorobot | returningHome, state: $idle")
 						 
-										X = Home_X
-										Y = Home_Y
-										Dir = Homedir
-						robotIsMoving=true 
+									X = Home_X
+									Y = Home_Y
+									Dir = Homedir
+									robotIsMoving=true
 						CommUtils.outmagenta("Cargorobot | returningHome, X:$X  Y: $Y ")
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						//genTimer( actor, state )
@@ -197,7 +186,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						robotIsMoving=false 
 						CommUtils.outgreen("[cargorobot] arrived at home, dir: $Dir")
-						forward("resume", "resume(gormiti)" ,name ) 
+						forward("resume", "resume(at_home)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -213,17 +202,15 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("loadcontainer(Slot)"), Term.createTerm("loadcontainer(Slot)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								 
-												Slot =  payloadArg(0) 
+								 Slot = payloadArg(0)  
 						}
 						CommUtils.outblue("Cargorobot | go to IOport")
 						 
-										X = Pup_X
-										Y = Pup_Y
-										Dir = Pupdir
-										
-										idle=false 
-										robotIsMoving = true
+									X = Pup_X
+									Y = Pup_Y
+									Dir = Pupdir
+									idle=false 
+									robotIsMoving = true
 						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						//genTimer( actor, state )
 					}
@@ -239,7 +226,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						CommUtils.outgreen("[cargorobot] arrived at ioport, dir: $Dir")
 						robotIsMoving=false 
 						delay(2000) 
-						forward("resume", "resume(gormiti)" ,name ) 
+						forward("resume", "resume(at_ioport)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

@@ -29,12 +29,11 @@ event( stopActions, stopActions(M) ).
 event( resumeActions, resumeActions(M) ).
 event( containerhere, containerhere(M) ).
 dispatch( resume, resume(M) ).
-dispatch( goto_idle, goto_idle(M) ).
 %====================================================================================
 context(ctx_cargoservice, "localhost",  "TCP", "8000").
 context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
 context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
-context(ctx_raspdevice, "host.docker.internal",  "TCP", "8128").
+context(ctx_raspdevice, "127.0.0.1",  "TCP", "8128").
  qactor( basicrobot, ctx_basicrobot, "external").
   qactor( productservice, ctx_productservice, "external").
   qactor( sonar, ctx_raspdevice, "external").
