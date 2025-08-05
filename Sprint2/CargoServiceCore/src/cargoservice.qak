@@ -1,0 +1,446 @@
+System cargoservice
+
+mqttBroker "mosquitto" : 1883 eventTopic "unibo/qak/events"
+
+//================ MESSAGES AND EVENTS ===================================
+
+// ClientSimulator -> CargoService
+Request loadrequest:	loadrequest(PID)
+
+// CargoService -> ProductService
+Request getProduct 		: product( PID ) 
+
+ // ProductService -> CargoService
+Reply   getProductAnswer: product( JSonString ) for getProduct 
+
+// CargoService -> ClientSimulator
+Reply loadaccepted:		loadaccepted(Slot) for loadrequest
+Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, no_slots, no_PID }
+
+// CargoService -> CargoRobot
+Request loadcontainer:		loadcontainer(Slot)
+
+// CargoRobot -> CargoService
+Reply containerloaded : containerloaded(M) for loadcontainer
+
+//--------------------------------
+// CargoRobot -> BasicRobot
+Dispatch cmd:			cmd(M)
+Event alarm: 		alarm(STOP) // to stop basicRobot
+
+// basicrobot commands
+Request engage : engage(CALLER, STEPTIME)
+Reply engagedone : engagedone(ARG) for engage
+Reply engagerefused : engagerefused(ARG) for engage
+
+Dispatch disengage    : disengage(ARG)
+
+Dispatch setdirection : dir( D )  // D = up|down|left|right
+Dispatch setrobotstate : setpos(X,Y,Dir)
+
+Request  doplan     : doplan( PATH, STEPTIME )
+Reply doplandone    : doplandone( ARG )    for doplan
+Reply doplanfailed  : doplanfailed( ARG )  for doplan
+
+Request step       : step(TIME)
+Reply stepdone     : stepdone(V)                 for step
+Reply stepfailed   : stepfailed(DURATION, CAUSE) for step
+
+Request moverobot    :  moverobot(TARGETX, TARGETY)
+Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
+Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
+
+// sonar events
+Event stopActions : stopActions(M)
+Event resumeActions : resumeActions(M)
+Event containerhere : containerhere(M)
+
+// autodispatch used by actors for internal state transitions
+Dispatch resume : resume(M)
+
+
+// CONTEXTS ===================================================================
+Context ctx_cargoservice ip [host="localhost" port=8000]
+Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
+Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
+
+// per containerizzazione su docker e iodevice attivato su stessa macchina
+Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
+
+// se si usa facendo partire il sonar sulla stessa macchina (no container)
+//Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
+
+
+// ACTORS =====================================================================
+ExternalQActor basicrobot context ctx_basicrobot
+ExternalQActor productservice context ctx_productservice
+//ExternalQActor sonar context ctx_raspdevice
+
+
+// ----------- CARGOROBOT -----------------------------------------------------
+QActor cargorobot context ctx_cargoservice {
+	import "main.java.map.*"
+		[#
+			MapServiceSingleton.init("map.json");
+			var idle = true
+			var X:Int? = 0
+			var Y:Int? = 0
+			var Dir = ""
+			var Map = MapServiceSingleton.getInstance()
+			var Slot = ""
+			var robotIsMoving = false
+			
+			//fixed coordinates
+			var HomeLoc = Map.getCoordinates("Home");
+			var Homecoords = HomeLoc.getCoords();
+			var Home_X = Homecoords.get("x");
+			var Home_Y = Homecoords.get("y");
+			var Homedir = HomeLoc.getFacingDir()
+			
+			var PupLoc = Map.getCoordinates("Pickup");
+			var Pupcoords = PupLoc.getCoords();
+			var Pup_X = Pupcoords.get("x");
+			var Pup_Y = Pupcoords.get("y");
+			var Pupdir = PupLoc.getFacingDir()
+		#]
+	State state_init initial {
+		discardMsg Off
+		println("[CargoRobot] | Started ") color blue
+	}
+	Goto state_engage
+	
+	State state_engage{
+		delay 3000
+		println("[Cargorobot] | Requests engage to basicrobot, name: $MyName ") color blue
+		request basicrobot -m engage : engage($MyName, 330)
+	}
+	Transition t1 	
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenReply engagedone -> state_idle
+		whenReply engagerefused ->state_engage // Retry engage
+	
+	State state_idle {
+		println("[Cargorobot] | Idle ") color blue
+		[#
+			idle=true
+			robotIsMoving = false
+		#]
+	}
+	Transition t0
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenRequest loadcontainer	-> goto_IO_port
+					
+	// This state is entered upon a 'stopActions' event. It halts the basic robot.
+	State state_wait_resume{
+		println("[Cargorobot] | Stops ") color red
+		emit alarm : alarm(STOP) // Stops basicrobot
+	}
+	Transition t1 
+		whenEvent resumeActions -> state_resume
+		whenReply moverobotdone -> mexEater // Consume unexpected replies while stopped
+		whenReply moverobotfailed -> mexEater
+					
+	// This state consumes messages that arrive while the robot is stopped,
+	// to prevent them from being processed incorrectly upon resume.
+	State mexEater {
+		println("[Cargorobot] | Consuming message while stopped ") color cyan
+		autodispatch resume : resume(consumed)
+	}
+	Transition t1 
+		whenEvent resumeActions -> state_resume
+	
+	// Handles the resume logic after an interrupt
+	State state_resume{
+		println("[Cagorobot] | Resume ") color red
+		if [#robotIsMoving#]{
+			// If the robot was moving, it attempts to continue to its last known target
+			forward basicrobot -m setdirection : dir(up)
+			request basicrobot -m moverobot : moverobot($X,$Y)
+			println("[Cagorobot] | Resuming movement to X:$X, Y:$Y ") color yellow
+		}
+		returnFromInterrupt
+	}
+	
+	State state_move_cont {
+		[#
+			var location = Map.getCoordinates(Slot);
+			var coords = location.getCoords();
+			X = coords.get("x");
+			Y = coords.get("y");
+			Dir=location.getFacingDir();
+		#]
+		
+		println("[Cargorobot] Moving container to slot $Slot... X:$X, Y:$Y") color blue
+		[#robotIsMoving = true#]
+		request basicrobot -m moverobot : moverobot($X,$Y)
+	}
+	Transition t3
+		whenReply moverobotdone -> at_slot
+		whenReply moverobotfailed -> goto_IO_port
+					
+	State at_slot{
+		println("[cargorobot] arrived at slot, dir:$Dir") color green
+		[#robotIsMoving = false#]
+		delay 2000 // Simulate unload time
+		autodispatch resume : resume(at_slot)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenMsg resume -> state_finalize
+		
+	State returnHOME{
+		println("Cargorobot | returningHome, state: $idle") color blue
+		[# 
+			X = Home_X
+			Y = Home_Y
+			Dir = Homedir
+			robotIsMoving=true
+		#]
+		println("Cargorobot | returningHome, X:$X  Y: $Y ") color magenta
+		request basicrobot -m moverobot : moverobot($X,$Y)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenReply moverobotdone -> at_HOME
+		
+	State at_HOME{
+		[#robotIsMoving=false#]
+		println("[cargorobot] arrived at home, dir: $Dir") color green
+		autodispatch resume : resume(at_home)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenMsg resume and [#idle#]-> state_idle
+		whenMsg resume and [#!idle#] -> goto_IO_port
+		
+	State goto_IO_port{
+		onMsg(loadcontainer: loadcontainer(Slot)){
+			[# Slot = payloadArg(0) #]
+		}
+		println("Cargorobot | go to IOport") color blue
+		[# 
+			X = Pup_X
+			Y = Pup_Y
+			Dir = Pupdir
+			idle=false 
+			robotIsMoving = true
+		#]
+		request basicrobot -m moverobot : moverobot($X,$Y)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenReply moverobotdone -> at_IO_port
+		whenReply moverobotfailed -> returnHOME
+						
+	State at_IO_port{
+		println("[cargorobot] arrived at ioport, dir: $Dir") color green
+		[#robotIsMoving=false#]
+		delay 2000 // Simulate load time
+		autodispatch resume : resume(at_ioport)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_wait_resume
+		whenMsg resume -> state_move_cont
+					
+	State state_finalize{
+		replyTo loadcontainer with containerloaded: containerloaded(YEE)
+		println("[cargorobot] inviata reply containerloaded") color yellow
+		[#
+			idle = true
+			robotIsMoving=false
+		#]
+	}
+	Goto returnHOME
+}
+
+
+// ----------- CARGOSERVICE -----------------------------------------------------
+QActor cargoservice context ctx_cargoservice {
+	import "main.java.domain.*" 
+	import "main.java.hold.*"
+	[#
+		val MAXLOAD = 600
+		var Weight = 0
+		var rejected = false
+		var PID:Int? = 0
+		var TotWeight = 0
+		var JSonString = ""
+		var PName = "" 
+		
+		// SlotManagement is now a POJO, instantiated here
+		var SlotMng = SlotManagement()
+		var SlotName = "NONE"
+	#]
+	State state_init initial {
+		discardMsg Off
+	}
+	Goto state_idle
+	
+	State state_idle {
+		println("[CargoService] Idle...")
+	}
+	Transition t0
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenRequest loadrequest	-> state_handle_slots 
+					
+	// This state is entered upon a 'stopActions' event.
+	State state_handle_stop{
+		println("[CargoService] Received stop event from sonar, waiting for resume...") color yellow
+	}
+	Transition t3 
+		whenEvent resumeActions -> state_handle_resume
+	
+	// Resumes from the interrupt
+	State state_handle_resume{
+		println("[CargoService] returning from interrupt...") color red
+		returnFromInterrupt
+	}
+
+	State state_handle_slots{
+		onMsg(loadrequest: loadrequest(PID)) {
+			[# PID = payloadArg(0).toInt() #]
+		}
+		println("[CargoService] | PID = $PID") color magenta
+		println("[CargoService] Checking for free slots...") color blue
+		
+		// Direct method call to the POJO
+		[# SlotName = SlotMng.freeSlot() #]
+		
+		autodispatch resume : resume(slot_checked)
+	}
+	Transition t1
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume -> state_handle_slot_name
+					
+	State state_handle_slot_name{
+		if [# SlotName.equals("NONE") #]{
+			println("[CargoService] No slots available: LOADREJECTED") color red
+			replyTo loadrequest with loadrejected: loadrejected(no_slots)
+			[#rejected=true#]
+		} else {
+			println("[CargoService] Slot $SlotName is available. Proceeding with checks.") color red
+			[#rejected=false#]
+		}
+		autodispatch resume : resume(slot_name_handled)
+	}
+	Transition t0 
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume and [#!rejected#] -> state_handle_load
+		whenMsg resume and [#rejected#] -> state_idle
+	
+	State state_handle_load {
+		println("[CargoService] | Requesting product info...") color blue
+		request productservice -m getProduct: product($PID)
+	}
+	Transition t1
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenReply getProductAnswer -> state_handle_product
+		
+	State state_handle_product{
+		onMsg(getProductAnswer: product(JSonString)){
+			[# JSonString = payloadArg(0).toString() #]
+		}
+		println("stringa json: $JSonString") color magenta
+		[#
+			var p = Product(JSonString)
+			Weight = p.getWeight()	
+			PName = p.getName()
+		#]
+		
+		// Handle non-existent PID
+		if [# (Weight == 0 && PName == "wrong" ) #]{
+			println("[CargoService] | PID does not exist: LOADREJECTED") color red
+			[# rejected = true #]
+			replyTo loadrequest with loadrejected: loadrejected(no_PID)
+		}else{
+			println("[CargoService] | Product found. Weight: $Weight. Checking total weight...") color green
+			[# rejected = false #]
+			
+			// Direct method call to the POJO
+			[# TotWeight = SlotMng.totalWeightReq() #]
+		}
+		autodispatch resume : resume(product_handled)
+	}
+	Transition t4 
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume and [#rejected#]-> state_idle
+		whenMsg resume and [#! rejected #] -> state_handle_weight
+
+	State state_handle_weight{
+		if [# Weight.plus(TotWeight) <= MAXLOAD #] {
+			replyTo loadrequest with loadaccepted: loadaccepted($SlotName)
+			[#rejected=false#]
+			println("[Cargoservice] | LOADACCEPTED") color green
+		} else {
+			replyTo loadrequest with loadrejected: loadrejected(too_heavy)
+			println("[Cargoservice] | LOADREJECTED: too heavy") color red
+			[#rejected=true#]
+			autodispatch resume:resume(reject)
+		}
+	}
+	Transition t2 
+		whenInterruptEvent stopActions -> state_handle_stop
+		whenMsg resume -> state_idle
+		whenEvent containerhere and [#!rejected#] -> state_moverobot
+				
+	State state_moverobot{
+		request cargorobot -m loadcontainer: loadcontainer($SlotName)
+		println("[Cargoservice] | loadcontainer request sent for slot $SlotName") color blue
+	}
+	Transition t0 
+		whenReply containerloaded -> state_update_hold
+	
+	State state_update_hold{
+		println("[Cargoservice] | Updating hold state for slot $SlotName...") color yellow
+		[#	
+			val safeWeight = requireNotNull(Weight)
+			var prod = Product(PID!!, PName, safeWeight)
+			SlotMng.updateHold(prod, SlotName)
+		#]
+	}
+	Goto state_idle
+}	
+	
+	
+// ----------- CLIENT SIMULATOR (for testing) --------------------------------
+QActor external_client context ctx_cargoservice{
+ 	State s0 initial {
+ 		println("$name | STARTS") color cyan
+ 		delay 5000
+  	} 
+  	Goto work1
+  	
+  	// A client that sends multiple spaced requests
+  	State work1 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(22)
+ 		delay 10000
+  	} 
+  	Transition t0
+	   whenReply loadaccepted -> work2
+	   whenReply loadrejected  -> work2
+	   
+	State work2 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(21)
+ 		delay 10000
+  	} 
+  	Transition t0
+	   whenReply loadaccepted -> work3
+	   whenReply loadrejected  -> work3
+	   
+	State work3 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(20)
+ 		delay 10000
+  	} 
+  	Transition t0
+	   whenReply loadaccepted -> work4
+	   whenReply loadrejected  -> work4
+	   
+	State work4 {
+ 		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(1)
+ 		delay 10000
+  	} 
+}
