@@ -91,6 +91,111 @@ L'analisi confluisce nei seguenti 2 modelli logici.
 
 ## Piano di testing
 
+### Test SlotManagement
+
+Codice: [SlotManagementTest](./CargoServiceCore/src/test/java/SlotManagementTest.java)
+
+* Test aggiornamento stiva 
+```java
+   /**
+     * updateHold should successfully add a product in a valid slot
+     * and increase the total weight accordingly.
+     */
+    @Test
+    public void testUpdateHold() {
+        Product p = new Product(1, "Prod1", 10);
+        try {
+            slotManagement.updateHold(new Product(1, "ProdA", 10), "Slot1");
+        } catch (Exception e) {
+            fail("Unexpected exception thrown: " + e.getMessage());
+        }
+        
+        assertEquals("Il peso totale deve riflettere il prodotto inserito",10, slotManagement.totalWeightReq());
+        
+        String state = slotManagement.getHoldState(false);
+
+        assertNotNull(state);
+        
+        // At least PID should appear, even if we don't know the format yet
+        assertTrue(state.contains("\"productId\":1"));
+    }
+```
+
+* Test stiva piena
+```java
+   /**
+     * freeSlot() should return "NONE" when all slots are filled.
+     */
+    @Test
+    public void testFreeSlotNoneWhenFull() {
+        slotManagement.updateHold(new Product(1, "ProdA", 5), "Slot1");
+        slotManagement.updateHold(new Product(2, "ProdB", 5), "Slot2");
+        slotManagement.updateHold(new Product(3, "ProdC", 5), "Slot3");
+        slotManagement.updateHold(new Product(4, "ProdD", 5), "Slot4");
+
+        assertEquals("No free slot should be available when all slots are occupied","NONE", slotManagement.freeSlot());
+    }
+```
+
+* Test tentativo di update slot già occupato
+```java
+   @Test
+    public void testUpdateHoldOccupiedSlot() {
+        Product p = new Product(1, "ProdA", 50);
+        slotManagement.updateHold(p, "Slot1");
+        
+        Product p2 = new Product(2, "ProdB",30);
+        try {
+            slotManagement.updateHold(p2, "Slot1");
+            fail("Expected exception was not thrown");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("is already occupied"));
+        }
+    }
+```
+
+### Test Sonar
+
+Codice: [SonarTest](./logicModel_IODevices/src/test/java/SonarTest.java)
+
+* Test emissione containerhere (container rilevato per 3 secondi)
+```java
+   @Test
+    public void testUpdateHoldOccupiedSlot() {
+        Product p = new Product(1, "ProdA", 50);
+        slotManagement.updateHold(p, "Slot1");
+        
+        Product p2 = new Product(2, "ProdB",30);
+        try {
+            slotManagement.updateHold(p2, "Slot1");
+            fail("Expected exception was not thrown");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("is already occupied"));
+        }
+    }
+```
+
+* Test emissione interrupt (in caso di guasto) e ripristino
+```java
+   @Test
+	public void testFaultAndResume() throws Exception {
+		IApplMessage dist_fault = CommUtils.buildEvent("tester","sonardata", "distance(25)");
+		IApplMessage dist_resume = CommUtils.buildEvent("tester","sonardata", "distance(5)");
+		
+        //QakContext.emit(dist_containerhere, false, null);
+		mqttOutConn.send(dist_fault.toString());
+		mqttOutConn.send(dist_fault.toString());
+		mqttOutConn.send(dist_fault.toString());
+		String msg = mqttConn.receive();   // bloccante
+        assertTrue(msg.contains("stopActions"));
+        
+        mqttOutConn.send(dist_resume.toString());
+		mqttOutConn.send(dist_resume.toString());
+		mqttOutConn.send(dist_resume.toString());
+		msg = mqttConn.receive();   // bloccante
+        assertTrue(msg.contains("resumeActions"));
+	}
+```
 
 ## Progettazione
 

@@ -29,7 +29,7 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
-		 
+		
 				var D = 0  
 				val D_FREE = 20
 				var counter = 0
@@ -42,6 +42,7 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 					action { //it:State
 						delay(3000) 
 						CommUtils.outblack("$name |  start")
+						subscribe(  "sonardatatest" ) //mqtt.subscribe(this,topic)
 						subscribeToLocalActor("sonarsimul") 
 						subscribeToLocalActor("sonardevice") 
 						//genTimer( actor, state )
