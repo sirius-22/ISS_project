@@ -185,7 +185,7 @@ QActor sonarsimul  context ctx_raspdevice{
 		delay 50000
 		println("sonarsimul | AVVIATO") color magenta
 	}
-	//Goto work
+	Goto work
 	
 	// D_FREE =20
 	
