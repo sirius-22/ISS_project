@@ -32,7 +32,7 @@ class Sonarsimul ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						delay(10000) 
+						delay(50000) 
 						CommUtils.outmagenta("sonarsimul | AVVIATO")
 						//genTimer( actor, state )
 					}
@@ -43,20 +43,6 @@ class Sonarsimul ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				}	 
 				state("work") { //this:State
 					action { //it:State
-						CommUtils.outmagenta("sonarsimul | Emetto 25 (per causare FAULT)")
-						emitLocalStreamEvent("sonardata", "distance(25)" ) 
-						delay(1000) 
-						emitLocalStreamEvent("sonardata", "distance(26)" ) 
-						delay(1000) 
-						emitLocalStreamEvent("sonardata", "distance(25)" ) 
-						delay(2000) 
-						CommUtils.outmagenta("sonarsimul | Emetto 8 (per causare RESUME)")
-						emitLocalStreamEvent("sonardata", "distance(8)" ) 
-						delay(1000) 
-						emitLocalStreamEvent("sonardata", "distance(15)" ) 
-						delay(1000) 
-						emitLocalStreamEvent("sonardata", "distance(5)" ) 
-						delay(2000) 
 						CommUtils.outmagenta("sonarsimul | Emetto 8 (per causare containerhere)")
 						emitLocalStreamEvent("sonardata", "distance(8)" ) 
 						delay(1000) 
@@ -69,6 +55,7 @@ class Sonarsimul ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
+					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
 			}
 		}

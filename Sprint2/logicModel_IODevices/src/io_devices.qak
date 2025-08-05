@@ -1,6 +1,7 @@
 System io_devices
 
-mqttBroker "broker.hivemq.com" : 1883 eventTopic "unibo/qak/events"
+mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
+//Attenzione! cambiare localhost con l'ip su cui gira mosqitto (il container con tutto dentro)
 
 Event sonardata      : distance(D)
 
@@ -25,7 +26,7 @@ QActor mind context ctx_raspdevice{
  	#]	
  	
 	State s0 initial{
-		delay 1000
+		delay 3000
 		println("$name |  start") 
 		
 		//cambiare dopo il testing
@@ -180,7 +181,7 @@ QActor leddevice_mock context ctx_raspdevice{
 // Simulatore aggiornato per testare la transizione a fault e il resume
 QActor sonarsimul  context ctx_raspdevice{
 	State s0 initial{
-		delay 10000
+		delay 50000
 		println("sonarsimul | AVVIATO") color magenta
 	}
 	Goto work
@@ -188,22 +189,22 @@ QActor sonarsimul  context ctx_raspdevice{
 	// D_FREE =20
 	
 	State work{
-		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
-		emitlocalstream sonardata      : distance(25)
-	    delay 1000
-		emitlocalstream sonardata      : distance(26)
-	    delay 1000
-		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
-	    delay 2000
-
-		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
-		emitlocalstream sonardata      : distance(8) // lettura clear 1
-	    delay 1000
-		emitlocalstream sonardata      : distance(15)// lettura clear 2
-	    delay 1000
-		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
-	    delay 2000
-	    
+//		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
+//		emitlocalstream sonardata      : distance(25)
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(26)
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
+//	    delay 2000
+//
+//		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
+//		emitlocalstream sonardata      : distance(8) // lettura clear 1
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(15)// lettura clear 2
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
+//	    delay 2000
+//	    
 		println("sonarsimul | Emetto 8 (per causare containerhere)") color magenta
 		emitlocalstream sonardata      : distance(8)
 	    delay 1000
@@ -213,5 +214,5 @@ QActor sonarsimul  context ctx_raspdevice{
 	    delay 2000
 
 	}
-	//Goto work
+	Goto work
 }

@@ -1,5 +1,5 @@
 services:
-  # ------ UTILS -------------
+  #------ UTILS -------------
   mosquitto:
     image: eclipse-mosquitto:1.6.15
     container_name: mosquitto
@@ -24,14 +24,9 @@ services:
       - EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS=120
     networks:
       - iss-network
-    # Aggiungiamo un healthcheck anche per Eureka per essere sicuri che sia attivo
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  #------ PRODUCTSERVICE -------------
+
+ #------ PRODUCTSERVICE -------------
   mongodb:
     image: mongo:6.0.4
     container_name: mongodb  
@@ -40,11 +35,13 @@ services:
       - MONGO_INITDB_DATABASE=cargodb # Nome del database da inizializzare
     ports:
       - "27017:27017"
+    command: mongod
     networks:
       - iss-network
 
   cargoserviceqak:
     container_name: cargoserviceqak 
+    #image: cargoserviceqak:1.0
     image: docker.io/natbodocker/cargoserviceqak:1.0
     environment:
       - MONGO_HOST=mongodb
@@ -54,22 +51,13 @@ services:
       - 8111:8111/udp
     networks:
       - iss-network
-    depends_on:
-      mongodb:
-        condition: service_started
-      eureka:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://eureka:8761/eureka/apps/CTXCARGOSERVICE"] # Assicurati che 'CARGOSERVICEQAK' sia il nome corretto
-      interval: 10s
-      timeout: 10s
-      retries: 12
-      
 
-  # ------ CARGOSERVICE (Robot) -------------
+
+  #------ CARGOSERVICE -------------
   wenv:
     container_name: wenv
     image: docker.io/natbodocker/virtualrobotdisi25:2.2
+    #image: virtualrobotdisi25:2.1
     ports:
       - 8090:8090 
       - 8091:8091/tcp
@@ -80,58 +68,23 @@ services:
   basicrobot24:
     container_name: basicrobot24
     image: pretty/basicrobot
+    #image: basicrobot24:3.0
     mem_limit: 512m
     ports:
       - "8020:8020/tcp"
       - "8020:8020/udp"
       - "8085:8085"
     environment:
-      - VIRTUAL_ENV=wenv
+      - VIRTUAL_ENV=wenv                         #Used by uniborobots.robotSupport.create
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
-      - SERVICE_HOST=172.31.64.1
+      - SERVICE_HOST=172.31.64.1      #basicrobot24 per app che usano basicrobot in docker
       - SERVICE_IP=172.31.64.1
       - MQTTBROKER=mosquitto
     depends_on:
-      wenv:
-        condition: service_started
-      eureka:
-        condition: service_healthy
+      - wenv  
     networks:
       - iss-network
-    # L'healthcheck deve verificare la registrazione su Eureka
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://eureka:8761/eureka/apps/CTXBASICROBOT"] #
-      interval: 10s
-      timeout: 10s
-      retries: 12
   
-  # ------ CARGOSERVICECORE -------------
-  cargoservicecore:
-    container_name: cargoservicecore
-    image: cargoservice:1.0
-    mem_limit: 512m
-    ports:
-      - "8000:8000/tcp"
-      - "8000:8000/udp"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
-      - SERVICE_HOST=172.31.64.1
-      - SERVICE_IP=172.31.64.1
-      - MQTTBROKER=mosquitto
-    depends_on:
-      mosquitto:
-        condition: service_started
-      eureka:
-        condition: service_healthy
-      basicrobot24:
-        condition: service_healthy
-      cargoserviceqak:
-        condition: service_healthy
-    networks:
-      - iss-network
-
 networks:
   iss-network:
     external: true
-
-# docker compose -f arch2.yaml up 

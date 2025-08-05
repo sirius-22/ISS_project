@@ -33,8 +33,6 @@ with Diagram('cargoserviceArch', show=False, outformat='png', graph_attr=graphat
           basicrobot=Custom('basicrobot(ext)','./qakicons/externalQActor.png')
      with Cluster('ctx_productservice', graph_attr=nodeattr):
           productservice=Custom('productservice(ext)','./qakicons/externalQActor.png')
-     with Cluster('ctx_raspdevice', graph_attr=nodeattr):
-          sonar=Custom('sonar(ext)','./qakicons/externalQActor.png')
      cargorobot >> Edge( label='alarm', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      sys >> Edge( label='resumeActions', **evattr, decorate='true', fontcolor='darkgreen') >> cargorobot
      sys >> Edge( label='resumeActions', **evattr, decorate='true', fontcolor='darkgreen') >> cargoservice

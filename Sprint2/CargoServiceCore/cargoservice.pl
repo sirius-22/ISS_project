@@ -1,6 +1,7 @@
 %====================================================================================
 % cargoservice description   
 %====================================================================================
+mqttBroker("mosquitto", "1883", "unibo/qak/events").
 request( loadrequest, loadrequest(PID) ).
 request( getProduct, product(PID) ).
 reply( getProductAnswer, product(JSonString) ).  %%for getProduct
@@ -33,10 +34,9 @@ dispatch( resume, resume(M) ).
 context(ctx_cargoservice, "localhost",  "TCP", "8000").
 context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
 context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
-context(ctx_raspdevice, "127.0.0.1",  "TCP", "8128").
+context(ctx_raspdevice, "host.docker.internal",  "TCP", "8128").
  qactor( basicrobot, ctx_basicrobot, "external").
   qactor( productservice, ctx_productservice, "external").
-  qactor( sonar, ctx_raspdevice, "external").
   qactor( cargorobot, ctx_cargoservice, "it.unibo.cargorobot.Cargorobot").
  static(cargorobot).
   qactor( cargoservice, ctx_cargoservice, "it.unibo.cargoservice.Cargoservice").

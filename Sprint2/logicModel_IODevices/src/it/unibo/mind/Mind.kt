@@ -40,7 +40,7 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						delay(1000) 
+						delay(3000) 
 						CommUtils.outblack("$name |  start")
 						subscribeToLocalActor("sonarsimul") 
 						subscribeToLocalActor("sonardevice") 

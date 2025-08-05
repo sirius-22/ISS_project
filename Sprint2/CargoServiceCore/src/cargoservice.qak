@@ -1,5 +1,7 @@
 System cargoservice
 
+mqttBroker "mosquitto" : 1883 eventTopic "unibo/qak/events"
+
 //================ MESSAGES AND EVENTS ===================================
 
 // ClientSimulator -> CargoService
@@ -59,20 +61,20 @@ Dispatch resume : resume(M)
 
 // CONTEXTS ===================================================================
 Context ctx_cargoservice ip [host="localhost" port=8000]
-Context ctx_basicrobot     ip [host="basicrobot24"   port=8020]
-Context ctx_productservice ip [host="cargoserviceqak" port=8111]  
+Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
+Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
 
 // per containerizzazione su docker e iodevice attivato su stessa macchina
-//Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
+Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
 
 // se si usa facendo partire il sonar sulla stessa macchina (no container)
-Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
+//Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
 
 
 // ACTORS =====================================================================
 ExternalQActor basicrobot context ctx_basicrobot
 ExternalQActor productservice context ctx_productservice
-ExternalQActor sonar context ctx_raspdevice
+//ExternalQActor sonar context ctx_raspdevice
 
 
 // ----------- CARGOROBOT -----------------------------------------------------
