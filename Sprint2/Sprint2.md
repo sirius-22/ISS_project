@@ -86,6 +86,7 @@ Per rendere più agevole questo passaggio verrà implementata un'interfaccia [FO
 L'analisi confluisce nei seguenti 2 modelli logici.
 
 <img src='./logicModel_IODevices/io_devicesarch.png' width="500">
+<img src='./CargoServiceCore/cargoservicearch.png'>
 
 
 ## Piano di testing
@@ -119,8 +120,39 @@ La comunicazione verso gli altri componenti del sistema, come `cargoservice` e i
 
 In sintesi, la progettazione adotta un pattern **Publisher/Subscriber** per la comunicazione esterna e un'architettura a **stream di dati locali** per la comunicazione interna, sfruttando appieno le capacità espressive e le astrazioni fornite dal linguaggio Qak per creare un sistema reattivo, modulare e robusto.
 
+### Refactoring di SlotManagement e CargoService
 
+In linea con quanto emerso dall'analisi, si procede a un importante refactoring che coinvolge `slotmanagement` e `cargoservice`.
 
+#### SlotManagement come Componente POJO (Plain Old Java Object)
+
+La scelta di trasformare `slotmanagement` da attore Qak a POJO è guidata dal principio **YAGNI (You Aren't Gonna Need It)** e dalla ricerca di semplicità architetturale. Essendo `slotmanagement` un componente puramente passivo, che non gestisce stati concorrenti né comportamenti autonomi, modellarlo come attore avrebbe introdotto una complessità non necessaria (gestione di messaggi, code, transizioni) per operazioni che sono, di fatto, chiamate a metodo sincrone.
+
+*   **Implementazione tramite Interfaccia (`ISlotManagement`)**: La logica di `slotmanagement` è definita attraverso l'interfaccia `ISlotManagement`. Questa scelta progettuale è cruciale per due motivi:
+    1.  **Disaccoppiamento**: `cargoservice` dipenderà dall'interfaccia e non dall'implementazione concreta (`SlotManagement`). Ciò permette di sostituire o estendere l'implementazione in futuro (ad esempio, con una versione che carica i dati da un database o da un file di configurazione) senza modificare il codice del `cargoservice`.
+    2.  **Testabilità**: Permette di creare facilmente implementazioni "mock" dell'interfaccia per testare `cargoservice` in isolamento.
+
+*   **Metodi Principali**:
+    *   `freeSlot()`: Restituisce il primo slot disponibile o "NONE".
+    *   `totalWeightReq()`: Calcola e restituisce il peso totale corrente della stiva.
+    *   `updateHold(Product, String)`: Aggiorna lo stato di uno specifico slot, ricalcolando il peso totale.
+    *   `getHoldState(boolean asJson)`: Questo metodo è stato progettato pensando all'estensibilità futura del sistema. Fornisce una rappresentazione completa dello stato della stiva, sia in formato testuale leggibile dall'uomo (per logging e debug), sia in formato **JSON**. La rappresentazione JSON è fondamentale perché **pone le basi per future integrazioni con interfacce esterne**, come una **Web GUI** o un sistema di monitoraggio remoto, che possono facilmente effettuare il parsing di dati strutturati in questo formato standard.
+
+#### Refactoring del CargoService
+
+Con la trasformazione di `slotmanagement`, il `cargoservice` diventa il gestore principale della logica di carico e della comunicazione con i componenti esterni.
+
+*   **Integrazione del POJO**: Il `cargoservice` ora istanzia e mantiene un riferimento a un oggetto `SlotManagement`. Le precedenti interazioni basate su messaggi (`Request`/`Reply`) vengono sostituite da chiamate a metodo dirette e sincrone, rendendo il codice più semplice e lineare.
+    ```qak
+    // Prima:
+    // request slotmanagement_mock -m freeSlot: freeSlot(m)
+    
+    // Ora (all'interno di un'azione Kotlin):
+    [# SlotName = SlotMng.freeSlot() #]
+    ```
+
+*   **Gestione degli Eventi dal Sonar**: Il `cargoservice` ora deve reagire agli eventi globali emessi dal `mind` (attore del `sonardevice`). Mentre prima poteva sottoscriversi a uno stream locale del `sonar_mock`, ora deve gestire `Event` provenienti da un contesto esterno.
+    *   **Scelta Progettuale**: Utilizzando la transizione `whenEvent` (es. `whenEvent stopActions -> state_handle_stop`), l'attore può intercettare gli eventi pubblicati sul broker MQTT a cui l'intero sistema è connesso. Questo permette di implementare la logica di interruzione (`stopActions`) e ripresa (`resumeActions`) in modo disaccoppiato e reattivo, senza che `cargoservice` debba conoscere i dettagli implementativi del `sonardevice`.
 
 
 ## Deployment
