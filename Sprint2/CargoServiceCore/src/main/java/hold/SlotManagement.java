@@ -8,7 +8,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -23,7 +23,7 @@ import java.util.Map;
  */
 public class SlotManagement implements ISlotManagement {
 
-    private final Map<String, Product> slots = new HashMap<>();
+	private final Map<String, Product> slots = new LinkedHashMap<>();
     private int totalWeight;
 
     /**

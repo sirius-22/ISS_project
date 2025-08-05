@@ -25,7 +25,7 @@ public class SlotManagementTest {
     @Test
     public void testInitialFreeSlotExists() {
         String free = slotManagement.freeSlot();
-        assertFalse(free.equals("NONE"));
+        assertTrue(free.equals("Slot1"));
     }
     
     /**
