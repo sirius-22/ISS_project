@@ -11,7 +11,7 @@ Event containerhere : containerhere(INFO)
 Dispatch ledon : ledon(M)
 Dispatch ledoff : ledoff(M)
 
-Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
+Context ctx_raspdevice ip [ host= "localhost" port= 8128 ]
 
 QActor mind context ctx_raspdevice{
 	[# 
@@ -21,12 +21,17 @@ QActor mind context ctx_raspdevice{
 		
 		var prevInterval = -1
 		var currentInterval = -1
+		var fault = false
  	#]	
  	
 	State s0 initial{
 		delay 1000
 		println("$name |  start") 
+		
+		//cambiare dopo il testing
 		subscribeTo sonarsimul for sonardata
+		//con
+		subscribeTo sonardevice for sonardata
 	}
 	Transition t0
 		whenEvent sonardata -> work
@@ -70,38 +75,41 @@ QActor mind context ctx_raspdevice{
 		// Stato vuoto, serve solo per la logica di transizione
 	}
 		// Se la condizione di fault è vera, vai a fault_state
-		Goto fault_state if [# counter >= 3 && currentInterval == 1 #] 
+		Goto fault_state_init if [# counter >= 3 && currentInterval == 1 #] 
 		// Altrimenti, torna ad attendere dati
 		else work_wait
 
 
 	// STATO DI ATTESA REALE
 	State work_wait {
-		println("$name | Attendo il prossimo dato...")
+		println("$name | Attendo il prossimo dato...") color blue
 	}
 	Transition t0
-		whenEvent sonardata -> work
+		whenEvent sonardata and [#!fault#] -> work
+		whenEvent sonardata and [#fault#] -> evaluate_resume
 
 
     // STATO DI FAULT: il sistema è fermo
- 	State fault_state {
- 		println("$name | In FAULT_STATE....") color red
+ 	State fault_state_init {
+ 		println("$name | In FAULT_STATE -> EMIT STOPACTIONS") color red
  		emit stopActions: stopActions(Stop)
  		[# 
  			// Resetto il contatore quando entro per la prima volta
  			// in questo stato
  			counter = 0; 
+ 			fault = true
  		#]
- 	}
- 	Transition t0
- 		whenEvent sonardata -> evaluate_resume
-
+ 	}Goto work_wait
+ 	
  	State evaluate_resume {
  		onMsg(sonardata : distance(D)) {
  			[# D = payloadArg(0).toInt() #]
  			
  			if [# D <= D_FREE #] {
  				[# counter++ #]
+ 				if [# counter >= 3 #]{
+ 					[#fault= false#]
+ 				}
  			} else {
  				[# counter = 0 #]
  			}
@@ -109,7 +117,7 @@ QActor mind context ctx_raspdevice{
  		}
  	}
  	// Dopo aver valutato il dato, controlla se uscire dal fault
- 		Goto work_after_resume if [# counter >= 3 #] else fault_state
+ 		Goto work_after_resume if [# !fault #] else work_wait
  	
  	// Stato per emettere il resume e resettare le variabili
  	State work_after_resume {
@@ -132,7 +140,8 @@ QActor mind context ctx_raspdevice{
 	 	[#
 			p       = Runtime.getRuntime().exec("python sonar.py")
 			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	
-		#]		
+		#]	
+		delay 2000	
 	}
 	Goto readSonarData
 	
@@ -171,12 +180,15 @@ QActor leddevice_mock context ctx_raspdevice{
 // Simulatore aggiornato per testare la transizione a fault e il resume
 QActor sonarsimul  context ctx_raspdevice{
 	State s0 initial{
-		println("sonarsimul | AVVIATO")
+		delay 10000
+		println("sonarsimul | AVVIATO") color magenta
 	}
 	Goto work
 	
+	// D_FREE =20
+	
 	State work{
-		println("sonarsimul | Emetto 25 (per causare FAULT)")
+		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
 		emitlocalstream sonardata      : distance(25)
 	    delay 1000
 		emitlocalstream sonardata      : distance(26)
@@ -184,7 +196,7 @@ QActor sonarsimul  context ctx_raspdevice{
 		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
 	    delay 2000
 
-		println("sonarsimul | Emetto 8 (per causare RESUME)")
+		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
 		emitlocalstream sonardata      : distance(8) // lettura clear 1
 	    delay 1000
 		emitlocalstream sonardata      : distance(15)// lettura clear 2
@@ -192,7 +204,7 @@ QActor sonarsimul  context ctx_raspdevice{
 		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
 	    delay 2000
 	    
-		println("sonarsimul | Emetto 8 (per causare containerhere)")
+		println("sonarsimul | Emetto 8 (per causare containerhere)") color magenta
 		emitlocalstream sonardata      : distance(8)
 	    delay 1000
 		emitlocalstream sonardata      : distance(7)
@@ -201,5 +213,5 @@ QActor sonarsimul  context ctx_raspdevice{
 	    delay 2000
 
 	}
-	Goto work
+	//Goto work
 }

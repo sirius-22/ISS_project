@@ -36,12 +36,14 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 				
 				var prevInterval = -1
 				var currentInterval = -1
+				var fault = false
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						delay(1000) 
 						CommUtils.outblack("$name |  start")
 						subscribeToLocalActor("sonarsimul") 
+						subscribeToLocalActor("sonardevice") 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -90,35 +92,39 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="fault_state", cond=doswitchGuarded({ counter >= 3 && currentInterval == 1  
+					 transition( edgeName="goto",targetState="fault_state_init", cond=doswitchGuarded({ counter >= 3 && currentInterval == 1  
 					}) )
 					transition( edgeName="goto",targetState="work_wait", cond=doswitchGuarded({! ( counter >= 3 && currentInterval == 1  
 					) }) )
 				}	 
 				state("work_wait") { //this:State
 					action { //it:State
-						CommUtils.outblack("$name | Attendo il prossimo dato...")
+						CommUtils.outblue("$name | Attendo il prossimo dato...")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t01",targetState="work",cond=whenEvent("sonardata"))
+					 transition(edgeName="t01",targetState="work",cond=whenEventGuarded("sonardata",{!fault 
+					}))
+					transition(edgeName="t02",targetState="evaluate_resume",cond=whenEventGuarded("sonardata",{fault 
+					}))
 				}	 
-				state("fault_state") { //this:State
+				state("fault_state_init") { //this:State
 					action { //it:State
-						CommUtils.outred("$name | In FAULT_STATE....")
+						CommUtils.outred("$name | In FAULT_STATE -> EMIT STOPACTIONS")
 						emit("stopActions", "stopActions(Stop)" ) 
 						 
 						 			// Resetto il contatore quando entro per la prima volta
 						 			// in questo stato
 						 			counter = 0; 
+						 			fault = true
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="evaluate_resume",cond=whenEvent("sonardata"))
+					 transition( edgeName="goto",targetState="work_wait", cond=doswitch() )
 				}	 
 				state("evaluate_resume") { //this:State
 					action { //it:State
@@ -127,6 +133,9 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 								 D = payloadArg(0).toInt()  
 								if(  D <= D_FREE  
 								 ){ counter++  
+								if(  counter >= 3  
+								 ){fault= false 
+								}
 								}
 								else
 								 { counter = 0  
@@ -138,9 +147,9 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition( edgeName="goto",targetState="work_after_resume", cond=doswitchGuarded({ counter >= 3  
+					 transition( edgeName="goto",targetState="work_after_resume", cond=doswitchGuarded({ !fault  
 					}) )
-					transition( edgeName="goto",targetState="fault_state", cond=doswitchGuarded({! ( counter >= 3  
+					transition( edgeName="goto",targetState="work_wait", cond=doswitchGuarded({! ( !fault  
 					) }) )
 				}	 
 				state("work_after_resume") { //this:State

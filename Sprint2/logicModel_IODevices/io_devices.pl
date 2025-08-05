@@ -9,7 +9,7 @@ event( containerhere, containerhere(INFO) ).
 dispatch( ledon, ledon(M) ).
 dispatch( ledoff, ledoff(M) ).
 %====================================================================================
-context(ctx_raspdevice, "127.0.0.1",  "TCP", "8128").
+context(ctx_raspdevice, "localhost",  "TCP", "8128").
  qactor( mind, ctx_raspdevice, "it.unibo.mind.Mind").
  static(mind).
   qactor( sonardevice, ctx_raspdevice, "it.unibo.sonardevice.Sonardevice").
