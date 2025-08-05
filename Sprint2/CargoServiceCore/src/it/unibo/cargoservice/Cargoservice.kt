@@ -234,8 +234,6 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 									var prod = Product(PID!!, PName, safeWeight)
 									SlotMng.updateHold(prod, SlotName)
 									
-						forward("sonaractivate", "sonaractivate(A)" ,"sonar" ) 
-						forward("restart", "restart(M)" ,"sonar" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

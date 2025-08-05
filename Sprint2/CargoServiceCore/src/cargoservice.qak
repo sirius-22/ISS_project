@@ -16,8 +16,8 @@ Reply   getProductAnswer: product( JSonString ) for getProduct
 Reply loadaccepted:		loadaccepted(Slot) for loadrequest
 Reply loadrejected:		loadrejected(Error) for loadrequest // Error={ too_heavy, no_slots, no_PID }
  
-//CargoService--> Sonar
-Dispatch restart:restart(M)
+//CargoService--> Sonar testing
+//Dispatch restart:restart(M)
 
 /* NOT NEEDED ANYMORE */
 //// slotmanagement in forse
@@ -72,8 +72,9 @@ Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
 Event stopActions : stopActions(M)
 Event resumeActions : resumeActions(M)
 Event containerhere : containerhere(M)
+
 //TODO da togliere
-Dispatch sonaractivate : sonaractivate(A)
+//Dispatch sonaractivate : sonaractivate(A)
 
 // autodispatch for interrupt event
 Dispatch resume : resume(M)
@@ -638,8 +639,8 @@ QActor cargoservice context ctx_cargoservice {
 
 
 		//se si usa il contesto raspdevice
-		forward sonar -m sonaractivate: sonaractivate(A)
-		forward sonar -m restart:restart(M)
+		//forward sonar -m sonaractivate: sonaractivate(A)
+		//forward sonar -m restart:restart(M)
 	}Goto state_idle
 }	
 	
