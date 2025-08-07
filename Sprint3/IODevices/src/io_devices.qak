@@ -1,0 +1,234 @@
+System io_devices
+
+mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
+//Attenzione! cambiare localhost con l'ip su cui gira mosqitto (il container con tutto dentro)
+
+Event sonardata      : distance(D)
+
+Event stopActions : stopActions(REASON)
+Event resumeActions : resumeActions(REASON)
+Event containerhere : containerhere(INFO)
+
+Dispatch ledon : ledon(M)
+Dispatch ledoff : ledoff(M)
+
+Context ctx_raspdevice ip [ host= "localhost" port= 8128 ]
+
+QActor mind context ctx_raspdevice{
+	[#
+		var D = 0  
+		val D_FREE = 20
+		var counter = 0
+		
+		var prevInterval = -1
+		var currentInterval = -1
+		var fault = false
+ 	#]	
+ 	
+	State s0 initial{
+		delay 3000
+		println("$name |  start") 
+		
+		subscribe "sonardatatest"
+		//cambiare dopo il testing
+		subscribeTo sonarsimul for sonardata
+		//con
+		subscribeTo sonardevice for sonardata
+	}
+	Transition t0
+		whenEvent sonardata -> work
+	
+	// STATO OPERATIVO NORMALE
+	State work{
+		println("$name | In stato WORK. In attesa di dati...") color cyan
+		
+		onMsg( sonardata : distance(X) ){
+			[#  
+                D = payloadArg(0).toInt()
+                
+                currentInterval = when {
+                    D < D_FREE / 2 -> 0 // containerhere
+                    D > D_FREE     -> 1 // fault
+                    else           -> 2 // free
+                }
+
+                if (currentInterval == prevInterval) {
+                    counter++
+                } else {
+                    counter = 1
+                    prevInterval = currentInterval
+                }
+            #]
+ 			println("$name | WORK: D=$D, interval=$currentInterval, counter=$counter") color cyan
+
+			// Emetti eventi se necessario
+			if [# counter >= 3 && currentInterval == 0 #] {
+				println("$name | 3 letture CONTAINER consecutive -> EMIT containerhere") color green
+				emit containerhere : containerhere(hereee)
+				[# counter = 0 #] // Resetta per evitare emissioni multiple
+			}
+		}
+	}
+	// Transizione SENZA attesa che valuta dove andare dopo 'work'
+	Goto check_fault_condition
+
+	// Stato "ponte" che instrada il flusso
+	State check_fault_condition {
+		// Stato vuoto, serve solo per la logica di transizione
+	}
+		// Se la condizione di fault è vera, vai a fault_state
+		Goto fault_state_init if [# counter >= 3 && currentInterval == 1 #] 
+		// Altrimenti, torna ad attendere dati
+		else work_wait
+
+
+	// STATO DI ATTESA REALE
+	State work_wait {
+		println("$name | Attendo il prossimo dato...") color blue
+	}
+	Transition t0
+		whenEvent sonardata and [#!fault#] -> work
+		whenEvent sonardata and [#fault#] -> evaluate_resume
+
+
+    // STATO DI FAULT: il sistema è fermo
+ 	State fault_state_init {
+ 		println("$name | In FAULT_STATE -> EMIT STOPACTIONS") color red
+ 		emit stopActions: stopActions(Stop)
+ 		//comunico al led di accendersi
+ 		forward leddevice -m ledon : ledon(on)
+ 		[# 
+ 			// Resetto il contatore quando entro per la prima volta
+ 			// in questo stato
+ 			counter = 0; 
+ 			fault = true
+ 		#]
+ 	}Goto work_wait
+ 	
+ 	State evaluate_resume {
+ 		onMsg(sonardata : distance(D)) {
+ 			[# D = payloadArg(0).toInt() #]
+ 			
+ 			if [# D <= D_FREE #] {
+ 				[# counter++ #]
+ 				if [# counter >= 3 #]{
+ 					[#fault= false#]
+ 				}
+ 			} else {
+ 				[# counter = 0 #]
+ 			}
+ 			println("$name | FAULT_STATE: D=$D, clear_counter=$counter") color red
+ 		}
+ 	}
+ 	// Dopo aver valutato il dato, controlla se uscire dal fault
+ 		Goto work_after_resume if [# !fault #] else work_wait
+ 	
+ 	// Stato per emettere il resume e resettare le variabili
+ 	State work_after_resume {
+ 		println("$name | 3 letture 'clear' consecutive. EMIT resumeActions e torno al lavoro.") color green
+ 		emit resumeActions : resumeActions(okok)
+ 		forward leddevice -m ledoff : ledoff(of)
+ 		[# counter = 0; prevInterval = -1; #]
+ 	}
+ 	Goto work_wait
+
+ }
+ 
+ QActor sonardevice context ctx_raspdevice{
+[# 
+	lateinit var reader : java.io.BufferedReader
+    lateinit var p : Process	
+    var Distance = 0
+#]	
+	State s0 initial{
+		println("$name | start") 
+	 	[#
+			p       = Runtime.getRuntime().exec("python sonar.py")
+			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	
+		#]	
+		delay 2000	
+	}
+	Goto readSonarData
+	
+	State readSonarData{
+	[# 
+		var data = reader.readLine()
+		if( data != null ){
+		try{ 
+			val vd = data.toFloat()
+			val v  = vd.toInt()
+			if( v <= 100 ){	//Un primo filtro...
+				Distance = v				
+			}else Distance = 0
+		}catch(e: Exception){
+			CommUtils.outred("$name readSonarDataERROR: $e "   )
+		}
+		}//if
+		
+	#]	
+		if [# Distance > 0 #] { 
+		    println("$name with python: data = $data"   ) color yellow
+			emitlocalstream sonardata : distance($Distance)			 
+		}
+	}
+	Goto readSonarData
+}//sonardevice
+
+
+
+QActor leddevice context ctx_raspdevice{
+	State init initial{
+	 println("$name | led ready") color yellow
+	}Goto ledoff_state
+	
+	State ledoff_state{
+		[# Runtime.getRuntime().exec("python ledPython25Off.py") #]
+		println("$name | led is off") color yellow
+		println("$name | led waiting for messages") color yellow
+	}Transition t0 whenMsg ledon -> ledon_state
+	
+	State ledon_state{
+		 [# machineExec("python ledPython25On.py") #]
+		println("$name | led is on") color yellow
+	}Transition t0 whenMsg ledoff -> ledoff_state
+	
+}
+ 
+// Simulatore aggiornato per testare la transizione a fault e il resume
+QActor sonarsimul  context ctx_raspdevice{
+	State s0 initial{
+		delay 50000
+		println("sonarsimul | AVVIATO") color magenta
+	}
+	Goto work
+	
+	// Memo D_FREE =20
+	
+	State work{
+//		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
+//		emitlocalstream sonardata      : distance(25)
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(26)
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
+//	    delay 2000
+//
+//		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
+//		emitlocalstream sonardata      : distance(8) // lettura clear 1
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(15)// lettura clear 2
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
+//	    delay 2000
+//	    
+		println("sonarsimul | Emetto 8 (per causare containerhere)") color magenta
+		emitlocalstream sonardata      : distance(8)
+	    delay 1000
+		emitlocalstream sonardata      : distance(7)
+	    delay 1000
+		emitlocalstream sonardata      : distance(9) // <-- mind emetterà containerhere
+	    delay 2000
+
+	}
+	Goto work
+}
