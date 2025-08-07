@@ -259,6 +259,21 @@ Con la trasformazione di `slotmanagement`, il `cargoservice` diventa il gestore 
 *   **Gestione degli Eventi dal Sonar**: Il `cargoservice` ora deve reagire agli eventi globali emessi dal `mind` (attore del `sonardevice`). Mentre prima poteva sottoscriversi a uno stream locale del `sonar_mock`, ora deve gestire `Event` provenienti da un contesto esterno.
     *   **Scelta Progettuale**: Utilizzando la transizione `whenEvent` (es. `whenEvent stopActions -> state_handle_stop`), l'attore può intercettare gli eventi pubblicati sul broker MQTT a cui l'intero sistema è connesso. Questo permette di implementare la logica di interruzione (`stopActions`) e ripresa (`resumeActions`) in modo disaccoppiato e reattivo, senza che `cargoservice` debba conoscere i dettagli implementativi del `sonardevice`.
 
-
 ## Deployment
+
+1. Andare nella cartella [CargoServiceCore](./CargoServiceCore)
+2. Seguire le [istruzioni](how_to_creare_immagini_docker.md) per caricare l'immagine Docker di cargoservicore
+3. Eseguire il comando ```docker load -i basicrobot24.tar``` per caricare l'immagine Docker del basicrobot
+4. Creare la rete ```docker network create iss-network```
+5. Eseguire  il comando ```docker compose -f arch2.yaml up``` per far partire i componenti del sistema 
+6. Aprire il browser su [localhost:8090](localhost:8090) per visualizzare l’ambiente WEnv in cui lavorerà il DDR robot
+7. Eseguire il comando ```./gradlew run``` oppure ```gradle run``` nella cartella [logicModel_IODevices](./logicModel_IODevices) per far partire il resto del sistema RaspDevice
+
+*Note:*
+
+a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docker </br>
+b. Il sistema cargoservice si appoggia a productservice che ha un database Mongo per la persistenza dei prodotti, questo si può riempire con oppurtuni prodotti di test attraverso il file [setup_mongo.js](setup_mongo.js) (eseguire ```node setup_mongo.js```)
+
+### Raspberry Deployment
+Eseguire fino al punto 6 della sezione precedente
 
