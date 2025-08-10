@@ -1,7 +1,7 @@
 %====================================================================================
 % io_devices description   
 %====================================================================================
-mqttBroker("broker.hivemq.com", "1883", "unibo/qak/events").
+mqttBroker("192.168.78.21", "1883", "unibo/qak/events").
 event( sonardata, distance(D) ).
 event( stopActions, stopActions(REASON) ).
 event( resumeActions, resumeActions(REASON) ).

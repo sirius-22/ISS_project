@@ -114,6 +114,7 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 					action { //it:State
 						CommUtils.outred("$name | In FAULT_STATE -> EMIT STOPACTIONS")
 						emit("stopActions", "stopActions(Stop)" ) 
+						forward("ledon", "ledon(on)" ,"leddevice" ) 
 						 
 						 			// Resetto il contatore quando entro per la prima volta
 						 			// in questo stato
@@ -156,6 +157,7 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 					action { //it:State
 						CommUtils.outgreen("$name | 3 letture 'clear' consecutive. EMIT resumeActions e torno al lavoro.")
 						emit("resumeActions", "resumeActions(okok)" ) 
+						forward("ledoff", "ledoff(of)" ,"leddevice" ) 
 						 counter = 0; prevInterval = -1;  
 						//genTimer( actor, state )
 					}

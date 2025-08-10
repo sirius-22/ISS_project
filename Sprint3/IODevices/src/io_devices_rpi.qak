@@ -1,6 +1,6 @@
 System io_devices
 
-mqttBroker "broker.hivemq.com" : 1883 eventTopic "unibo/qak/events"
+mqttBroker "192.168.78.21" : 1883 eventTopic "unibo/qak/events"
 //Attenzione! cambiare localhost con l'ip su cui gira mosqitto (il container con tutto dentro)
 
 Event sonardata      : distance(D)
@@ -95,6 +95,8 @@ QActor mind context ctx_raspdevice{
  	State fault_state_init {
  		println("$name | In FAULT_STATE -> EMIT STOPACTIONS") color red
  		emit stopActions: stopActions(Stop)
+ 		//comunico al led di accendersi
+ 		forward leddevice -m ledon : ledon(on)
  		[# 
  			// Resetto il contatore quando entro per la prima volta
  			// in questo stato
@@ -125,6 +127,7 @@ QActor mind context ctx_raspdevice{
  	State work_after_resume {
  		println("$name | 3 letture 'clear' consecutive. EMIT resumeActions e torno al lavoro.") color green
  		emit resumeActions : resumeActions(okok)
+ 		forward leddevice -m ledoff : ledoff(of)
  		[# counter = 0; prevInterval = -1; #]
  	}
  	Goto work_wait
@@ -138,7 +141,7 @@ QActor mind context ctx_raspdevice{
     var Distance = 0
 #]	
 	State s0 initial{
-		println("$name | start") 
+		println("$name | start") color green
 	 	[#
 			p       = Runtime.getRuntime().exec("python ./resources/python/sonar.py")
 			System.out.println(p)
@@ -182,13 +185,13 @@ QActor leddevice context ctx_raspdevice{
 	}Goto ledoff_state
 	
 	State ledoff_state{
-		[# Runtime.getRuntime().exec("python ledPython25Off.py") #]
+		[# Runtime.getRuntime().exec("python ./resources/python/ledPython25Off.py") #]
 		println("$name | led is off") color yellow
 		println("$name | led waiting for messages") color yellow
 	}Transition t0 whenMsg ledon -> ledon_state
 	
 	State ledon_state{
-		 [# machineExec("python ledPython25On.py") #]
+		 [# machineExec("python ./resources/python/ledPython25On.py") #]
 		println("$name | led is on") color yellow
 	}Transition t0 whenMsg ledoff -> ledoff_state
 	

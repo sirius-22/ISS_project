@@ -5,8 +5,8 @@ import sys
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-TRIG = 17
-ECHO = 27
+TRIG = 23
+ECHO = 24
 
 GPIO.setup(TRIG,GPIO.OUT)
 GPIO.setup(ECHO,GPIO.IN)
