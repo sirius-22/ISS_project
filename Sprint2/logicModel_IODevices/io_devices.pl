@@ -1,7 +1,7 @@
 %====================================================================================
 % io_devices description   
 %====================================================================================
-mqttBroker("localhost", "1883", "unibo/qak/events").
+mqttBroker("broker.hivemq.com", "1883", "unibo/qak/events").
 event( sonardata, distance(D) ).
 event( stopActions, stopActions(REASON) ).
 event( resumeActions, resumeActions(REASON) ).
@@ -16,5 +16,3 @@ context(ctx_raspdevice, "localhost",  "TCP", "8128").
  static(sonardevice).
   qactor( leddevice_mock, ctx_raspdevice, "it.unibo.leddevice_mock.Leddevice_mock").
  static(leddevice_mock).
-  qactor( sonarsimul, ctx_raspdevice, "it.unibo.sonarsimul.Sonarsimul").
- static(sonarsimul).

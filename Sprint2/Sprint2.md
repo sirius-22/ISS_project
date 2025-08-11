@@ -275,5 +275,14 @@ a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docke
 b. Il sistema cargoservice si appoggia a productservice che ha un database Mongo per la persistenza dei prodotti, questo si può riempire con oppurtuni prodotti di test attraverso il file [setup_mongo.js](setup_mongo.js) (eseguire ```node setup_mongo.js```)
 
 ### Raspberry Deployment
-Eseguire fino al punto 6 della sezione precedente
 
+
+Se si è in possesso di un Raspberry Pi, si possono usare componenti fisici per il controllo dei dispositivi di I/O.
+Per farlo:
+
+1. Eseguire fino al punto 6 della sezione precedente
+2. Copiare sul Raspberry Pi la distribuzione dei componenti relativi ai dispositivi di I/O generata con ```./gradlew run``` utilizzando, ad esempio, il comando ```scp``` oppure clonando direttamente il repository da Git.
+3. Sul Raspberry Pi, assicurarsi di avere installato Java 17 e Python 3: ```sudo apt update && sudo apt install -y openjdk-17-jdk python3 python3-pip```
+4. Verificare che lo script sonar.py sia leggibile ed eseguibile: ```chmod a+rx /percorso/del/progetto/resources/python/sonar.py```
+5. Assicurarsi che il file gradlew abbia il permesso di esecuzione (necessario se il progetto è stato copiato da Windows o scaricato in un formato che perde i permessi): ```chmod +x gradlew```
+6. Lanciare il sistema direttamente sul Raspberry Pi con: ```./gradlew run```
