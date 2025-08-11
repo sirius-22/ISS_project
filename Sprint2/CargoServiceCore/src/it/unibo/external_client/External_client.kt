@@ -45,42 +45,55 @@ class External_client ( name: String, scope: CoroutineScope, isconfined: Boolean
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
 						request("loadrequest", "loadrequest(22)" ,"cargoservice" )  
-						delay(10000) 
+						delay(15000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t040",targetState="work2",cond=whenReply("loadaccepted"))
-					transition(edgeName="t041",targetState="work2",cond=whenReply("loadrejected"))
+					 transition(edgeName="t045",targetState="work2",cond=whenReply("loadaccepted"))
+					transition(edgeName="t046",targetState="work2",cond=whenReply("loadrejected"))
 				}	 
 				state("work2") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
 						request("loadrequest", "loadrequest(21)" ,"cargoservice" )  
-						delay(10000) 
+						delay(15000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t042",targetState="work3",cond=whenReply("loadaccepted"))
-					transition(edgeName="t043",targetState="work3",cond=whenReply("loadrejected"))
+					 transition(edgeName="t047",targetState="work3",cond=whenReply("loadaccepted"))
+					transition(edgeName="t048",targetState="work3",cond=whenReply("loadrejected"))
 				}	 
 				state("work3") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
 						request("loadrequest", "loadrequest(20)" ,"cargoservice" )  
-						delay(10000) 
+						delay(20000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t044",targetState="work4",cond=whenReply("loadaccepted"))
-					transition(edgeName="t045",targetState="work4",cond=whenReply("loadrejected"))
+					 transition(edgeName="t049",targetState="work4",cond=whenReply("loadaccepted"))
+					transition(edgeName="t050",targetState="work4",cond=whenReply("loadrejected"))
 				}	 
 				state("work4") { //this:State
+					action { //it:State
+						CommUtils.outcyan("$name | sends request")
+						request("loadrequest", "loadrequest(1)" ,"cargoservice" )  
+						delay(15000) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t051",targetState="work5",cond=whenReply("loadaccepted"))
+					transition(edgeName="t052",targetState="work5",cond=whenReply("loadrejected"))
+				}	 
+				state("work5") { //this:State
 					action { //it:State
 						CommUtils.outcyan("$name | sends request")
 						request("loadrequest", "loadrequest(1)" ,"cargoservice" )  

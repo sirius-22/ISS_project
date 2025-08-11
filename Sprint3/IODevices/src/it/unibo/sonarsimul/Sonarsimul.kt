@@ -49,7 +49,7 @@ class Sonarsimul ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						emitLocalStreamEvent("sonardata", "distance(7)" ) 
 						delay(1000) 
 						emitLocalStreamEvent("sonardata", "distance(9)" ) 
-						delay(2000) 
+						delay(10000) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

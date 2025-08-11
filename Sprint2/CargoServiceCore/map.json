@@ -8,7 +8,7 @@
   ],
   "LaydownPositions": [
     { "name": "Slot1", "x": 1, "y": 1, "direction":"r" },
-    { "name": "Slot2", "x": 4, "y": 1, "direction":"w" },
+    { "name": "Slot2", "x": 4, "y": 1, "direction":"l" },
     { "name": "Slot3", "x": 1, "y": 3, "direction":"r" },
     { "name": "Slot4", "x": 4, "y": 3, "direction":"l" }
   ],

@@ -79,7 +79,7 @@ services:
   
   basicrobot24:
     container_name: basicrobot24
-    image: pretty/basicrobot
+    image: pretty2/basicrobot:2.5
     mem_limit: 512m
     ports:
       - "8020:8020/tcp"
@@ -108,7 +108,7 @@ services:
   # ------ CARGOSERVICECORE -------------
   cargoservicecore:
     container_name: cargoservicecore
-    image: cargoservice:1.0
+    image: cargoservice:1.6
     mem_limit: 512m
     ports:
       - "8000:8000/tcp"

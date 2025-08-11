@@ -40,6 +40,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					var Slot = ""
 					var robotIsMoving = false
 					
+					var LastAttemptedState = ""  // for moverobotfailed
+					
 					//fixed coordinates
 					var HomeLoc = Map.getCoordinates("Home");
 					var Homecoords = HomeLoc.getCoords();
@@ -134,6 +136,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 				state("state_move_cont") { //this:State
 					action { //it:State
 						
+									LastAttemptedState = "state_move_cont"
 									var location = Map.getCoordinates(Slot);
 									var coords = location.getCoords();
 									X = coords.get("x");
@@ -148,12 +151,13 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 transition(edgeName="t39",targetState="at_slot",cond=whenReply("moverobotdone"))
-					transition(edgeName="t310",targetState="goto_IO_port",cond=whenReply("moverobotfailed"))
+					transition(edgeName="t310",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_slot") { //this:State
 					action { //it:State
 						CommUtils.outgreen("[cargorobot] arrived at slot, dir:$Dir")
 						robotIsMoving = false 
+						forward("setdirection", "dir($Dir)" ,"basicrobot" ) 
 						delay(2000) 
 						forward("resume", "resume(at_slot)" ,name ) 
 						//genTimer( actor, state )
@@ -168,6 +172,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					action { //it:State
 						CommUtils.outblue("Cargorobot | returningHome, state: $idle")
 						 
+									LastAttemptedState = "returnHOME"
 									X = Home_X
 									Y = Home_Y
 									Dir = Homedir
@@ -181,10 +186,12 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 interrupthandle(edgeName="t013",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
 					transition(edgeName="t014",targetState="at_HOME",cond=whenReply("moverobotdone"))
+					transition(edgeName="t015",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_HOME") { //this:State
 					action { //it:State
 						robotIsMoving=false 
+						forward("setdirection", "dir($Dir)" ,"basicrobot" ) 
 						CommUtils.outgreen("[cargorobot] arrived at home, dir: $Dir")
 						forward("resume", "resume(at_home)" ,name ) 
 						//genTimer( actor, state )
@@ -192,10 +199,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t015",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t016",targetState="state_idle",cond=whenDispatchGuarded("resume",{idle 
+					 interrupthandle(edgeName="t016",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t017",targetState="state_idle",cond=whenDispatchGuarded("resume",{idle 
 					}))
-					transition(edgeName="t017",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{!idle 
+					transition(edgeName="t018",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{!idle 
 					}))
 				}	 
 				state("goto_IO_port") { //this:State
@@ -206,6 +213,7 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						}
 						CommUtils.outblue("Cargorobot | go to IOport")
 						 
+									LastAttemptedState = "goto_IO_port"
 									X = Pup_X
 									Y = Pup_Y
 									Dir = Pupdir
@@ -217,23 +225,23 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t018",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t019",targetState="at_IO_port",cond=whenReply("moverobotdone"))
-					transition(edgeName="t020",targetState="returnHOME",cond=whenReply("moverobotfailed"))
+					 interrupthandle(edgeName="t019",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t020",targetState="at_IO_port",cond=whenReply("moverobotdone"))
+					transition(edgeName="t021",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_IO_port") { //this:State
 					action { //it:State
 						CommUtils.outgreen("[cargorobot] arrived at ioport, dir: $Dir")
 						robotIsMoving=false 
-						delay(2000) 
+						forward("setdirection", "dir($Dir)" ,"basicrobot" ) 
 						forward("resume", "resume(at_ioport)" ,name ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t021",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t022",targetState="state_move_cont",cond=whenDispatch("resume"))
+					 interrupthandle(edgeName="t022",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t023",targetState="state_move_cont",cond=whenDispatch("resume"))
 				}	 
 				state("state_finalize") { //this:State
 					action { //it:State
@@ -248,6 +256,71 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 transition( edgeName="goto",targetState="returnHOME", cond=doswitch() )
+				}	 
+				state("handle_move_failure") { //this:State
+					action { //it:State
+						CommUtils.outred("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						CommUtils.outred("[Cargorobot] | Movement FAILED. Resynchronizing state before retry.")
+						request("getrobotstate", "getrobotstate(please)" ,"basicrobot" )  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t024",targetState="resync_planner",cond=whenReply("robotstate"))
+				}	 
+				state("resync_planner") { //this:State
+					action { //it:State
+						if( checkMsgContent( Term.createTerm("robotstate(POS,DIR)"), Term.createTerm("robotstate(POS,DIR)"), 
+						                        currentMsg.msgContent()) ) { //set msgArgList
+								
+									            // Estrai X, Y, e Dir dalla stringa di risposta.
+									            // Esempio: "pos(1,0)" e "RIGHT"
+									            val posRegex = "pos\\((\\d+),(\\d+)\\)".toRegex()
+									            val dirStr = payloadArg(1)
+									            
+									            val matchResult = posRegex.find(payloadArg(0))
+									            if (matchResult != null) {
+									                val (xStr, yStr) = matchResult.destructured
+									                X = xStr.toInt()
+									                Y = yStr.toInt()
+									                
+									                // Converti la direzione in formato a una lettera per setpos
+									                Dir = when(dirStr){
+									                    "UP" -> "u"
+									                    "DOWN" -> "d"
+									                    "LEFT" -> "l"
+									                    "RIGHT" -> "r"
+									                    else -> "n"
+									                }
+									            }
+								CommUtils.outyellow("[Cargorobot] | fetching robot Real position . Updating planner.")
+								forward("setrobotstate", "setpos($X,$Y,$Dir)" ,"basicrobot" ) 
+						}
+						delay(500) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="retry_last_action", cond=doswitch() )
+				}	 
+				state("retry_last_action") { //this:State
+					action { //it:State
+						CommUtils.outgreen("[Cargorobot] | Planner resynced. Retrying last action from state: $LastAttemptedState")
+						forward("resume", "resume(goon)" ,"cargorobot" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t025",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "goto_IO_port"  
+					}))
+					transition(edgeName="t026",targetState="state_move_cont",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "state_move_cont"  
+					}))
+					transition(edgeName="t027",targetState="returnHOME",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "returnHOME"  
+					}))
 				}	 
 			}
 		}

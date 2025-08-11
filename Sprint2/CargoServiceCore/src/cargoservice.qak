@@ -38,6 +38,9 @@ Dispatch disengage    : disengage(ARG)
 Dispatch setdirection : dir( D )  // D = up|down|left|right
 Dispatch setrobotstate : setpos(X,Y,Dir)
 
+Request getrobotstate : getrobotstate(ARG)
+Reply robotstate      : robotstate(POS,DIR) for getrobotstate
+
 Request  doplan     : doplan( PATH, STEPTIME )
 Reply doplandone    : doplandone( ARG )    for doplan
 Reply doplanfailed  : doplanfailed( ARG )  for doplan
@@ -89,6 +92,8 @@ QActor cargorobot context ctx_cargoservice {
 			var Map = MapServiceSingleton.getInstance()
 			var Slot = ""
 			var robotIsMoving = false
+			
+			var LastAttemptedState = ""  // for moverobotfailed
 			
 			//fixed coordinates
 			var HomeLoc = Map.getCoordinates("Home");
@@ -148,6 +153,16 @@ QActor cargorobot context ctx_cargoservice {
 	}
 	Transition t1 
 		whenEvent resumeActions -> state_resume
+		
+//	State handle_move_failure {
+//	    printCurrentMessage color red
+//	    println("[Cargorobot] | Movement failed! Waiting 5 seconds before retry.")
+//	    delay 5000
+//	    forward cargorobot -m resume : resume(goon)
+//    }Transition t0
+//		whenMsg resume and [# LastAttemptedState == "goto_IO_port" #] -> goto_IO_port
+//	    whenMsg resume and [# LastAttemptedState == "state_move_cont" #] -> goto_IO_port//state_move_cont
+//	    whenMsg resume and [# LastAttemptedState == "returnHOME" #] -> returnHOME 
 	
 	// Handles the resume logic after an interrupt
 	State state_resume{
@@ -163,6 +178,7 @@ QActor cargorobot context ctx_cargoservice {
 	
 	State state_move_cont {
 		[#
+			LastAttemptedState = "state_move_cont"
 			var location = Map.getCoordinates(Slot);
 			var coords = location.getCoords();
 			X = coords.get("x");
@@ -176,11 +192,13 @@ QActor cargorobot context ctx_cargoservice {
 	}
 	Transition t3
 		whenReply moverobotdone -> at_slot
-		whenReply moverobotfailed -> goto_IO_port
+		whenReply moverobotfailed -> handle_move_failure
 					
 	State at_slot{
 		println("[cargorobot] arrived at slot, dir:$Dir") color green
 		[#robotIsMoving = false#]
+		// set direction
+		forward basicrobot -m setdirection : dir($Dir)
 		delay 2000 // Simulate unload time
 		autodispatch resume : resume(at_slot)
 	}
@@ -191,6 +209,7 @@ QActor cargorobot context ctx_cargoservice {
 	State returnHOME{
 		println("Cargorobot | returningHome, state: $idle") color blue
 		[# 
+			LastAttemptedState = "returnHOME"
 			X = Home_X
 			Y = Home_Y
 			Dir = Homedir
@@ -202,9 +221,12 @@ QActor cargorobot context ctx_cargoservice {
 	Transition t0 
 		whenInterruptEvent stopActions -> state_wait_resume
 		whenReply moverobotdone -> at_HOME
+		whenReply moverobotfailed -> handle_move_failure
 		
 	State at_HOME{
 		[#robotIsMoving=false#]
+		// set direction
+		forward basicrobot -m setdirection : dir($Dir)
 		println("[cargorobot] arrived at home, dir: $Dir") color green
 		autodispatch resume : resume(at_home)
 	}
@@ -219,6 +241,7 @@ QActor cargorobot context ctx_cargoservice {
 		}
 		println("Cargorobot | go to IOport") color blue
 		[# 
+			LastAttemptedState = "goto_IO_port"
 			X = Pup_X
 			Y = Pup_Y
 			Dir = Pupdir
@@ -230,12 +253,16 @@ QActor cargorobot context ctx_cargoservice {
 	Transition t0 
 		whenInterruptEvent stopActions -> state_wait_resume
 		whenReply moverobotdone -> at_IO_port
-		whenReply moverobotfailed -> returnHOME
+		whenReply moverobotfailed -> handle_move_failure
 						
 	State at_IO_port{
 		println("[cargorobot] arrived at ioport, dir: $Dir") color green
 		[#robotIsMoving=false#]
-		delay 2000 // Simulate load time
+		
+		// set direction
+		forward basicrobot -m setdirection : dir($Dir)
+		
+		
 		autodispatch resume : resume(at_ioport)
 	}
 	Transition t0 
@@ -251,6 +278,62 @@ QActor cargorobot context ctx_cargoservice {
 		#]
 	}
 	Goto returnHOME
+	
+		//*********** moverobotfailed logic ****************
+	
+		State handle_move_failure {
+	    printCurrentMessage color red
+	    println("[Cargorobot] | Movement FAILED. Resynchronizing state before retry.") color red
+	
+	    request basicrobot -m getrobotstate : getrobotstate(please)
+	}
+	Transition t0 
+	    // Quando ricevi la risposta con lo stato reale, aggiorna il modello del planner
+	    whenReply robotstate -> resync_planner
+	
+	// Nuovo stato per inviare il comando di aggiornamento al planner
+	State resync_planner {
+	    onMsg( robotstate : robotstate(POS,DIR) ){
+	        [#
+	            // Estrai X, Y, e Dir dalla stringa di risposta.
+	            // Esempio: "pos(1,0)" e "RIGHT"
+	            val posRegex = "pos\\((\\d+),(\\d+)\\)".toRegex()
+	            val dirStr = payloadArg(1)
+	            
+	            val matchResult = posRegex.find(payloadArg(0))
+	            if (matchResult != null) {
+	                val (xStr, yStr) = matchResult.destructured
+	                X = xStr.toInt()
+	                Y = yStr.toInt()
+	                
+	                // Converti la direzione in formato a una lettera per setpos
+	                Dir = when(dirStr){
+	                    "UP" -> "u"
+	                    "DOWN" -> "d"
+	                    "LEFT" -> "l"
+	                    "RIGHT" -> "r"
+	                    else -> "n"
+	                }
+	            }
+	        #]
+	        println("[Cargorobot] | fetching robot Real position . Updating planner.") color yellow
+	        // Invia un dispatch per aggiornare forzatamente lo stato del planner
+	        forward basicrobot -m setrobotstate : setpos($X, $Y, $Dir)
+	    }
+	    // Dai un piccolo delay al planner per aggiornarsi
+	    delay 500
+	}
+	Goto retry_last_action
+	
+	
+	// Nuovo stato per decidere cosa fare dopo la risincronizzazione
+	State retry_last_action {
+	    println("[Cargorobot] | Planner resynced. Retrying last action from state: $LastAttemptedState") color green
+	    forward cargorobot -m resume : resume(goon)
+    }Transition t0
+		whenMsg resume and [# LastAttemptedState == "goto_IO_port" #] -> goto_IO_port
+	    whenMsg resume and [# LastAttemptedState == "state_move_cont" #] -> state_move_cont
+	    whenMsg resume and [# LastAttemptedState == "returnHOME" #] -> returnHOME 
 }
 
 
@@ -278,6 +361,7 @@ QActor cargoservice context ctx_cargoservice {
 	
 	State state_idle {
 		println("[CargoService] Idle...")
+		delay 2000
 	}
 	Transition t0
 		whenInterruptEvent stopActions -> state_handle_stop
@@ -318,7 +402,7 @@ QActor cargoservice context ctx_cargoservice {
 			replyTo loadrequest with loadrejected: loadrejected(no_slots)
 			[#rejected=true#]
 		} else {
-			println("[CargoService] Slot $SlotName is available. Proceeding with checks.") color red
+			println("[CargoService] Slot $SlotName is available. Proceeding with checks.") color yellow
 			[#rejected=false#]
 		}
 		autodispatch resume : resume(slot_name_handled)
@@ -399,6 +483,7 @@ QActor cargoservice context ctx_cargoservice {
 		#]
 	}
 	Goto state_idle
+	
 }	
 	
 	
@@ -414,7 +499,7 @@ QActor external_client context ctx_cargoservice{
   	State work1 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(22)
- 		delay 10000
+ 		delay 15000
   	} 
   	Transition t0
 	   whenReply loadaccepted -> work2
@@ -423,7 +508,7 @@ QActor external_client context ctx_cargoservice{
 	State work2 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(21)
- 		delay 10000
+ 		delay 15000
   	} 
   	Transition t0
 	   whenReply loadaccepted -> work3
@@ -432,7 +517,7 @@ QActor external_client context ctx_cargoservice{
 	State work3 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(20)
- 		delay 10000
+ 		delay 20000
   	} 
   	Transition t0
 	   whenReply loadaccepted -> work4
@@ -441,6 +526,15 @@ QActor external_client context ctx_cargoservice{
 	State work4 {
  		println("$name | sends request") color cyan
  		request cargoservice -m loadrequest: loadrequest(1)
+ 		delay 15000
+  	}Transition t0
+  	   whenReply loadaccepted -> work5
+	   whenReply loadrejected  -> work5
+	   
+	State work5{
+		println("$name | sends request") color cyan
+ 		request cargoservice -m loadrequest: loadrequest(1)
  		delay 10000
-  	} 
+	}
+	   
 }

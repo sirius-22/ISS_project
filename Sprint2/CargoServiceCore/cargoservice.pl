@@ -17,6 +17,8 @@ reply( engagerefused, engagerefused(ARG) ).  %%for engage
 dispatch( disengage, disengage(ARG) ).
 dispatch( setdirection, dir(D) ).
 dispatch( setrobotstate, setpos(X,Y,Dir) ).
+request( getrobotstate, getrobotstate(ARG) ).
+reply( robotstate, robotstate(POS,DIR) ).  %%for getrobotstate
 request( doplan, doplan(PATH,STEPTIME) ).
 reply( doplandone, doplandone(ARG) ).  %%for doplan
 reply( doplanfailed, doplanfailed(ARG) ).  %%for doplan
