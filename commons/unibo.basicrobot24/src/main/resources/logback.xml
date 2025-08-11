@@ -1,0 +1,66 @@
+ <configuration debug="false">
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    <!-- Appender per scrivere i log in un file -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/basicrobot24.log</file>
+        <append>true</append>
+        <encoder>
+             <!-- <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern> -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender> 
+  
+    <appender name="STDOUT"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+         <!--    <destination>localhost:5044</destination>   --> 
+           <destination>logstash:5044</destination>  
+          <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+             <!-- Configura eventuali campi personalizzati o pattern (opzionale)  -->
+        </encoder>
+        <!-- 
+          <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>     
+        <reconnectionDelay>60 minutes</reconnectionDelay>   
+        -->
+    </appender>    
+ 
+    <!-- LOG everything at warn level -->
+    <root level="off">
+        <!--   <appender-ref ref="STDOUT" /> -->
+    </root>
+
+    <logger name="org.springframework" level="warn"  additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+    <logger name="org.springframework" level="info"  additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <logger name="io.netty" level="info" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+    <logger name="reactor.Flux" level="info" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <logger name="io.netty" level="info" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <!-- Configura il logger per org.eclipse.californium -->
+    <logger name="org.eclipse.californium" level="OFF" />
+    
+    <root level="INFO">
+        <!-- <appender-ref ref="STDOUT" /> -->
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>		
