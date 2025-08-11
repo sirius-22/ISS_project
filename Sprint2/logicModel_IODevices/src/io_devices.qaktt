@@ -1,6 +1,6 @@
 System io_devices
 
-mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
+mqttBroker "broker.hivemq.com" : 1883 eventTopic "unibo/qak/events"
 //Attenzione! cambiare localhost con l'ip su cui gira mosqitto (il container con tutto dentro)
 
 Event sonardata      : distance(D)
@@ -27,11 +27,11 @@ QActor mind context ctx_raspdevice{
  	
 	State s0 initial{
 		delay 3000
-		println("$name |  start") 
+		println("$name |  start") color blue 
 		
 		subscribe "sonardatatest"
 		//cambiare dopo il testing
-		subscribeTo sonarsimul for sonardata
+		//subscribeTo sonarsimul for sonardata
 		//con
 		subscribeTo sonardevice for sonardata
 	}
@@ -140,8 +140,9 @@ QActor mind context ctx_raspdevice{
 	State s0 initial{
 		println("$name | start") 
 	 	[#
-			p       = Runtime.getRuntime().exec("python sonar.py")
-			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	
+			p       = Runtime.getRuntime().exec("python ./resources/python/sonar.py")
+			System.out.println(p)
+			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))
 		#]	
 		delay 2000	
 	}
@@ -150,6 +151,7 @@ QActor mind context ctx_raspdevice{
 	State readSonarData{
 	[# 
 		var data = reader.readLine()
+		System.out.println(data)
 		if( data != null ){
 		try{ 
 			val vd = data.toFloat()
@@ -163,6 +165,7 @@ QActor mind context ctx_raspdevice{
 		}//if
 		
 	#]	
+		println("$data") color magenta
 		if [# Distance > 0 #] { 
 		    println("$name with python: data = $data"   ) color yellow
 			emitlocalstream sonardata : distance($Distance)			 
@@ -177,43 +180,43 @@ QActor leddevice_mock context ctx_raspdevice{
 	State init initial{
 		//verrà implementato nel prossimo Sprint
 	}
-}
+} 
  
 // Simulatore aggiornato per testare la transizione a fault e il resume
-QActor sonarsimul  context ctx_raspdevice{
-	State s0 initial{
-		delay 50000
-		println("sonarsimul | AVVIATO") color magenta
-	}
-	Goto work
-	
-	// D_FREE =20
-	
-	State work{
-//		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
-//		emitlocalstream sonardata      : distance(25)
+//QActor sonarsimul  context ctx_raspdevice{
+//	State s0 initial{
+//		delay 50000
+//		println("sonarsimul | AVVIATO") color magenta
+//	}
+//	Goto work
+//	
+//	// D_FREE =20
+//	
+//	State work{
+////		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
+////		emitlocalstream sonardata      : distance(25)
+////	    delay 1000
+////		emitlocalstream sonardata      : distance(26)
+////	    delay 1000
+////		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
+////	    delay 2000
+////
+////		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
+////		emitlocalstream sonardata      : distance(8) // lettura clear 1
+////	    delay 1000
+////		emitlocalstream sonardata      : distance(15)// lettura clear 2
+////	    delay 1000
+////		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
+////	    delay 2000
+////	    
+//		println("sonarsimul | Emetto 8 (per causare containerhere)") color magenta
+//		emitlocalstream sonardata      : distance(8)
 //	    delay 1000
-//		emitlocalstream sonardata      : distance(26)
+//		emitlocalstream sonardata      : distance(7)
 //	    delay 1000
-//		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
+//		emitlocalstream sonardata      : distance(9) // <-- mind emetterà containerhere
 //	    delay 2000
 //
-//		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
-//		emitlocalstream sonardata      : distance(8) // lettura clear 1
-//	    delay 1000
-//		emitlocalstream sonardata      : distance(15)// lettura clear 2
-//	    delay 1000
-//		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
-//	    delay 2000
-//	    
-		println("sonarsimul | Emetto 8 (per causare containerhere)") color magenta
-		emitlocalstream sonardata      : distance(8)
-	    delay 1000
-		emitlocalstream sonardata      : distance(7)
-	    delay 1000
-		emitlocalstream sonardata      : distance(9) // <-- mind emetterà containerhere
-	    delay 2000
-
-	}
-	Goto work
-}
+//	}
+//	Goto work
+//}

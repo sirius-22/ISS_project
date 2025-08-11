@@ -10,7 +10,7 @@ CONFIGURATION
 ----------------------------------
 '''
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(25,GPIO.OUT)
+GPIO.setup(14,GPIO.OUT)
 
 '''
 ----------------------------------
@@ -18,6 +18,6 @@ main activity
 ----------------------------------
 '''
 
-GPIO.output(25,GPIO.LOW)
+GPIO.output(14,GPIO.LOW)
 
     

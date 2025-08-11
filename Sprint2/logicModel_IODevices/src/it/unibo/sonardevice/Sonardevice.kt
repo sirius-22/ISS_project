@@ -38,8 +38,9 @@ class Sonardevice ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					action { //it:State
 						CommUtils.outblack("$name | start")
 						
-									p       = Runtime.getRuntime().exec("python sonar.py")
-									reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	
+									p       = Runtime.getRuntime().exec("python ./resources/python/sonar.py")
+									System.out.println(p)
+									reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))
 						delay(2000) 
 						//genTimer( actor, state )
 					}
@@ -52,6 +53,7 @@ class Sonardevice ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 					action { //it:State
 						 
 								var data = reader.readLine()
+								System.out.println(data)
 								if( data != null ){
 								try{ 
 									val vd = data.toFloat()
@@ -64,6 +66,7 @@ class Sonardevice ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 								}
 								}//if
 								
+						CommUtils.outmagenta("$data")
 						if(  Distance > 0  
 						 ){CommUtils.outyellow("$name with python: data = $data")
 						emitLocalStreamEvent("sonardata", "distance($Distance)" ) 
