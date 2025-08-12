@@ -47,6 +47,100 @@ Si sono quindi modellati altri due tipi di messaggi. Si è optato per messaggi d
 ```
 
 ## Piano di testing
+Avendo ora un formato definito per la visualizzazione dello **stato della stiva**, è possibile verificarne con maggiore precisione il corretto aggiornamento, oltre che il corretto invio del messaggio di update per la GUI.  
+A tal fine, sono stati ideati i seguenti **test plan**:
+
+### Nuovi test aggiornamento stiva - [SlotManagementTest.java](./CargoServiceCore/src/test/java/SlotManagementTest.java)
+* Verifica rappresentazione della stiva in formato JSON (caso stiva vuota):
+```java
+  @Test
+  public void testEmptyHoldJsonRepresentation() {
+      String stateJson = slotManagement.getHoldState(true);
+      assertNotNull("Lo stato JSON non deve essere null", stateJson);
+
+      try {
+          JSONObject root = (JSONObject) new JSONParser().parse(stateJson);
+
+          // Verifica totalWeight
+          assertEquals("Il peso totale deve essere 0", 0, ((Long) root.get("totalWeight")).intValue());
+
+          // Verifica slots array
+          JSONArray slots = (JSONArray) root.get("slots");
+          assertEquals("Devono esserci esattamente 4 slot", 4, slots.size());
+
+          // Ogni slot deve avere product = null
+          for (Object obj : slots) {
+              JSONObject slotObj = (JSONObject) obj;
+              assertTrue("Ogni slot deve avere un nome valido", ((String) slotObj.get("slotName")).startsWith("Slot"));
+              assertNull("Ogni slot deve essere vuoto (product = null)", slotObj.get("product"));
+          }
+
+      } catch (ParseException e) {
+          fail("Formato JSON non valido: " + e.getMessage());
+      }
+  }
+```
+
+* Verifica rappresentazione della stiva in formato JSON (caso dopo un update):
+```java
+  @Test
+  public void testJsonStateAfterUpdate() {
+      Product prod = new Product(5, "SpecialItem", 42);
+
+      try {
+          slotManagement.updateHold(prod, "Slot1");
+      } catch (Exception e) {
+          fail("Unexpected exception: " + e.getMessage());
+      }
+
+      String stateJson = slotManagement.getHoldState(true);
+      assertNotNull("Lo stato JSON non deve essere null", stateJson);
+
+      try {
+          JSONObject root = (JSONObject) new JSONParser().parse(stateJson);
+
+          // Verifica peso totale aggiornato
+          assertEquals("Il peso totale deve riflettere il prodotto inserito",
+                  42, ((Long) root.get("totalWeight")).intValue());
+
+          // Verifica che Slot1 contenga il prodotto corretto
+          JSONArray slots = (JSONArray) root.get("slots");
+          JSONObject slot1 = null;
+          for (Object obj : slots) {
+              JSONObject slotObj = (JSONObject) obj;
+              if ("Slot1".equals(slotObj.get("slotName"))) {
+                  slot1 = slotObj;
+                  break;
+              }
+          }
+          assertNotNull("Slot1 deve esistere", slot1);
+
+          JSONObject product = (JSONObject) slot1.get("product");
+          assertNotNull("Slot1 deve contenere un prodotto", product);
+          assertEquals(5, ((Long) product.get("productId")).intValue());
+          assertEquals("SpecialItem", product.get("name"));
+          assertEquals(42, ((Long) product.get("weight")).intValue());
+
+          // Verifica che gli altri slot siano vuoti
+          for (Object obj : slots) {
+              JSONObject slotObj = (JSONObject) obj;
+              if (!"Slot1".equals(slotObj.get("slotName"))) {
+                  assertNull(slotObj.get("slotName") + " deve essere vuoto",slotObj.get("product"));
+              }
+          }
+
+      } catch (ParseException e) {
+          fail("Formato JSON non valido: " + e.getMessage());
+      }
+  }
+```
+
+### Test invio messaggio di update - [GuiUpdateTest.Java]
+
+* Verifica dell'invio del messaggio:
+```java
+
+```
 
 ## Progettazione
 
