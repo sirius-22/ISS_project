@@ -23,10 +23,10 @@ In particolare i requisiti su cui ci concentreremo in questo sprint sono:
 ### CargoServiceStatusGui
 
 CargoserviceStatusGui riceve informazioni sullo stato della stiva da cargoService nel formato json implementato nel precedente Sprint.
-Il compito di ```cargoserviceStatusGui``` è far visualizzare all'utente finale lo stato interno della stiva, visto che ```Slot5``` da requisiti è sempre vuoto non lo consideriamo nello scambio di messaggi attraverso il json, ma sarà comunque sempre prensente nalla rappresentazione.
+Il compito di ```cargoserviceStatusGui``` è far visualizzare all'utente finale lo stato interno della stiva, visto che ```Slot5``` da requisiti è sempre vuoto non lo consideriamo nello scambio di messaggi attraverso il json, ma sarà comunque sempre presente nalla rappresentazione.
 
 Il flusso di ```cargoserviceStatusGui```  è il seguente:
-- nella fase di inizializzazione tutti gli Slot saranno visualizzati vuoti (come da requisiti) quindi non riteniamo necessaria una prima comunicazione con cargoservice
+- nella fase di inizializzazione tutti gli Slot saranno visualizzati vuoti (come da requisiti), quindi non riteniamo necessaria una prima comunicazione con cargoservice
 - successivamente ```cargoserviceStatusGui``` aspetta i messaggi di update da ```cargoService``` e mostra i cambiamenti all'utente
 
 
