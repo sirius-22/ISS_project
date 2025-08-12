@@ -57,11 +57,11 @@ Per quanto riguarda i componenti che gestiscono i **dispositivi di I/O**, sono d
 
 1. **Utilizzo su Raspberry Pi**  
    - Si possono impiegare componenti fisici per il sonar e il led.  
-   - Modello QAK da utilizzare: [io_devices_rpi.qak](./src/io_devices_rpi.qak)
+   - Modello QAK da utilizzare: [io_devices_rpi.qak](./IODevices/src/io_devices_rpi.qak)
 
 2. **Utilizzo senza hardware fisico**  
    - È possibile utilizzare gli attori *mock* sviluppati negli sprint precedenti.  
-   - Modello QAK da utilizzare: [io_devices.qak](./src/io_devices.qak)
+   - Modello QAK da utilizzare: [io_devices.qak](./IODevices/src/io_devices.qak)
 
 
 
