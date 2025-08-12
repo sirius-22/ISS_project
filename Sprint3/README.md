@@ -51,7 +51,17 @@ Si sono quindi modellati altri due tipi di messaggi. Si è optato per messaggi d
 ## Progettazione
 
 ## Deployment
+Poiché la parte del sistema relativa alla **logica di business** non ha subito modifiche, si rimanda allo sprint precedente per le istruzioni di [deployment di CargoServiceCore](https://github.com/sirius-22/ISS_project/blob/s3/Sprint2/Sprint2.md#deployment).  
 
+Per quanto riguarda i componenti che gestiscono i **dispositivi di I/O**, sono disponibili due opzioni:
+
+1. **Utilizzo su Raspberry Pi**  
+   - Si possono impiegare componenti fisici per il sonar e il led.  
+   - Modello QAK da utilizzare: [io_devices_rpi.qak](./src/io_devices_rpi.qak)
+
+2. **Utilizzo senza hardware fisico**  
+   - È possibile utilizzare gli attori *mock* sviluppati negli sprint precedenti.  
+   - Modello QAK da utilizzare: [io_devices.qak](./src/io_devices.qak)
 
 
 
