@@ -39,6 +39,8 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 		  var StepSynchRes  = false
 		  var OwnerMngr     = supports.OwnerManager //Kotlin object
 		  var AnswerKo      = "" 
+		  var CurrentPlanIdForStep = 0
+		  
 		  
 		  fun checkOwner( ) : Boolean {
 		  	return OwnerMngr.checkOwner( currentMsg.msgSender() )
@@ -98,19 +100,6 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					transition(edgeName="t05",targetState="execcmd",cond=whenDispatch("cmd"))
 					transition(edgeName="t06",targetState="endwork",cond=whenDispatch("end"))
 					transition(edgeName="t07",targetState="handlesonardata",cond=whenEvent("sonardata"))
-					transition(edgeName="t08",targetState="handlealarmtest24",cond=whenEvent("alarm"))
-				}	 
-				state("handlealarmtest24") { //this:State
-					action { //it:State
-						CommUtils.outmagenta("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
-						forward("cmd", "cmd(l)" ,name ) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
 				state("handlesonardata") { //this:State
 					action { //it:State
@@ -157,10 +146,12 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						CommUtils.outcyan("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
 						 	   
 						if(    checkOwner()  
-						 ){if( checkMsgContent( Term.createTerm("step(TIME)"), Term.createTerm("step(T)"), 
+						 ){if( checkMsgContent( Term.createTerm("step(TIME,PLANID)"), Term.createTerm("step(T,PLANID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-									StepTime     = payloadArg(0).toLong()  	 
-								updateResourceRep( "step(${StepTime})"  
+									StepTime     = payloadArg(0).toLong()  
+													CurrentPlanIdForStep = payloadArg(1).toInt()
+													
+								updateResourceRep( "step(${StepTime},  ${CurrentPlanIdForStep})"  
 								)
 						}
 						StartTime = getCurrentTime()
@@ -176,16 +167,17 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 transition( edgeName="goto",targetState="stepok", cond=doswitchGuarded({ StepSynchRes  
 					}) )
-					transition( edgeName="goto",targetState="stepKo", cond=doswitchGuarded({! ( StepSynchRes  
+					transition( edgeName="goto",targetState="handleStepFailure", cond=doswitchGuarded({! ( StepSynchRes  
 					) }) )
 				}	 
 				state("stepok") { //this:State
 					action { //it:State
-						 StepSynchRes = false  
+						 StepSynchRes = false
+									
 						robot.move( "h"  )
-						updateResourceRep( "stepDone($StepTime)"  
+						updateResourceRep( "stepDone($StepTime, $CurrentPlanIdForStep)"  
 						)
-						answer("step", "stepdone", "stepdone($StepTime)"   )  
+						answer("step", "stepdone", "stepdone($StepTime,$CurrentPlanIdForStep)"   )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -193,26 +185,40 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
-				state("stepKo") { //this:State
+				state("handleStepFailure") { //this:State
 					action { //it:State
-						if(  AnswerKo == ""  
-						 ){Duration = getDuration(StartTime)
 						robot.move( "h"  )
-						 var TunedDuration   = StepTime - ((Duration * 0.80)).toLong()    
-						if(  TunedDuration > 30  
-						 ){robot.move( "s"  )
-						delay(TunedDuration)
-						robot.move( "h"  )
-						updateResourceRep( "stepFail($Duration)"  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="stepKoLogical", cond=doswitchGuarded({ AnswerKo != ""  
+					}) )
+					transition( edgeName="goto",targetState="stepKoCollision", cond=doswitchGuarded({! ( AnswerKo != ""  
+					) }) )
+				}	 
+				state("stepKoLogical") { //this:State
+					action { //it:State
+						
+						            val Cause = AnswerKo
+						            AnswerKo = "" // Reset
+						updateResourceRep( "stepFail(0, $Cause)"  
 						)
-						delay(300) 
-						}
-						answer("step", "stepfailed", "stepfailed($Duration,obst)"   )  
-						}
-						else
-						 {answer("step", "stepfailed", "stepfailed($Duration,$AnswerKo)"   )  
-						  AnswerKo = ""  
-						 }
+						answer("step", "stepfailed", "stepfailed(0,$Cause,$CurrentPlanIdForStep)"   )  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="work", cond=doswitch() )
+				}	 
+				state("stepKoCollision") { //this:State
+					action { //it:State
+						Duration = getDuration(StartTime)
+						updateResourceRep( "stepCollided($Duration)"  
+						)
+						answer("step", "stepcollided", "stepcollided($Duration,$CurrentPlanIdForStep)"   )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -225,10 +231,11 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						CommUtils.outgreen("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
 						 	   
 						if(  checkOwner()  
-						 ){if( checkMsgContent( Term.createTerm("stepback(TIME)"), Term.createTerm("stepback(T)"), 
+						 ){if( checkMsgContent( Term.createTerm("stepback(TIME,PLANID)"), Term.createTerm("stepback(T,PLANID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								 StepTime = payloadArg(0).toLong()  
-								updateResourceRep( "stepback($StepTime)"  
+								 StepTime = payloadArg(0).toLong()
+									            	CurrentPlanIdForStep = payloadArg(1).toInt()
+								updateResourceRep( "stepback($StepTime,  ${CurrentPlanIdForStep})"  
 								)
 						}
 						StartTime = getCurrentTime()
@@ -244,16 +251,16 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 transition( edgeName="goto",targetState="stepBackOk", cond=doswitchGuarded({ StepSynchRes  
 					}) )
-					transition( edgeName="goto",targetState="stepBackKo", cond=doswitchGuarded({! ( StepSynchRes  
+					transition( edgeName="goto",targetState="handleStepBackFailure", cond=doswitchGuarded({! ( StepSynchRes  
 					) }) )
 				}	 
 				state("stepBackOk") { //this:State
 					action { //it:State
 						 StepSynchRes = false  
 						robot.move( "h"  )
-						updateResourceRep( "stepBackDone($StepTime)"  
+						updateResourceRep( "stepBackDone($StepTime, $CurrentPlanIdForStep)"  
 						)
-						answer("stepback", "stepbackdone", "stepbackdone($StepTime)"   )  
+						answer("stepback", "stepbackdone", "stepbackdone($StepTime,$CurrentPlanIdForStep)"   )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -261,26 +268,40 @@ class Basicrobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
-				state("stepBackKo") { //this:State
+				state("handleStepBackFailure") { //this:State
 					action { //it:State
-						if(  AnswerKo == ""  
-						 ){Duration = getDuration(StartTime)
 						robot.move( "h"  )
-						 var TunedDuration   = StepTime - ((Duration * 0.80)).toLong()    
-						if(  TunedDuration > 30  
-						 ){robot.move( "w"  )
-						delay(TunedDuration)
-						robot.move( "h"  )
-						updateResourceRep( "stepBackFail($Duration)"  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="stepBackKoLogical", cond=doswitchGuarded({ AnswerKo != ""  
+					}) )
+					transition( edgeName="goto",targetState="stepBackKoCollision", cond=doswitchGuarded({! ( AnswerKo != ""  
+					) }) )
+				}	 
+				state("stepBackKoLogical") { //this:State
+					action { //it:State
+						
+						            val Cause = AnswerKo
+						            AnswerKo = "" // Reset
+						updateResourceRep( "stepBackFail(0, $Cause)"  
 						)
-						delay(300) 
-						}
-						answer("stepback", "stepbackfailed", "stepbackfailed($Duration,obst)"   )  
-						}
-						else
-						 {answer("stepback", "stepbackfailed", "stepbackfailed($Duration,$AnswerKo)"   )  
-						  AnswerKo = ""  
-						 }
+						answer("stepback", "stepbackfailed", "stepbackfailed(0,$Cause,$CurrentPlanIdForStep)"   )  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="work", cond=doswitch() )
+				}	 
+				state("stepBackKoCollision") { //this:State
+					action { //it:State
+						Duration = getDuration(StartTime)
+						updateResourceRep( "stepbackCollided($Duration)"  
+						)
+						answer("stepback", "stepbackcollided", "stepbackcollided($Duration,$CurrentPlanIdForStep)"   )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

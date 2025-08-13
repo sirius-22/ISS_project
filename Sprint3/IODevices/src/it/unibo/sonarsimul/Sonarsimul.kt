@@ -29,10 +29,12 @@ class Sonarsimul ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				var count=0
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						delay(50000) 
+						delay(15000) 
 						CommUtils.outmagenta("sonarsimul | AVVIATO")
 						//genTimer( actor, state )
 					}
@@ -49,7 +51,33 @@ class Sonarsimul ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 						emitLocalStreamEvent("sonardata", "distance(7)" ) 
 						delay(1000) 
 						emitLocalStreamEvent("sonardata", "distance(9)" ) 
-						delay(10000) 
+						delay(20000) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="error_and_resume", cond=doswitch() )
+				}	 
+				state("error_and_resume") { //this:State
+					action { //it:State
+						if( count % 2 == 0 
+						 ){CommUtils.outmagenta("sonarsimul | Emetto 25 (per causare FAULT)")
+						emitLocalStreamEvent("sonardata", "distance(25)" ) 
+						delay(1000) 
+						emitLocalStreamEvent("sonardata", "distance(26)" ) 
+						delay(1000) 
+						emitLocalStreamEvent("sonardata", "distance(25)" ) 
+						delay(3000) 
+						CommUtils.outmagenta("sonarsimul | Emetto 8 (per causare RESUME)")
+						emitLocalStreamEvent("sonardata", "distance(8)" ) 
+						delay(1000) 
+						emitLocalStreamEvent("sonardata", "distance(15)" ) 
+						delay(1000) 
+						emitLocalStreamEvent("sonardata", "distance(5)" ) 
+						delay(20000) 
+						}
+						count++ 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

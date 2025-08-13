@@ -41,8 +41,9 @@ class Mind ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isd
 				state("s0") { //this:State
 					action { //it:State
 						delay(3000) 
-						CommUtils.outblue("$name |  start")
+						CommUtils.outblack("$name |  start")
 						subscribe(  "sonardatatest" ) //mqtt.subscribe(this,topic)
+						subscribeToLocalActor("sonarsimul") 
 						subscribeToLocalActor("sonardevice") 
 						//genTimer( actor, state )
 					}

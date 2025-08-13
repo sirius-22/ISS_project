@@ -196,8 +196,12 @@ QActor leddevice context ctx_raspdevice{
  
 // Simulatore aggiornato per testare la transizione a fault e il resume
 QActor sonarsimul  context ctx_raspdevice{
+	[#
+		var count=0
+		#
+	]
 	State s0 initial{
-		delay 50000
+		delay 15000
 		println("sonarsimul | AVVIATO") color magenta
 	}
 	Goto work
@@ -205,21 +209,6 @@ QActor sonarsimul  context ctx_raspdevice{
 	// Memo D_FREE =20
 	
 	State work{
-//		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
-//		emitlocalstream sonardata      : distance(25)
-//	    delay 1000
-//		emitlocalstream sonardata      : distance(26)
-//	    delay 1000
-//		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
-//	    delay 2000
-//
-//		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
-//		emitlocalstream sonardata      : distance(8) // lettura clear 1
-//	    delay 1000
-//		emitlocalstream sonardata      : distance(15)// lettura clear 2
-//	    delay 1000
-//		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
-//	    delay 2000
 //	    
 		println("sonarsimul | Emetto 8 (per causare containerhere)") color magenta
 		emitlocalstream sonardata      : distance(8)
@@ -227,8 +216,31 @@ QActor sonarsimul  context ctx_raspdevice{
 		emitlocalstream sonardata      : distance(7)
 	    delay 1000
 		emitlocalstream sonardata      : distance(9) // <-- mind emetterà containerhere
-	    delay 10000
+	    delay 20000
 
 	}
-	Goto work
+	Goto error_and_resume
+	
+	State error_and_resume{
+		
+		if[#count % 2 == 0#]{
+			
+			println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
+			emitlocalstream sonardata      : distance(25)
+		    delay 1000
+			emitlocalstream sonardata      : distance(26)
+		    delay 1000
+			emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
+		    delay 3000
+	
+			println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
+			emitlocalstream sonardata      : distance(8) // lettura clear 1
+		    delay 1000
+			emitlocalstream sonardata      : distance(15)// lettura clear 2
+		    delay 1000
+			emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
+		    delay 20000
+		}
+		[#count++#]
+	}Goto work
 }

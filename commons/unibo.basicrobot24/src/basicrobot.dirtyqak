@@ -116,8 +116,11 @@ QActor engager context ctxbasicrobot{
      
      
     State disengageRobot{  
+    	//printCurrentMessage 
+     	//[# Owner  = "unkknown"  #]
      	[# OwnerMngr.disengage()  #]
      	println( "$name has disengaged")
+    	//forward basicrobot -m disengaged : disengaged($Owner)  //ancora necessario?
     	emitlocalstream alarm : alarm(disengaged)  //lo elabora planexec
     }
     Goto s0 
@@ -134,14 +137,30 @@ QActor engager context ctxbasicrobot{
 		[# val Owner    = OwnerMngr.owner #]
 		updateResource [# "workingfor($Owner)" #] 			
 		replyTo engage with engagedone : engagedone($Owner)
+		//forward basicrobot    -m engaged : engaged($Owner) //Non necessario
 		//I messaggi che arrivano al basicrobot sono elaborati solo se OwnerMngr.owner ok	 			 
 	} 
 	Goto s0
 	 
+//	State handleEvent{
+//		printCurrentMessage
+//		[# CommUtils.outcyan("handleEvent $currentMsg") 
+//		   val info = currentMsg.toString()
+//		   if( curConn != null ) CommUtils.forwardOnInterconn(curConn,info) //invio l'evento al caller'
+//		#]
+// 	}
+// 	Goto s0
  	
  	//Added June6. Poi removed a favore di OwnerMngr
  	State checkTheOwner{
  		printCurrentMessage
+ 		/*
+ 		onMsg( checkowner    : checkowner(CALLER) ){
+ 			[# val Caller = payloadArg(0) #]
+  		    println("$name checkTheOwner $Caller owner=$Owner")
+ 			if [# Owner == Caller || Caller == "gui23xyz9526" #] { replyTo checkowner with checkownerok : checkownerok(Owner)}
+ 			else { replyTo checkowner with checkownerfailed : checkownerfailed(Owner)}
+ 		}*/
  	}
  	Goto s0 
 }
@@ -199,8 +218,31 @@ QActor basicrobot context ctxbasicrobot withobj robot using "uniborobots.robotSu
 			CommUtils.registerService( main.java.EurekaServiceConfig() )
 		#]		
  		 
+//PROVE NQTT
+//  		connectToMqttBroker "wss://test.mosquitto.org:8081" clientid "brnat"
+// 		println("basicrobot | CREATED  (and connected to mosquitto) ... ") color magenta
+//   		subscribe "unibodisi"
+ 		/*   
+ 		println("basicrobot | STARTING ... ") color magenta
+ 		//realsonar creato da uniborobots.robotsupport come sonarHCSR04SupportActor
+  	    //[# subscribeToLocalActor("distancefilter").subscribeToLocalActor("realsonar") #] 
+  	    //sottoscrive this a distancefilter e distancefilter a realsonar 
+  	    //DOVERI DIRE: subscribe distancefilter to realsonar (che � partito)
+  	    //E subscribe this a distancefilter
+  	    [#  subscribeTo("distancefilter","realsonar")
+  	    	subscribeToLocalActor("distancefilter")
+  	    #]
+   		//delay 2000 //per inserzione in docker
+  		*/
+  		
   		println("basicrobot | STARTING Sept 2024 no moves ... ") color magenta
-  
+  		
+//        run robot.move( "h" )    //reset
+//        delay 300
+//	  	run robot.move( "a" )    //synch 
+// 		run robot.move( "d" )	 //synch
+ 
+ 
  	}
  	//Goto waitForRobot   
  	Goto work 
@@ -209,13 +251,17 @@ QActor basicrobot context ctxbasicrobot withobj robot using "uniborobots.robotSu
  		delay 5000 //per inserzione in docker: attesa per wenv  
  		//NO SUBSCRIPTION TO SONAR FOR THE VIRTUAL ROBOT
  		println("basicrobot | waitForRobot ... ") color magenta
-
+ 		
+ 		//ELIMINO LA INTERAZIONE SINCRONA perch� richiede la presenza dell'immagine
+   		//run robot.move( "a" )    //synch 
+ 		//run robot.move( "d" )	//synch   	
     } 
     Goto work
     
   	 
 	State work{ 
 		//printCurrentMessage   
+        //updateResource [# "basicrobot(started)" #]
 		discardMsg Off //We want store the non-handled messages
 		println("basicrobot  | waiting, working for ${OwnerMngr.owner} ... ")  color magenta 
 	} 
@@ -312,6 +358,32 @@ QActor basicrobot context ctxbasicrobot withobj robot using "uniborobots.robotSu
         replyTo step with stepcollided : stepcollided($Duration, $CurrentPlanIdForStep)
     }
     Goto work
+ 
+//	State stepKo{ 
+//		//println("$name stepKo AnswerKo=$AnswerKo") color red 	 
+//			run robot.move( "h" )  //stop the (real) robot
+//		if [# AnswerKo == "" #]{
+//			setDuration Duration from StartTime
+//			//printCurrentMessage
+//			[# var TunedDuration   = StepTime - ((Duration * 0.80)).toLong()   #]
+//			//println("basicrobot | stepKo $StepTime  duration=$Duration  TunedDuration=$TunedDuration") color magenta
+//			//if [# TunedDuration > 30 #]{
+////				run robot.move( "s" )
+////				delayVar TunedDuration 
+////				run robot.move( "h" ) 
+//				
+//	            //forward robotpos -m updatemappath : path(s)
+//				
+//		 		updateResource [# "stepFail($Duration)" #] 
+//		 		delay 300
+//			//}
+//		 	replyTo step with stepfailed : stepfailed($Duration, obst)
+//	 	}else{
+//	 		replyTo step with stepfailed : stepfailed($Duration, $AnswerKo)
+//	 		[# AnswerKo = "" #]
+//	 	}
+//    } 
+//	Goto work 
 	
 	//stepback
 	
@@ -347,6 +419,32 @@ QActor basicrobot context ctxbasicrobot withobj robot using "uniborobots.robotSu
     }
     Goto stepBackKoLogical if [# AnswerKo != "" #] else stepBackKoCollision
 	
+//	State stepBackKo  {
+//	    if [# AnswerKo == "" #] {
+//	        setDuration Duration from StartTime
+//	        
+//        // *** INIZIO LOGICA DI RECUPERO (speculare a quella di stepko) ***
+////        [# var TunedDuration   = StepTime - ((Duration * 0.80)).toLong()   #]
+////        
+////        if [# TunedDuration > 30 #]{
+////            // Se il passo indietro (s) è fallito, recupera con un passo avanti (w)
+////            run robot.move( "w" ) 
+////            delayVar TunedDuration 
+//            run robot.move( "h" ) 
+//            
+//            //forward robotpos -m updatemappath : path(w)
+//            
+//	        updateResource [# "stepBackFail($Duration)" #] // Logga l'errore 
+//	        delay 300 // Piccolo delay per stabilità
+//        //}
+//        
+//	        replyTo stepback with stepbackfailed : stepbackfailed($Duration, obst)
+//	    } else {
+//	        replyTo stepback with stepbackfailed : stepbackfailed($Duration, $AnswerKo)
+//	        [# AnswerKo = "" #]
+//	    }
+//	}
+//	Goto work
 
     State stepBackKoLogical {
         [#
@@ -442,7 +540,9 @@ QActor planexec context ctxbasicrobot withobj robot using "uniborobots.robotSupp
  		} 
 		else{ if [# CurMoveTodo == "w" #] {
 	 			delay 300  //avoid too fast ...
+	 			//Il supporto non fa step-back
 	 			//Chiedo di fare step 
+	 			//[# StepSynchRes = robot.dostep( StepTime ) #]
 	 			request basicrobot -m step : step($StepTime, $CurrentPlanId )	//mentre fa doplan ...		
 			}else{
 				   if [# CurMoveTodo == "s" #] {
@@ -459,16 +559,16 @@ QActor planexec context ctxbasicrobot withobj robot using "uniborobots.robotSupp
  	}  
 	Transition t0  whenReply stepfailed  -> validateReply
 	               whenReply stepbackfailed  -> validateReply
-				   whenEvent alarm    -> handleAlarm 
+				   whenEvent alarm    -> handleAlarm //planinterruptedalarm
 					whenReply stepcollided   -> validateReply
                		whenReply stepbackcollided  -> validateReply
 	               whenMsg nomoremove   -> planend
 	               whenMsg nextmove   -> handleTurnAndUpdate  
-	               whenReply stepdone  -> validateReply
-	               whenReply stepbackdone -> validateReply
-//alarm gestito solo se non c'è stepfailed
+	               whenReply stepdone  -> validateReply//nextMove 
+	               whenReply stepbackdone -> validateReply//nextMove
+//alarm gestito solo se non c'� stepfailed
 
-// STATO FILTRO: per la validazione
+// STATO FILTRO: Il nuovo cuore della validazione
 State validateReply {
     printCurrentMessage color gray
     [#
@@ -491,8 +591,8 @@ State validateReply {
 				if [# msgId.contains("done") || msgId.contains("collided") #] {
 					[# PlanDone += CurMoveTodo 
 						PathTodoOnFail = Plan 
-						
-						#]
+						#
+					]
 				}else{
 					[#PathTodoOnFail = CurMoveTodo + Plan#]
 				}
@@ -593,7 +693,17 @@ State validateReply {
 
             // FERMARE IMMEDIATAMENTE IL ROBOT
             forward basicrobot -m cmd : cmd(h)
-
+//
+//            // 2. CALCOLARE LO STATO FINALE DEL PIANO
+//            [#var PathTodo = CurMoveTodo + Plan#]
+//			if [#PlanDone.isEmpty()#]{
+// 				[#PlanDone = "n"#]
+// 			}
+//            // 3. NOTIFICARE IL FALLIMENTO
+//            updateResource [# "planfailed($PlanOrig,$PathTodo)" #]
+//            replyTo doplan with doplanfailed : doplanfailed($PlanDone, $PathTodo)
+//            //invalidare il piano corrente
+//            [#CurrentPlanId != 0#]
            }
     }
     Goto awaitingFinalReplyAfterAlarm 	
@@ -609,7 +719,14 @@ State validateReply {
 	               whenReply stepbackcollided -> validateReply
  	
  	State planinterruptedalarm{  
-
+//		printCurrentMessage
+// 		println("$name |  planinterruptedalarm $CurMoveTodo ")	color magenta
+// 		println("$name | ALARM RECEIVED! Forcing robot stop and failing the plan.") color red
+// 		
+// 		[# var Plantodo = CurMoveTodo + Plan
+// 		#]
+// 		updateResource [# "planfailed($PlanOrig,$Plantodo )" #] 
+// 		replyTo doplan with doplanfailed : doplanfailed( $Plan )
  	}	 
  	Transition t0 //whenTime 200 -> work  //THanks to Mirabella 2023
  				  whenMsg nextmove    ->  nonextmovesincealarm
@@ -618,6 +735,10 @@ State validateReply {
  				  whenReply stepbackdone -> nonextmovesincealarm
  				  whenReply stepbackfailed -> planinterruptedobstacle
 
+ 	//State possiblestepdonemirabella{
+ 	//	request basicrobot -m getrobotstate : getrobotstate(ARG)
+ 	//}
+ 	//Transition t0 whenReply robotstate -> setstatemirabella
 
 	State nonextmovesincealarm{
  		println("$name |  nonextmovesincealarm $CurMoveTodo plantodo=$Plan") color magenta
@@ -630,7 +751,43 @@ State validateReply {
  		delay 200
 	}
 	Goto work
+	/*Il piano esegue sempre almeno la prima mossa prima di essere interrotto
+	 */
+	 /* 
+ 	State setstatemirabella{
+ 		onMsg(robotstate:robotstate(Pos,Dir)){
+ 			[#
+ 				var Pos = payloadArg(0)
+ 				var Dir = payloadArg(1)
+ 				var X = 0
+ 				var Y = 0
+ 				val regex = """pos\((\d+),(\d+)\)""".toRegex()
+				val matchResult = regex.find(Pos)
+				if (matchResult != null) {
+				    val (yStr, xStr) = matchResult.destructured
+				    X = xStr.toInt()
+				    Y = yStr.toInt()
+ 				}else {
+				    CommUtils.outred("setstatemirabella Invalid input format")  
+				}
 
+ 				when (Dir) {
+			    "UP" -> X-=1
+			    "DOWN" -> X+=1
+			    "LEFT" -> Y-=1
+			    "RIGHT" -> Y+=1
+			    else -> { // Note the block
+			        CommUtils.outred("setstatemirabella errore direzione")  
+			    }
+			}
+ 			#]
+ 			println("$Pos -x $X y $Y  - $Dir") color black
+ 			forward basicrobot -m setrobotstate: setpos($Y,$X,$Dir)
+
+ 		}
+ 	}
+ 	Goto work
+ 	*/
  	State planrefused{
  		println("$name | planrefused ") color red
  		replyTo doplan with doplanfailed : doplanfailed( youarenotowner )
@@ -662,7 +819,9 @@ QActor robotpos context ctxbasicrobot{
 		var PlanCounter = 0 //contatore per PlanID
 	#]
 	State s0 initial{
-        println("$name STARTS loading $MapName") 		
+        println("$name STARTS loading $MapName") 
+        //[# StepTime = OwnerMngr.steptime //robot.readStepTime( )	 		
+ 		//#]		
         
 		[# planner.initAI()  
 		   planner.loadRoomMap(MapName) 
@@ -726,7 +885,9 @@ QActor robotpos context ctxbasicrobot{
     	println("setTheRobotDirection $D") color magenta
     	[# Plan = planner.setTheDirection(D)
     		#
-    	]  
+    	]  //Solo nel planner ? Anche nel real world ...
+    	//[# planner.showCurrentRobotState() #]
+    	//println("setTheRobotDirection plan=$Plan caller=$Caller") color magenta
     	
     	// Quando si trova già nella direzione corretta ... ELIMINIAMO IL BUG che fa esplodere prolog :)
     	if [# Plan.isEmpty() #] {
@@ -848,6 +1009,38 @@ QActor robotpos context ctxbasicrobot{
 			println("pos NOT reached - PathTodo = ${PathTodo} vs. $Plan") color red		
 			
 			println("===> [ROBOTPOS | ENDKO] ESECUZIONE LOGICA DI RECUPERO AVVIATA Pathdone : $PathDone <===") color cyan	 
+			[#    
+//				 var PathDone = Plan.substring(0, Plan.lastIndexOf(PathTodo))
+//				 if( PathDone == "" ) PathDone ="n"				 
+//				 else planner.doPathOnMap(PathDone)
+			
+			// per fare in modo che non crei un messaggio di moverobotfailed con stringa vuota che manda in crash il compilatore prolog
+//            var PathDone = ""
+//            val todoIndex = Plan.lastIndexOf(PathTodo)
+//            
+//            CommUtils.outyellow("===> [ROBOTPOS | ENDKO] Piano Originale (Plan): $Plan")
+//            CommUtils.outyellow("===> [ROBOTPOS | ENDKO] Percorso Fallito (PathTodo): $PathTodo")
+//
+//            if (todoIndex > 0) { // Controlla se l'indice è STRETTAMENTE MAGGIORE di 0
+//                PathDone = Plan.substring(0, todoIndex)
+//            }
+//            CommUtils.outmagenta("===> [ROBOTPOS | ENDKO] CALCOLATO PathDone: '$PathDone'")
+//            // Se todoIndex è 0 o -1, PathDone rimane ""
+//
+//            // Aggiorna la mappa solo se PathDone non è vuoto
+//            if( !PathDone.isEmpty() ) {
+//                 planner.doPathOnMap(PathDone)
+//               CommUtils.outgreen("===> [ROBOTPOS | ENDKO] AGGIORNAMENTO MAPPA CON: '$PathDone'")
+//            }else{
+//            	
+//            // Sanifica l'output PER LA REPLY. Se PathDone è vuoto dopo il calcolo,
+//            // usa un placeholder non vuoto come "n".
+//                 PathDone = "n"	
+//             CommUtils.outred("===> [ROBOTPOS | ENDKO] NESSUN AGGIORNAMENTO MAPPA (PathDone vuoto o 'n')")
+//            }
+
+            
+			#]
             if [# PathDone != "n"  #] {
                  println("===> [ROBOTPOS | ENDKO] AGGIORNAMENTO MAPPA CON: '$PathDone'") color green
                  [#planner.doPathOnMap(PathDone)#]
@@ -855,6 +1048,9 @@ QActor robotpos context ctxbasicrobot{
                  println("===> [ROBOTPOS | ENDKO] NESSUN AGGIORNAMENTO MAPPA (PathDone vuoto)") color red
             }			
 			
+			//updateResource [# planner.robotOnMap() #]
+			//println("uuu ${PathDone}") 
+			//[# planner.doPathOnMap(PathDone) #]
 			[# planner.showCurrentRobotState(); #]
 			replyTo moverobot with moverobotfailed : moverobotfailed($PathDone,$PathTodo)
 		}

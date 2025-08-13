@@ -42,6 +42,7 @@ class Robotpos ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 				var X         = ""
 				var Y         = "" 
 				var D         = ""
+				var PlanCounter = 0 //contatore per PlanID
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -64,12 +65,12 @@ class Robotpos ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t020",targetState="getRoboSstate",cond=whenRequest("getrobotstate"))
-					transition(edgeName="t021",targetState="checkTheOwnerForMove",cond=whenRequest("moverobot"))
-					transition(edgeName="t022",targetState="getEnvMap",cond=whenRequest("getenvmap"))
-					transition(edgeName="t023",targetState="checkTheOwnerForSet",cond=whenDispatch("setrobotstate"))
-					transition(edgeName="t024",targetState="checkTheOwnerForSetDir",cond=whenDispatch("setdirection"))
-					transition(edgeName="t025",targetState="update_map_after_recovery",cond=whenDispatch("updatemappath"))
+					 transition(edgeName="t034",targetState="getRoboSstate",cond=whenRequest("getrobotstate"))
+					transition(edgeName="t035",targetState="checkTheOwnerForMove",cond=whenRequest("moverobot"))
+					transition(edgeName="t036",targetState="getEnvMap",cond=whenRequest("getenvmap"))
+					transition(edgeName="t037",targetState="checkTheOwnerForSet",cond=whenDispatch("setrobotstate"))
+					transition(edgeName="t038",targetState="checkTheOwnerForSetDir",cond=whenDispatch("setdirection"))
+					transition(edgeName="t039",targetState="update_map_after_recovery",cond=whenDispatch("updatemappath"))
 				}	 
 				state("update_map_after_recovery") { //this:State
 					action { //it:State
@@ -134,22 +135,26 @@ class Robotpos ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 				}	 
 				state("setTheRobotDirection") { //this:State
 					action { //it:State
-						 Plan = planner.setTheDirection(D)  
+						CommUtils.outmagenta("setTheRobotDirection $D")
+						 Plan = planner.setTheDirection(D)
 						if(  Plan.isEmpty()  
 						 ){CommUtils.outgreen("robotpos | Direction is already set. No plan needed.")
 						forward("nomoremove", "nomoremove(noNeed)" ,"robotpos" ) 
 						}
 						else
-						 {request("doplan", "doplan($Plan,$StepTime)" ,"planexec" )  
+						 {
+						                 PlanCounter++
+						 CommUtils.outgreen("$name | Direction plan: '$Plan' with ID: $PlanCounter")
+						 request("doplan", "doplan($Plan,$StepTime,$PlanCounter)" ,"planexec" )  
 						 }
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t026",targetState="planfordirok",cond=whenReply("doplandone"))
-					transition(edgeName="t027",targetState="fatalerror",cond=whenReply("doplanfailed"))
-					transition(edgeName="t028",targetState="planfordirok",cond=whenDispatch("nomoremove"))
+					 transition(edgeName="t040",targetState="planfordirok",cond=whenReply("doplandone"))
+					transition(edgeName="t041",targetState="fatalerror",cond=whenReply("doplanfailed"))
+					transition(edgeName="t042",targetState="planfordirok",cond=whenDispatch("nomoremove"))
 				}	 
 				state("planfordirok") { //this:State
 					action { //it:State
@@ -241,15 +246,17 @@ class Robotpos ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 								   Plan = planner.planCompacted(Plan) 
 								   if( Plan.isEmpty()) Plan="''"
 								   //CommUtils.outblue("$name | Plan to reach pos: $Plan")
-						CommUtils.outblue("$name | Plan to reach pos: $Plan for $Caller")
-						request("doplan", "doplan($Plan,$StepTime)" ,"planexec" )  
+								   
+						           PlanCounter++
+						CommUtils.outblue("$name | Plan to reach pos: '$Plan' for $Caller with ID: $PlanCounter")
+						request("doplan", "doplan($Plan,$StepTime,$PlanCounter)" ,"planexec" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t029",targetState="endok",cond=whenReply("doplandone"))
-					transition(edgeName="t030",targetState="endko",cond=whenReply("doplanfailed"))
+					 transition(edgeName="t043",targetState="endok",cond=whenReply("doplandone"))
+					transition(edgeName="t044",targetState="endko",cond=whenReply("doplanfailed"))
 				}	 
 				state("endok") { //this:State
 					action { //it:State
@@ -267,43 +274,20 @@ class Robotpos ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 				}	 
 				state("endko") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("doplanfailed(ARG)"), Term.createTerm("doplanfailed(ARG)"), 
+						if( checkMsgContent( Term.createTerm("doplanfailed(PATH_DONE,PATH_TODO)"), Term.createTerm("doplanfailed(PATH_DONE,PATH_TODO)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
-								 val PathTodo = payloadArg(0)  
+								 val PathDone  = payloadArg(0) 
+												val PathTodo = payloadArg(1)
+												
 								CommUtils.outred("pos NOT reached - PathTodo = ${PathTodo} vs. $Plan")
-								CommUtils.outcyan("===> [ROBOTPOS | ENDKO] ESECUZIONE LOGICA DI RECUPERO AVVIATA <===")
-								    
-								//				 var PathDone = Plan.substring(0, Plan.lastIndexOf(PathTodo))
-								//				 if( PathDone == "" ) PathDone ="n"				 
-								//				 else planner.doPathOnMap(PathDone)
-											
-											// per fare in modo che non crei un messaggio di moverobotfailed con stringa vuota che manda in crash il compilatore prolog
-								            var PathDone = ""
-								            val todoIndex = Plan.lastIndexOf(PathTodo)
-								            
-								            CommUtils.outyellow("===> [ROBOTPOS | ENDKO] Piano Originale (Plan): $Plan")
-								            CommUtils.outyellow("===> [ROBOTPOS | ENDKO] Percorso Fallito (PathTodo): $PathTodo")
-								
-								            if (todoIndex > 0) { // Controlla se l'indice è STRETTAMENTE MAGGIORE di 0
-								                PathDone = Plan.substring(0, todoIndex)
-								            }
-								            CommUtils.outmagenta("===> [ROBOTPOS | ENDKO] CALCOLATO PathDone: '$PathDone'")
-								            // Se todoIndex è 0 o -1, PathDone rimane ""
-								
-								            // Aggiorna la mappa solo se PathDone non è vuoto
-								            if( !PathDone.isEmpty() ) {
-								                 planner.doPathOnMap(PathDone)
-								               CommUtils.outgreen("===> [ROBOTPOS | ENDKO] AGGIORNAMENTO MAPPA CON: '$PathDone'")
-								            }else{
-								            	
-								            // Sanifica l'output PER LA REPLY. Se PathDone è vuoto dopo il calcolo,
-								            // usa un placeholder non vuoto come "n".
-								                 PathDone = "n"	
-								             CommUtils.outred("===> [ROBOTPOS | ENDKO] NESSUN AGGIORNAMENTO MAPPA (PathDone vuoto o 'n')")
-								            }
-								            
-								updateResourceRep( planner.robotOnMap()  
-								)
+								CommUtils.outcyan("===> [ROBOTPOS | ENDKO] ESECUZIONE LOGICA DI RECUPERO AVVIATA Pathdone : $PathDone <===")
+								if(  PathDone != "n"   
+								 ){CommUtils.outgreen("===> [ROBOTPOS | ENDKO] AGGIORNAMENTO MAPPA CON: '$PathDone'")
+								planner.doPathOnMap(PathDone) 
+								}
+								else
+								 {CommUtils.outred("===> [ROBOTPOS | ENDKO] NESSUN AGGIORNAMENTO MAPPA (PathDone vuoto)")
+								 }
 								 planner.showCurrentRobotState();  
 								answer("moverobot", "moverobotfailed", "moverobotfailed($PathDone,$PathTodo)"   )  
 						}
@@ -316,7 +300,7 @@ class Robotpos ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 				}	 
 				state("moveRefused") { //this:State
 					action { //it:State
-						answer("moverobot", "moverobotfailed", "moverobotfailed(none,youarenotowner)"   )  
+						answer("moverobot", "moverobotfailed", "moverobotfailed(youarenotowner)"   )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

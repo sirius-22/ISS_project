@@ -32,10 +32,16 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 		val robot = uniborobots.robotSupport
 		  var Plan          = ""
 				var PlanOrig      = ""
-				var CurMoveTodo   = ""		
+				var PlanDone	  = ""
+				var CurMoveTodo   = ""	
+				var AlarmReceived = false	
 				var StepTime      = "200"
 				var OwnerMngr     = supports.OwnerManager //Kotlin object
 				var IsOwner       = false
+				var CurrentPlanId = 0
+				var msgId = ""
+				var isValid = false
+				var PathTodoOnFail = "" 
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -53,17 +59,21 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t09",targetState="checkTheOwner",cond=whenRequest("doplan"))
+					 transition(edgeName="t08",targetState="checkTheOwner",cond=whenRequest("doplan"))
 				}	 
 				state("checkTheOwner") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("doplan(PATH,STEPTIME)"), Term.createTerm("doplan(PLAN,STEPTIME)"), 
+						if( checkMsgContent( Term.createTerm("doplan(PATH,STEPTIME,PLANID)"), Term.createTerm("doplan(PLAN,STEPTIME,PLANID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								 Plan       = payloadArg(0).replace("[","").replace("]","").replace(",","").replace(" ","")
 											   PlanOrig   = Plan
+											   PlanDone   = ""
+											   AlarmReceived = false 
 											   StepTime   = payloadArg(1)          //if int ...
 								    		   val Caller = currentMsg.msgSender() //payloadArg(1) 
 								    		   IsOwner    = OwnerMngr.checkOwner( Caller )
+								    		   CurrentPlanId  = payloadArg(2).toInt()
+								    		   PathTodoOnFail = ""
 						}
 						//genTimer( actor, state )
 					}
@@ -91,11 +101,11 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 						else
 						 {if(  CurMoveTodo == "w"  
 						  ){delay(300) 
-						 request("step", "step($StepTime)" ,"basicrobot" )  
+						 request("step", "step($StepTime,$CurrentPlanId)" ,"basicrobot" )  
 						 }
 						 else
 						  {if(  CurMoveTodo == "s"  
-						   ){request("stepback", "stepback($StepTime)" ,"basicrobot" )  
+						   ){request("stepback", "stepback($StepTime,$CurrentPlanId)" ,"basicrobot" )  
 						  }
 						  else
 						   {robot.move( CurMoveTodo  )
@@ -108,13 +118,123 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t010",targetState="planinterruptedobstacle",cond=whenReply("stepfailed"))
-					transition(edgeName="t011",targetState="planinterruptedobstacle",cond=whenReply("stepbackfailed"))
-					transition(edgeName="t012",targetState="planinterruptedalarm",cond=whenEvent("alarm"))
-					transition(edgeName="t013",targetState="planend",cond=whenDispatch("nomoremove"))
-					transition(edgeName="t014",targetState="nextMove",cond=whenDispatch("nextmove"))
-					transition(edgeName="t015",targetState="nextMove",cond=whenReply("stepdone"))
-					transition(edgeName="t016",targetState="nextMove",cond=whenReply("stepbackdone"))
+					 transition(edgeName="t09",targetState="validateReply",cond=whenReply("stepfailed"))
+					transition(edgeName="t010",targetState="validateReply",cond=whenReply("stepbackfailed"))
+					transition(edgeName="t011",targetState="handleAlarm",cond=whenEvent("alarm"))
+					transition(edgeName="t012",targetState="validateReply",cond=whenReply("stepcollided"))
+					transition(edgeName="t013",targetState="validateReply",cond=whenReply("stepbackcollided"))
+					transition(edgeName="t014",targetState="planend",cond=whenDispatch("nomoremove"))
+					transition(edgeName="t015",targetState="handleTurnAndUpdate",cond=whenDispatch("nextmove"))
+					transition(edgeName="t016",targetState="validateReply",cond=whenReply("stepdone"))
+					transition(edgeName="t017",targetState="validateReply",cond=whenReply("stepbackdone"))
+				}	 
+				state("validateReply") { //this:State
+					action { //it:State
+						CommUtils.outgray("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						
+						          val content = currentMsg.msgContent()
+									
+									val planIdInMsgStr = content.substringAfterLast(",").substringBefore(")").trim()
+									var planIdInMsg = -1
+									try{
+										planIdInMsg = planIdInMsgStr.toInt()
+									}catch(e: Exception){}
+						
+								    isValid = (planIdInMsg == CurrentPlanId && CurrentPlanId != 0)
+									msgId = currentMsg.msgId()
+						if(  !isValid  
+						 ){CommUtils.outred("$name | Discarding obsolete reply for plan $planIdInMsg (current is $CurrentPlanId): $currentMsg")
+						}
+						else
+						 {if(  AlarmReceived  
+						  ){CommUtils.outmagenta("$name | Final reply after alarm received: $currentMsg")
+						 if(  msgId.contains("done") || msgId.contains("collided")  
+						  ){ PlanDone += CurMoveTodo 
+						 						PathTodoOnFail = Plan 
+						 						
+						 }
+						 else
+						  {PathTodoOnFail = CurMoveTodo + Plan 
+						  }
+						 }
+						 }
+						forward("resume", "resume(go)" ,name ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t018",targetState="work",cond=whenDispatchGuarded("resume",{ !isValid  
+					}))
+					transition(edgeName="t019",targetState="failThePlan",cond=whenDispatchGuarded("resume",{ isValid && AlarmReceived  
+					}))
+					transition(edgeName="t020",targetState="handleStepDoneAndUpdate",cond=whenDispatchGuarded("resume",{ isValid && (msgId == "stepdone" || msgId == "stepbackdone") 
+					}))
+					transition(edgeName="t021",targetState="planInterruptedCollision",cond=whenDispatchGuarded("resume",{ isValid && (msgId == "stepcollided" || msgId == "stepbackcollided" ) 
+					}))
+					transition(edgeName="t022",targetState="planInterruptedLogical",cond=whenDispatchGuarded("resume",{ isValid && (msgId == "stepbackfailed " || msgId == "stepfailed") 
+					}))
+				}	 
+				state("handleStepDoneAndUpdate") { //this:State
+					action { //it:State
+						 PlanDone += CurMoveTodo  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="nextMove", cond=doswitch() )
+				}	 
+				state("handleTurnAndUpdate") { //this:State
+					action { //it:State
+						 PlanDone += CurMoveTodo  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="nextMove", cond=doswitch() )
+				}	 
+				state("planInterruptedLogical") { //this:State
+					action { //it:State
+						CommUtils.outred("$name | Plan interrupted by logical failure. Move not performed.")
+						 PathTodoOnFail = CurMoveTodo + Plan  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="failThePlan", cond=doswitch() )
+				}	 
+				state("planInterruptedCollision") { //this:State
+					action { //it:State
+						CommUtils.outyellow("$name | Plan interrupted by collision. Move was performed.")
+						 PlanDone += CurMoveTodo  
+						 PathTodoOnFail = Plan  
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="failThePlan", cond=doswitch() )
+				}	 
+				state("failThePlan") { //this:State
+					action { //it:State
+						
+								    // Ora usiamo il valore corretto calcolato prima
+								    val PathTodo = PathTodoOnFail
+								    var SafePlanDone = if (PlanDone.isEmpty()) "n" else PlanDone
+									var SafePathTodo = if (PathTodo.isEmpty()) "none" else PathTodo
+						answer("doplan", "doplanfailed", "doplanfailed($SafePlanDone,$SafePathTodo)"   )  
+						 CurrentPlanId = 0 
+									AlarmReceived = false
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="work", cond=doswitch() )
 				}	 
 				state("planend") { //this:State
 					action { //it:State
@@ -131,6 +251,9 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 						  answer("doplan", "doplandone", "doplandone($PlanOrig)"   )  
 						  updateResourceRep( "plandone($PlanOrig)"  
 						  )
+						  
+						  		        CurrentPlanId = 0
+						  		        AlarmReceived = false // Anche se dovrebbe essere già false, è buona pratica
 						  }
 						 }
 						//genTimer( actor, state )
@@ -142,18 +265,54 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 				}	 
 				state("planinterruptedobstacle") { //this:State
 					action { //it:State
+						CommUtils.outcyan("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
 						CommUtils.outmagenta("$name |  planinterruptedobstacle $CurMoveTodo StepTime=$StepTime")
 						 var Plantodo =  CurMoveTodo + Plan
+						if( PlanDone.isEmpty() 
+						 ){PlanDone = "n" 
+						}
 						updateResourceRep( "planfailed($PlanOrig,$Plantodo )"  
 						)
-						answer("doplan", "doplanfailed", "doplanfailed($Plantodo)"   )  
-						delay(100) 
+						answer("doplan", "doplanfailed", "doplanfailed($PlanDone,$Plantodo)"   )  
+						delay(200) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
 					 transition( edgeName="goto",targetState="work", cond=doswitch() )
+				}	 
+				state("handleAlarm") { //this:State
+					action { //it:State
+						CommUtils.outred("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						if( ( !AlarmReceived ) 
+						 ){ AlarmReceived = true 
+						CommUtils.outred("$name | ALARM RECEIVED! Halting robot and waiting for final reply.")
+						forward("cmd", "cmd(h)" ,"basicrobot" ) 
+						}
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition( edgeName="goto",targetState="awaitingFinalReplyAfterAlarm", cond=doswitch() )
+				}	 
+				state("awaitingFinalReplyAfterAlarm") { //this:State
+					action { //it:State
+						CommUtils.outblack("$name | ... awaiting final reply for plan $CurrentPlanId ...")
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t023",targetState="validateReply",cond=whenReply("stepdone"))
+					transition(edgeName="t024",targetState="validateReply",cond=whenReply("stepbackdone"))
+					transition(edgeName="t025",targetState="validateReply",cond=whenReply("stepfailed"))
+					transition(edgeName="t026",targetState="validateReply",cond=whenReply("stepbackfailed"))
+					transition(edgeName="t027",targetState="validateReply",cond=whenReply("stepcollided"))
+					transition(edgeName="t028",targetState="validateReply",cond=whenReply("stepbackcollided"))
 				}	 
 				state("planinterruptedalarm") { //this:State
 					action { //it:State
@@ -162,9 +321,11 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t017",targetState="nonextmovesincealarm",cond=whenDispatch("nextmove"))
-					transition(edgeName="t018",targetState="nonextmovesincealarm",cond=whenReply("stepdone"))
-					transition(edgeName="t019",targetState="planinterruptedobstacle",cond=whenReply("stepfailed"))
+					 transition(edgeName="t029",targetState="nonextmovesincealarm",cond=whenDispatch("nextmove"))
+					transition(edgeName="t030",targetState="nonextmovesincealarm",cond=whenReply("stepdone"))
+					transition(edgeName="t031",targetState="planinterruptedobstacle",cond=whenReply("stepfailed"))
+					transition(edgeName="t032",targetState="nonextmovesincealarm",cond=whenReply("stepbackdone"))
+					transition(edgeName="t033",targetState="planinterruptedobstacle",cond=whenReply("stepbackfailed"))
 				}	 
 				state("nonextmovesincealarm") { //this:State
 					action { //it:State
@@ -177,6 +338,7 @@ class Planexec ( name: String, scope: CoroutineScope, isconfined: Boolean=false,
 						else
 						 {answer("doplan", "doplanfailed", "doplanfailed($Plan)"   )  
 						 }
+						delay(200) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

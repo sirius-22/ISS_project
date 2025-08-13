@@ -42,7 +42,7 @@ class Leddevice ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 				}	 
 				state("ledoff_state") { //this:State
 					action { //it:State
-						 Runtime.getRuntime().exec("python ./resources/python/ledPython25Off.py")  
+						 Runtime.getRuntime().exec("python ledPython25Off.py")  
 						CommUtils.outyellow("$name | led is off")
 						CommUtils.outyellow("$name | led waiting for messages")
 						//genTimer( actor, state )
@@ -54,7 +54,7 @@ class Leddevice ( name: String, scope: CoroutineScope, isconfined: Boolean=false
 				}	 
 				state("ledon_state") { //this:State
 					action { //it:State
-						 machineExec("python ./resources/python/ledPython25On.py")  
+						 machineExec("python ledPython25On.py")  
 						CommUtils.outyellow("$name | led is on")
 						//genTimer( actor, state )
 					}
