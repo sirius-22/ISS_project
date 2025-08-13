@@ -12,7 +12,7 @@ import org.junit.Before;
 import main.java.hold.*;
 import main.java.domain.*;
 
-public class SlotManagementTest2 {
+public class SlotManagementTest {
 	
 	private ISlotManagement slotManagement;
 

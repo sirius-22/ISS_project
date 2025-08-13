@@ -1,0 +1,12 @@
+HOW TO far partire il progetto:
+
+1. Andare nella cartella Sprint1/Implementation
+2. Eseguire il comando docker load -i basicrobot24.tar per caricare l'immagine Docker del basicrobot
+3. Eseguire  il comando docker compose -f arch1.yaml up per far partire vari componenti del sistema (cargorobot, productservice)
+4. Aprire il browser su localhost:8090 per visualizzare l’ambiente WEnv in cui lavorerà il DDR robot
+5. Andare nella cartella Implementation
+6. Eseguire il comando ./gradlew run per far partire il resto del sistema cargoservice
+
+Note:
+a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docker
+b. Il sistema cargoservice si appoggia a productservice che ha un database Mongo per la persistenza dei prodotti, questo è già stato riempito con opportuni prodotti di test attraverso il file setup_mongo.js
