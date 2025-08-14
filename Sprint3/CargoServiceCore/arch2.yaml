@@ -79,7 +79,7 @@ services:
   
   basicrobot24:
     container_name: basicrobot24
-    image: pretty2/basicrobot:2.5
+    image: pretty2/basicrobot:2.13
     mem_limit: 512m
     ports:
       - "8020:8020/tcp"
