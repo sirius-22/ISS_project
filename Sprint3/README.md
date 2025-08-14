@@ -22,12 +22,38 @@ In particolare i requisiti su cui ci concentreremo in questo sprint sono:
 
 ### CargoServiceStatusGui
 
-CargoserviceStatusGui riceve informazioni sullo stato della stiva da cargoService nel formato json implementato nel precedente Sprint.
-Il compito di ```cargoserviceStatusGui``` è far visualizzare all'utente finale lo stato interno della stiva, visto che ```Slot5``` da requisiti è sempre vuoto non lo consideriamo nello scambio di messaggi attraverso il json, ma sarà comunque sempre presente nalla rappresentazione.
+Inizialmente, nel modello di alto livello dello Sprint 0, `cargoserviceStatusGui` era stato concepito come un componente strettamente accoppiato a `cargoservice`, potenzialmente residente nello stesso contesto. Tuttavia, un'analisi più approfondita ha rivelato la necessità di un'architettura più robusta e disaccoppiata. Per questo motivo, si è deciso di implementare la GUI e il suo backend in un **contesto separato** (`ctx_cargoservicestatusgui`). Questa scelta strategica garantisce la separazione delle responsabilità (logica di business vs. logica di presentazione) e migliora la manutenibilità e la scalabilità future del sistema, trattando i due contesti come microservizi indipendenti.
 
-Il flusso di ```cargoserviceStatusGui```  è il seguente:
-- nella fase di inizializzazione tutti gli Slot saranno visualizzati vuoti (come da requisiti), quindi non riteniamo necessaria una prima comunicazione con cargoservice
-- successivamente ```cargoserviceStatusGui``` aspetta i messaggi di update da ```cargoService``` e mostra i cambiamenti all'utente
+Oltre al requisito originale di visualizzazione dello stato della stiva, si è aggiunto un nuovo requisito funzionale:
+
+> La Web GUI deve permettere a un utente esterno di **inviare una richiesta di carico** (`loadrequest(PID)`) direttamente dall'interfaccia, ricevendo una notifica di successo (`loadaccepted`) o fallimento (`loadrejected`).
+
+Questo requisito introduce una doppia responsabilità per il backend della GUI:
+1.  **Flusso in uscita (Push)**: Ricevere passivamente gli aggiornamenti di stato dal `cargoservice` e inoltrarli all'interfaccia web.
+2.  **Flusso in entrata (Request)**: Accettare attivamente comandi dall'interfaccia web, inoltrarli al `cargoservice` e gestire il ciclo di richiesta/risposta.
+
+Per gestire questa duplice natura in modo pulito e aderire al **Principio di Singola Responsabilità** anche a un livello più granulare, si è deciso di suddividere il backend della GUI in **tre attori distinti**, ognuno con un compito altamente specializzato. 
+
+Il flusso di operazioni si articola quindi come segue:
+
+-   **`gui_api_gateway` (API Gateway)**:
+    -   Agisce come unico punto di ingresso per tutte le comunicazioni provenienti dal mondo esterno (il WebSocket manager della GUI).
+    -   Nella sua fase di inizializzazione, configura un meccanismo di **delega** (`delegate`): istruisce l'infrastruttura Qak a inoltrare automaticamente tutte le future richieste di tipo `loadrequest` all'attore `gui_request_handler`.
+    -   Dopo la configurazione, rimane in uno stato passivo, agendo da puro router di messaggi.
+
+-   **`gui_state_observer` (Osservatore dello Stato)**:
+    -   La sua unica responsabilità è mantenere la GUI aggiornata.
+    -   In fase di inizializzazione, si sottoscrive come "osservatore" (`observeResource`) dell'attore `cargoservice`.
+    -   Rimane in attesa di notifiche di aggiornamento. Quando `cargoservice` pubblica un nuovo stato della stiva, questo attore lo riceve e lo inoltra a tutti i client web connessi.
+
+-   **`gui_request_handler` (Gestore delle Richieste)**:
+    -   La sua unica responsabilità è gestire il ciclo di richiesta/risposta per i comandi inviati dalla GUI.
+    -   Riceve le richieste `loadrequest` tramite la delega configurata dal Gateway.
+    -   Inoltra la richiesta al `cargoservice`.
+    -   Attende la risposta (`loadaccepted` o `loadrejected`) da `cargoservice`.
+    -   Una volta ricevuta la risposta, la inoltra al client web originale che ha avviato la richiesta.
+
+Questa architettura a tre attori, basata sul pattern **API Gateway** con worker specializzati, garantisce il massimo disaccoppiamento, una chiara separazione dei compiti e una notevole robustezza, poiché un eventuale malfunzionamento in un attore (es. nel gestore delle richieste) non influenzerà l'operatività degli altri (l'osservatore dello stato continuerà a funzionare).
 
 
 ### leddevice
