@@ -36,7 +36,7 @@ class Sonardevice ( name: String, scope: CoroutineScope, isconfined: Boolean=fal
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
-						CommUtils.outblack("$name | start")
+						CommUtils.outgreen("$name | start")
 						
 									p       = Runtime.getRuntime().exec("python sonar.py")
 									reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	

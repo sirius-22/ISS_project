@@ -64,13 +64,13 @@ Dispatch resume : resume(M)
 
 // CONTEXTS ===================================================================
 Context ctx_cargoservice ip [host="localhost" port=8000]
-//Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
-Context ctx_basicrobot     ip [host="127.0.0.1"   port=8020] //basicrobot24
-Context ctx_productservice ip [host="127.0.0.1" port=8111]  //cargoserviceqak
+Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
+//Context ctx_basicrobot     ip [host="127.0.0.1"   port=8020] //basicrobot24
+Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
 //Context ctx_productservice ip [host="127.0.0.1" port=8111]  //cargoserviceqak
 
 // per containerizzazione su docker e iodevice attivato su stessa macchina
-//Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
+Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
 
 // se si usa facendo partire il sonar sulla stessa macchina (no container)
 //Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
@@ -443,7 +443,7 @@ QActor external_client context ctx_cargoservice{
  		println("$name | STARTS") color cyan
  		delay 5000
   	} 
-  	//Goto work1
+  	Goto work1
   	
   	// A client that sends multiple spaced requests
   	State work1 {

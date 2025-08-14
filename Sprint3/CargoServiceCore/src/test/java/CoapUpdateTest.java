@@ -11,14 +11,15 @@ import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapObserveRelation;
 import org.eclipse.californium.core.CoapResponse;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 import unibo.basicomm23.interfaces.IApplMessage;
 import unibo.basicomm23.interfaces.Interaction;
 import unibo.basicomm23.msg.ProtocolType;
 import unibo.basicomm23.utils.CommUtils;
 import unibo.basicomm23.utils.ConnectionFactory;
-import main.java.domain.*;
-import unibo.basicomm23.interfaces.Interaction;
 
 public class CoapUpdateTest {
 
@@ -37,8 +38,8 @@ public class CoapUpdateTest {
 		
 		CountDownLatch latch = new CountDownLatch(1);
 		
-		java.util.logging.Logger.getLogger("org.eclipse.californium.*").setLevel(java.util.logging.Level.SEVERE);
-
+		Logger califLogger = (Logger) LoggerFactory.getLogger("org.eclipse.californium");
+		califLogger.setLevel(Level.INFO);
 
 		CoapObserveRelation relation = client.observe(new CoapHandler() {
 			@Override

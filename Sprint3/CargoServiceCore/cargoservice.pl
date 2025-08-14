@@ -1,7 +1,7 @@
 %====================================================================================
 % cargoservice description   
 %====================================================================================
-mqttBroker("mosquitto", "1883", "unibo/qak/events").
+mqttBroker("localhost", "1883", "unibo/qak/events").
 request( loadrequest, loadrequest(PID) ).
 request( getProduct, product(PID) ).
 reply( getProductAnswer, product(JSonString) ).  %%for getProduct
