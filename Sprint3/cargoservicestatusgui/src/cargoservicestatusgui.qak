@@ -1,0 +1,121 @@
+System cargoservicestatusgui
+
+//mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
+
+// ======================= MESSAGGI =======================
+Request loadrequest : loadrequest(PID)
+Reply   loadaccepted : loadaccepted(SLOT) for loadrequest
+Reply   loadrejected : loadrejected(REASON) for loadrequest
+Dispatch hold_state_update : update(JSONSTATE)
+
+// ======================= CONTESTI =======================
+Context ctx_cargoservice ip [host="localhost" port=8000]
+Context ctx_cargoservicestatusgui ip [host="localhost" port=8001]
+
+// ======================= ATTORI =======================
+ExternalQActor cargoservice context ctx_cargoservice
+
+// ---------- ATTORE 1: L'API GATEWAY PER LA GUI ----------
+QActor gui_api_gateway context ctx_cargoservicestatusgui {
+	import "main.java.gui.WebSocketManager"
+
+	[#
+		// Inizializza il Manager e gli passa il nome del Gateway.
+		WebSocketManager.init(this.name, myself.getQActorContext(), 8080);
+	#]
+
+	State s0 initial {
+		println("$name | Gateway avviato. Configuro la delega delle richieste.")
+		
+		// --- CONFIGURAZIONE DELLA DELEGA ---
+		// Delega la gestione di tutte le future richieste 'loadrequest'
+		// all'attore specializzato 'GuiRequestHandler'.
+		delegate loadrequest to gui_request_handler
+	}
+	// Il Gateway, una volta configurata la delega, non fa nient'altro.
+	// Rimane in uno stato passivo. Potrebbe gestire messaggi amministrativi
+	// o di logging se necessario in futuro.
+	Goto idle_state
+
+	State idle_state {
+		// Stato di attesa.
+	}
+}
+
+
+// ---------- OSSERVATORE DELLO STATO (Worker) ----------
+QActor gui_state_observer context ctx_cargoservicestatusgui {
+	import "main.java.gui.WebSocketManager"
+
+	State s0 initial {
+		println("$name | Avvio e inizio ad osservare cargoservice...") color green
+		observeResource cargoservice msgid hold_state_update
+	}
+	Transition t0
+		whenMsg hold_state_update -> push_state_to_gui
+
+	State push_state_to_gui {
+		onMsg(hold_state_update : update(JSONSTATE)) {
+			[#
+				val holdStateJson = payloadArg(0)
+				// Invia il JSON a tutti i client web tramite il Manager condiviso.
+				WebSocketManager.getInstance().sendToAll(holdStateJson)
+			#]
+		}
+	}
+	Transition t0
+		whenMsg hold_state_update -> push_state_to_gui
+}
+
+
+// ---------- GESTORE DELLE RICHIESTE ----------
+QActor gui_request_handler context ctx_cargoservicestatusgui {
+	import "main.java.gui.WebSocketManager"
+	[#
+		var Last_PID = 0
+		var Last_Request_ID = ""
+	#]
+	State s0 initial {
+		println("$name | Pronto a ricevere richieste DELEGATE.") color blue
+	}
+	Transition t0
+		// Questo attore ora riceve le richieste non direttamente,
+		// ma tramite la delega configurata dal Gateway.
+		whenRequest loadrequest -> handle_web_request
+
+	State handle_web_request {
+		onMsg(loadrequest : loadrequest(PID)) {
+			[#
+				Last_Request_ID = currentMsg.msgId()
+				Last_PID = payloadArg(0).toInt()
+			#]
+			println("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID. Inoltro...")
+			request cargoservice -m loadrequest : loadrequest($Last_PID)
+		}
+	}
+	Transition t0
+		whenReply loadaccepted -> handle_load_accepted
+		whenReply loadrejected -> handle_load_rejected
+
+	State handle_load_accepted {
+		onMsg(loadaccepted : loadaccepted(SLOT)) {
+			[#
+				val slot = payloadArg(0)
+				val responseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
+				WebSocketManager.getInstance().reply(Last_Request_ID, responseJson)
+			#]
+		}
+	}
+	Goto s0
+
+	State handle_load_rejected {
+		onMsg(loadrejected : loadrejected(REASON)) {
+			[#
+				val reason = payloadArg(0)
+				val responseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
+				WebSocketManager.getInstance().reply(Last_Request_ID, responseJson)
+			#]
+		}
+	}
+	Goto s0
+}

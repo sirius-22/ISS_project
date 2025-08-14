@@ -1,37 +1,25 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### STS ###
-.apt_generated
+bin
+bin/default
+.metadata
 .classpath
-.factorypath
 .project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
 .idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+build
+logs 
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+log4jInfo.log
 
-### VS Code ###
-.vscode/
+#node
+nodeCode/*/node_modules/
+*.lck
+package-lock.json
+
+# MQTT generated
+*-tcp*
+
+
+/ReadMe.html
+.lck/ 
+docker/
+/.metadata/
+/src-gen/

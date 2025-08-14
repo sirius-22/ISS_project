@@ -217,7 +217,7 @@ class Cargoservice ( name: String, scope: CoroutineScope, isconfined: Boolean=fa
 									//get updated hold state and update gui
 									val JsonHold = SlotMng.getHoldState(true)
 						CommUtils.outblack("Aggiorno la gui con $JsonHold")
-						updateResourceRep("$JsonHold" 
+						updateResourceRep("hold_state_update($JsonHold)" 
 						)
 						//genTimer( actor, state )
 					}

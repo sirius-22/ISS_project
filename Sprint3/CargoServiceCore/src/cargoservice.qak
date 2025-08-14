@@ -428,7 +428,7 @@ QActor cargoservice context ctx_cargoservice {
 			val JsonHold = SlotMng.getHoldState(true)
 		#]
 		println("Aggiorno la gui con $JsonHold")
-		updateResource[#"$JsonHold"#]
+		updateResource[#"hold_state_update($JsonHold)"#]
 	}
 	Goto state_idle
 	
