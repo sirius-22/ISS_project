@@ -15,7 +15,10 @@ import org.junit.Test;
 import unibo.basicomm23.interfaces.IApplMessage;
 import unibo.basicomm23.interfaces.Interaction;
 import unibo.basicomm23.msg.ProtocolType;
-import unibo.basicomm23.utils.*;
+import unibo.basicomm23.utils.CommUtils;
+import unibo.basicomm23.utils.ConnectionFactory;
+import main.java.domain.*;
+import unibo.basicomm23.interfaces.Interaction;
 
 public class CoapUpdateTest {
 

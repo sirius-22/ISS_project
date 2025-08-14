@@ -156,22 +156,21 @@ QActor cargorobot context ctx_cargoservice {
 	Transition t1 
 		whenEvent resumeActions -> state_resume
 		
-//	State handle_move_failure {
-//	    printCurrentMessage color red
-//	    println("[Cargorobot] | Movement failed! Waiting 5 seconds before retry.")
-//	    delay 5000
-//	    forward cargorobot -m resume : resume(goon)
-//    }Transition t0
-//		whenMsg resume and [# LastAttemptedState == "goto_IO_port" #] -> goto_IO_port
-//	    whenMsg resume and [# LastAttemptedState == "state_move_cont" #] -> goto_IO_port//state_move_cont
-//	    whenMsg resume and [# LastAttemptedState == "returnHOME" #] -> returnHOME 
+	State handle_move_failure {
+	    printCurrentMessage color red
+	    println("[Cargorobot] | Movement failed! Waiting 5 seconds before retry.")
+	    delay 5000
+	    forward cargorobot -m resume : resume(goon)
+    }Transition t0
+		whenMsg resume and [# LastAttemptedState == "goto_IO_port" #] -> goto_IO_port
+	    whenMsg resume and [# LastAttemptedState == "state_move_cont" #] -> goto_IO_port//state_move_cont
+	    whenMsg resume and [# LastAttemptedState == "returnHOME" #] -> returnHOME 
 	
 	// Handles the resume logic after an interrupt
 	State state_resume{
 		println("[Cagorobot] | Resume ") color red
 		if [#robotIsMoving#]{
 			// If the robot was moving, it attempts to continue to its last known target
-			forward basicrobot -m setdirection : dir(up)
 			request basicrobot -m moverobot : moverobot($X,$Y)
 			println("[Cagorobot] | Resuming movement to X:$X, Y:$Y ") color yellow
 		}
@@ -280,62 +279,6 @@ QActor cargorobot context ctx_cargoservice {
 		#]
 	}
 	Goto returnHOME
-	
-		//*********** moverobotfailed logic ****************
-	
-	State handle_move_failure {
-	    printCurrentMessage color red
-	    println("[Cargorobot] | Movement FAILED. Resynchronizing state before retry.") color red
-	
-	    request basicrobot -m getrobotstate : getrobotstate(please)
-	}
-	Transition t0 
-	    // Quando ricevi la risposta con lo stato reale, aggiorna il modello del planner
-	    whenReply robotstate -> resync_planner
-	
-	// Nuovo stato per inviare il comando di aggiornamento al planner
-	State resync_planner {
-	    onMsg( robotstate : robotstate(POS,DIR) ){
-	        [#
-	            // Estrai X, Y, e Dir dalla stringa di risposta.
-	            // Esempio: "pos(1,0)" e "RIGHT"
-	            val posRegex = "pos\\((\\d+),(\\d+)\\)".toRegex()
-	            val dirStr = payloadArg(1)
-	            
-	            val matchResult = posRegex.find(payloadArg(0))
-	            if (matchResult != null) {
-	                val (xStr, yStr) = matchResult.destructured
-	                X = xStr.toInt()
-	                Y = yStr.toInt()
-	                
-	                // Converti la direzione in formato a una lettera per setpos
-	                Dir = when(dirStr){
-	                    "UP" -> "u"
-	                    "DOWN" -> "d"
-	                    "LEFT" -> "l"
-	                    "RIGHT" -> "r"
-	                    else -> "n"
-	                }
-	            }
-	        #]
-	        println("[Cargorobot] | fetching robot Real position . Updating planner.") color yellow
-	        // Invia un dispatch per aggiornare forzatamente lo stato del planner
-	        forward basicrobot -m setrobotstate : setpos($X, $Y, $Dir)
-	    }
-	    // Dai un piccolo delay al planner per aggiornarsi
-	    delay 500
-	}
-	Goto retry_last_action
-	
-	
-	// Nuovo stato per decidere cosa fare dopo la risincronizzazione
-	State retry_last_action {
-	    println("[Cargorobot] | Planner resynced. Retrying last action from state: $LastAttemptedState") color green
-	    forward cargorobot -m resume : resume(goon)
-    }Transition t0
-		whenMsg resume and [# LastAttemptedState == "goto_IO_port" #] -> goto_IO_port
-	    whenMsg resume and [# LastAttemptedState == "state_move_cont" #] -> state_move_cont
-	    whenMsg resume and [# LastAttemptedState == "returnHOME" #] -> returnHOME 
 }
 
 
@@ -474,18 +417,20 @@ QActor cargoservice context ctx_cargoservice {
 		println("[Cargoservice] | loadcontainer request sent for slot $SlotName") color blue
 	}
 	Transition t0 
-		whenReply containerloaded -> state_update_hold
+		whenReply containerloaded -> state_update_hold_and_gui
 	
-	State state_update_hold{
+	State state_update_hold_and_gui{
 		println("[Cargoservice] | Updating hold state for slot $SlotName...") color yellow
 		[#	
 			val safeWeight = requireNotNull(Weight)
 			var prod = Product(PID!!, PName, safeWeight)
 			SlotMng.updateHold(prod, SlotName)
-			val HoldJsonState = SlotMng.getHoldState(true)
+			
+			//get updated hold state and update gui
+			val JsonHold = SlotMng.getHoldState(true)
 		#]
-		
-		updateResource [# HoldJsonState #]
+		println("Aggiorno la gui con $JsonHold")
+		updateResource[#"$JsonHold"#]
 	}
 	Goto state_idle
 	
