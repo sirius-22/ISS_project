@@ -71,6 +71,13 @@ Si sono quindi modellati altri due tipi di messaggi. Si è optato per messaggi d
   Dispatch ledon : ledon(M)
   Dispatch ledoff : ledoff(M)
 ```
+## Modello
+L'analisi confluisce nei seguenti due modelli logici
+
+<img src='./IODevices/io_devicesarch.png' width="500" alt='iodevices'>
+<img src='./cargoservicestatusgui/cargoservicestatusguiarch.png' width="700" alt='gui'>
+
+
 
 ## Piano di testing
 Avendo ora un formato definito per la visualizzazione dello **stato della stiva**, è possibile verificarne con maggiore precisione il corretto aggiornamento, oltre che il corretto invio del messaggio di update per la GUI.  
