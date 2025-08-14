@@ -23,10 +23,10 @@ In particolare i requisiti su cui ci concentreremo in questo sprint sono:
 ### CargoServiceStatusGui
 
 CargoserviceStatusGui riceve informazioni sullo stato della stiva da cargoService nel formato json implementato nel precedente Sprint.
-Il compito di ```cargoserviceStatusGui``` è far visualizzare all'utente finale lo stato interno della stiva, visto che ```Slot5``` da requisiti è sempre vuoto non lo consideriamo nello scambio di messaggi attraverso il json, ma sarà comunque sempre prensente nalla rappresentazione.
+Il compito di ```cargoserviceStatusGui``` è far visualizzare all'utente finale lo stato interno della stiva, visto che ```Slot5``` da requisiti è sempre vuoto non lo consideriamo nello scambio di messaggi attraverso il json, ma sarà comunque sempre presente nalla rappresentazione.
 
 Il flusso di ```cargoserviceStatusGui```  è il seguente:
-- nella fase di inizializzazione tutti gli Slot saranno visualizzati vuoti (come da requisiti) quindi non riteniamo necessaria una prima comunicazione con cargoservice
+- nella fase di inizializzazione tutti gli Slot saranno visualizzati vuoti (come da requisiti), quindi non riteniamo necessaria una prima comunicazione con cargoservice
 - successivamente ```cargoserviceStatusGui``` aspetta i messaggi di update da ```cargoService``` e mostra i cambiamenti all'utente
 
 
@@ -47,11 +47,115 @@ Si sono quindi modellati altri due tipi di messaggi. Si è optato per messaggi d
 ```
 
 ## Piano di testing
+Avendo ora un formato definito per la visualizzazione dello **stato della stiva**, è possibile verificarne con maggiore precisione il corretto aggiornamento, oltre che il corretto invio del messaggio di update per la GUI.  
+A tal fine, sono stati ideati i seguenti **test plan**:
+
+### Nuovi test aggiornamento stiva - [SlotManagementTest.java](./CargoServiceCore/src/test/java/SlotManagementTest.java)
+* Verifica rappresentazione della stiva in formato JSON (caso stiva vuota):
+```java
+  @Test
+  public void testEmptyHoldJsonRepresentation() {
+      String stateJson = slotManagement.getHoldState(true);
+      assertNotNull("Lo stato JSON non deve essere null", stateJson);
+
+      try {
+          JSONObject root = (JSONObject) new JSONParser().parse(stateJson);
+
+          // Verifica totalWeight
+          assertEquals("Il peso totale deve essere 0", 0, ((Long) root.get("totalWeight")).intValue());
+
+          // Verifica slots array
+          JSONArray slots = (JSONArray) root.get("slots");
+          assertEquals("Devono esserci esattamente 4 slot", 4, slots.size());
+
+          // Ogni slot deve avere product = null
+          for (Object obj : slots) {
+              JSONObject slotObj = (JSONObject) obj;
+              assertTrue("Ogni slot deve avere un nome valido", ((String) slotObj.get("slotName")).startsWith("Slot"));
+              assertNull("Ogni slot deve essere vuoto (product = null)", slotObj.get("product"));
+          }
+
+      } catch (ParseException e) {
+          fail("Formato JSON non valido: " + e.getMessage());
+      }
+  }
+```
+
+* Verifica rappresentazione della stiva in formato JSON (caso dopo un update):
+```java
+  @Test
+  public void testJsonStateAfterUpdate() {
+      Product prod = new Product(5, "SpecialItem", 42);
+
+      try {
+          slotManagement.updateHold(prod, "Slot1");
+      } catch (Exception e) {
+          fail("Unexpected exception: " + e.getMessage());
+      }
+
+      String stateJson = slotManagement.getHoldState(true);
+      assertNotNull("Lo stato JSON non deve essere null", stateJson);
+
+      try {
+          JSONObject root = (JSONObject) new JSONParser().parse(stateJson);
+
+          // Verifica peso totale aggiornato
+          assertEquals("Il peso totale deve riflettere il prodotto inserito",
+                  42, ((Long) root.get("totalWeight")).intValue());
+
+          // Verifica che Slot1 contenga il prodotto corretto
+          JSONArray slots = (JSONArray) root.get("slots");
+          JSONObject slot1 = null;
+          for (Object obj : slots) {
+              JSONObject slotObj = (JSONObject) obj;
+              if ("Slot1".equals(slotObj.get("slotName"))) {
+                  slot1 = slotObj;
+                  break;
+              }
+          }
+          assertNotNull("Slot1 deve esistere", slot1);
+
+          JSONObject product = (JSONObject) slot1.get("product");
+          assertNotNull("Slot1 deve contenere un prodotto", product);
+          assertEquals(5, ((Long) product.get("productId")).intValue());
+          assertEquals("SpecialItem", product.get("name"));
+          assertEquals(42, ((Long) product.get("weight")).intValue());
+
+          // Verifica che gli altri slot siano vuoti
+          for (Object obj : slots) {
+              JSONObject slotObj = (JSONObject) obj;
+              if (!"Slot1".equals(slotObj.get("slotName"))) {
+                  assertNull(slotObj.get("slotName") + " deve essere vuoto",slotObj.get("product"));
+              }
+          }
+
+      } catch (ParseException e) {
+          fail("Formato JSON non valido: " + e.getMessage());
+      }
+  }
+```
+
+### Test invio messaggio di update - [GuiUpdateTest.Java]
+
+* Verifica dell'invio del messaggio:
+```java
+
+```
 
 ## Progettazione
 
 ## Deployment
+Poiché la parte del sistema relativa alla **logica di business** non ha subito modifiche, si rimanda allo sprint precedente per le istruzioni di [deployment di CargoServiceCore](https://github.com/sirius-22/ISS_project/blob/s3/Sprint2/Sprint2.md#deployment).  
 
+Per quanto riguarda i componenti che gestiscono i **dispositivi di I/O**, sono disponibili due opzioni:
+
+1. **Utilizzo su Raspberry Pi**  
+   - Si possono impiegare componenti fisici per il sonar e il led.  
+   - Modello QAK da utilizzare: [io_devices_rpi.qak](./IODevices/src/io_devices_rpi.qak)
+
+2. **Utilizzo senza hardware fisico**  
+   - È possibile utilizzare gli attori *mock* sviluppati negli sprint precedenti.  
+   - Modello QAK da utilizzare: [io_devices.qak](./IODevices/src/io_devices.qak)
 
 
 
