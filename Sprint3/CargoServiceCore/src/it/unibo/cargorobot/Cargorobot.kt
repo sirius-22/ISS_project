@@ -118,12 +118,30 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					}	 	 
 					 transition(edgeName="t18",targetState="state_resume",cond=whenEvent("resumeActions"))
 				}	 
+				state("handle_move_failure") { //this:State
+					action { //it:State
+						CommUtils.outred("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
+						 	   
+						CommUtils.outblack("[Cargorobot] | Movement failed! Waiting 5 seconds before retry.")
+						delay(5000) 
+						forward("resume", "resume(goon)" ,"cargorobot" ) 
+						//genTimer( actor, state )
+					}
+					//After Lenzi Aug2002
+					sysaction { //it:State
+					}	 	 
+					 transition(edgeName="t09",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "goto_IO_port"  
+					}))
+					transition(edgeName="t010",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "state_move_cont"  
+					}))
+					transition(edgeName="t011",targetState="returnHOME",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "returnHOME"  
+					}))
+				}	 
 				state("state_resume") { //this:State
 					action { //it:State
 						CommUtils.outred("[Cagorobot] | Resume ")
 						if( robotIsMoving 
-						 ){forward("setdirection", "dir(up)" ,"basicrobot" ) 
-						request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
+						 ){request("moverobot", "moverobot($X,$Y)" ,"basicrobot" )  
 						CommUtils.outyellow("[Cagorobot] | Resuming movement to X:$X, Y:$Y ")
 						}
 						returnFromInterrupt(interruptedStateTransitions)
@@ -150,8 +168,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t39",targetState="at_slot",cond=whenReply("moverobotdone"))
-					transition(edgeName="t310",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
+					 transition(edgeName="t312",targetState="at_slot",cond=whenReply("moverobotdone"))
+					transition(edgeName="t313",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_slot") { //this:State
 					action { //it:State
@@ -165,8 +183,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t011",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t012",targetState="state_finalize",cond=whenDispatch("resume"))
+					 interrupthandle(edgeName="t014",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t015",targetState="state_finalize",cond=whenDispatch("resume"))
 				}	 
 				state("returnHOME") { //this:State
 					action { //it:State
@@ -184,9 +202,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t013",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t014",targetState="at_HOME",cond=whenReply("moverobotdone"))
-					transition(edgeName="t015",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
+					 interrupthandle(edgeName="t016",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t017",targetState="at_HOME",cond=whenReply("moverobotdone"))
+					transition(edgeName="t018",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_HOME") { //this:State
 					action { //it:State
@@ -199,10 +217,10 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t016",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t017",targetState="state_idle",cond=whenDispatchGuarded("resume",{idle 
+					 interrupthandle(edgeName="t019",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t020",targetState="state_idle",cond=whenDispatchGuarded("resume",{idle 
 					}))
-					transition(edgeName="t018",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{!idle 
+					transition(edgeName="t021",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{!idle 
 					}))
 				}	 
 				state("goto_IO_port") { //this:State
@@ -225,9 +243,9 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t019",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t020",targetState="at_IO_port",cond=whenReply("moverobotdone"))
-					transition(edgeName="t021",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
+					 interrupthandle(edgeName="t022",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t023",targetState="at_IO_port",cond=whenReply("moverobotdone"))
+					transition(edgeName="t024",targetState="handle_move_failure",cond=whenReply("moverobotfailed"))
 				}	 
 				state("at_IO_port") { //this:State
 					action { //it:State
@@ -240,8 +258,8 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 interrupthandle(edgeName="t022",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
-					transition(edgeName="t023",targetState="state_move_cont",cond=whenDispatch("resume"))
+					 interrupthandle(edgeName="t025",targetState="state_wait_resume",cond=whenEvent("stopActions"),interruptedStateTransitions)
+					transition(edgeName="t026",targetState="state_move_cont",cond=whenDispatch("resume"))
 				}	 
 				state("state_finalize") { //this:State
 					action { //it:State
@@ -256,71 +274,6 @@ class Cargorobot ( name: String, scope: CoroutineScope, isconfined: Boolean=fals
 					sysaction { //it:State
 					}	 	 
 					 transition( edgeName="goto",targetState="returnHOME", cond=doswitch() )
-				}	 
-				state("handle_move_failure") { //this:State
-					action { //it:State
-						CommUtils.outred("$name in ${currentState.stateName} | $currentMsg | ${Thread.currentThread().getName()} n=${Thread.activeCount()}")
-						 	   
-						CommUtils.outred("[Cargorobot] | Movement FAILED. Resynchronizing state before retry.")
-						request("getrobotstate", "getrobotstate(please)" ,"basicrobot" )  
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t024",targetState="resync_planner",cond=whenReply("robotstate"))
-				}	 
-				state("resync_planner") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("robotstate(POS,DIR)"), Term.createTerm("robotstate(POS,DIR)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-									            // Estrai X, Y, e Dir dalla stringa di risposta.
-									            // Esempio: "pos(1,0)" e "RIGHT"
-									            val posRegex = "pos\\((\\d+),(\\d+)\\)".toRegex()
-									            val dirStr = payloadArg(1)
-									            
-									            val matchResult = posRegex.find(payloadArg(0))
-									            if (matchResult != null) {
-									                val (xStr, yStr) = matchResult.destructured
-									                X = xStr.toInt()
-									                Y = yStr.toInt()
-									                
-									                // Converti la direzione in formato a una lettera per setpos
-									                Dir = when(dirStr){
-									                    "UP" -> "u"
-									                    "DOWN" -> "d"
-									                    "LEFT" -> "l"
-									                    "RIGHT" -> "r"
-									                    else -> "n"
-									                }
-									            }
-								CommUtils.outyellow("[Cargorobot] | fetching robot Real position . Updating planner.")
-								forward("setrobotstate", "setpos($X,$Y,$Dir)" ,"basicrobot" ) 
-						}
-						delay(500) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition( edgeName="goto",targetState="retry_last_action", cond=doswitch() )
-				}	 
-				state("retry_last_action") { //this:State
-					action { //it:State
-						CommUtils.outgreen("[Cargorobot] | Planner resynced. Retrying last action from state: $LastAttemptedState")
-						forward("resume", "resume(goon)" ,"cargorobot" ) 
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t025",targetState="goto_IO_port",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "goto_IO_port"  
-					}))
-					transition(edgeName="t026",targetState="state_move_cont",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "state_move_cont"  
-					}))
-					transition(edgeName="t027",targetState="returnHOME",cond=whenDispatchGuarded("resume",{ LastAttemptedState == "returnHOME"  
-					}))
 				}	 
 			}
 		}

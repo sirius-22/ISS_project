@@ -12,8 +12,10 @@ import org.junit.Test;
 
 import main.java.hold.*;
 import unibo.basicomm23.msg.ProtocolType;
+import unibo.basicomm23.utils.CommUtils;
 import unibo.basicomm23.utils.ConnectionFactory;
 import main.java.domain.*;
+import unibo.basicomm23.interfaces.Interaction;
 
 public class CoapUpdateTest {
 	
@@ -34,7 +36,7 @@ public class CoapUpdateTest {
         String response = conn.request(req);
         
         if (!response.contains("loadaccepted"))
-        	fail("unexpected rejection")
+        	fail("unexpected rejection");
         	
         
     }
