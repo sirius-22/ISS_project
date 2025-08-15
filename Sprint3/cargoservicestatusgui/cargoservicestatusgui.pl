@@ -4,7 +4,7 @@
 request( loadrequest, loadrequest(PID) ).
 reply( loadaccepted, loadaccepted(SLOT) ).  %%for loadrequest
 reply( loadrejected, loadrejected(REASON) ).  %%for loadrequest
-dispatch( hold_state_update, update(JSONSTATE) ).
+dispatch( hold_state_update, hold_state_update(JSONSTATE) ).
 %====================================================================================
 context(ctx_gui, "localhost",  "TCP", "8001").
 context(ctx_cargoservice, "cargoservicecore",  "TCP", "8000").

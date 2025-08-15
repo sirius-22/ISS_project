@@ -44,7 +44,7 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 				}	 
 				state("push_state_to_gui") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("update(JSONSTATE)"), Term.createTerm("update(JSONSTATE)"), 
+						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE)"), Term.createTerm("hold_state_update(JSONSTATE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val holdStateJson = payloadArg(0)

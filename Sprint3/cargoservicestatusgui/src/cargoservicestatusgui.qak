@@ -6,7 +6,7 @@ System cargoservicestatusgui
 Request loadrequest : loadrequest(PID)
 Reply   loadaccepted : loadaccepted(SLOT) for loadrequest
 Reply   loadrejected : loadrejected(REASON) for loadrequest
-Dispatch hold_state_update : update(JSONSTATE)
+Dispatch hold_state_update : hold_state_update(JSONSTATE)
 
 // ======================= CONTESTI =======================
 Context ctx_gui ip [host="localhost" port=8001]
@@ -57,7 +57,7 @@ QActor gui_state_observer context ctx_gui {
 		whenMsg hold_state_update -> push_state_to_gui
 
 	State push_state_to_gui {
-		onMsg(hold_state_update : update(JSONSTATE)) {
+		onMsg(hold_state_update : hold_state_update(JSONSTATE)) {
 			[#
 				val holdStateJson = payloadArg(0)
 				// Invia il JSON a tutti i client web tramite il Manager condiviso.
