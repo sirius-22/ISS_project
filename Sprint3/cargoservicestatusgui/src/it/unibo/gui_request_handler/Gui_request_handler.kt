@@ -19,7 +19,6 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import main.java.unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
 
 class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -42,7 +41,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="handle_web_request",cond=whenRequest("loadrequest"))
+					 transition(edgeName="t04",targetState="handle_web_request",cond=whenRequest("loadrequest"))
 				}	 
 				state("handle_web_request") { //this:State
 					action { //it:State
@@ -52,15 +51,14 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 												Last_Request_ID = currentMsg.msgId()
 												Last_PID = payloadArg(0).toInt()
 								CommUtils.outblack("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID. Inoltro...")
-								request("loadrequest", "loadrequest($Last_PID)" ,"cargoservice" )  
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t03",targetState="handle_load_accepted",cond=whenReply("loadaccepted"))
-					transition(edgeName="t04",targetState="handle_load_rejected",cond=whenReply("loadrejected"))
+					 transition(edgeName="t05",targetState="handle_load_accepted",cond=whenReply("loadaccepted"))
+					transition(edgeName="t06",targetState="handle_load_rejected",cond=whenReply("loadrejected"))
 				}	 
 				state("handle_load_accepted") { //this:State
 					action { //it:State
@@ -69,7 +67,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 								
 												val slot = payloadArg(0)
 												val responseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
-												WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
+												// WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
 						}
 						//genTimer( actor, state )
 					}
@@ -85,7 +83,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 								
 												val reason = payloadArg(0)
 												val responseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
-												WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
+												// WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
 						}
 						//genTimer( actor, state )
 					}

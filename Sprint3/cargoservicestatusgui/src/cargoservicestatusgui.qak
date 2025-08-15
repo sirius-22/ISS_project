@@ -6,20 +6,20 @@ System cargoservicestatusgui
 Request loadrequest : loadrequest(PID)
 Reply   loadaccepted : loadaccepted(SLOT) for loadrequest
 Reply   loadrejected : loadrejected(REASON) for loadrequest
-Dispatch hold_state_update : hold_state_update(JSONSTATE)
+Dispatch hold_state_update : hold_state_update(JSONSTATE, TERM)
+Event hold_state_update : hold_state_update(JSONSTATE)
 
 // ======================= CONTESTI =======================
 Context ctx_gui ip [host="localhost" port=8001]
-// Context ctx_cargoservice ip [host="cargoservicecore" port=8000]
+Context ctx_cargoservice ip [host="localhost" port=8000] //TODO CHANGE HOST TO cargoservicecore
 
 // ======================= ATTORI =======================
 
-//ExternalQActor cargoservice context ctx_cargoservice
-
+ExternalQActor cargoservice context ctx_cargoservice
 
 // ---------- L'API GATEWAY PER LA GUI ----------
 QActor gui_api_gateway context ctx_gui {
-	////import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
+	//import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
 
 	[#
 		// Inizializza l'handler' e gli passa il nome del Gateway.
@@ -28,7 +28,7 @@ QActor gui_api_gateway context ctx_gui {
 
 	State s0 initial {
 		println("$name | Gateway avviato. Configuro la delega delle richieste.")
-		
+		delay 100 //per assicurarsi che la delegate sia fatta dopo la creazione dell'attore
 		// --- CONFIGURAZIONE DELLA DELEGA ---
 		// Delega la gestione di tutte le future richieste 'loadrequest'
 		// all'attore specializzato 'GuiRequestHandler'.
@@ -51,21 +51,24 @@ QActor gui_state_observer context ctx_gui {
 
 	State s0 initial {
 		println("$name | Avvio e inizio ad osservare cargoservice...") color green
-		//observeResource cargoservice msgid hold_state_update
+		observeResource cargoservice msgid hold_state_update
 	}
-	//Transition t0
-		//whenMsg hold_state_update -> push_state_to_gui
+	Transition t0
+		whenEvent hold_state_update -> push_state_to_gui
+		whenMsg hold_state_update -> push_state_to_gui
 
 	State push_state_to_gui {
-		onMsg(hold_state_update : hold_state_update(JSONSTATE)) {
+		onMsg(hold_state_update : hold_state_update(JSONSTATE, TERM)) {
 			[#
 				val holdStateJson = payloadArg(0)
 				// Invia il JSON a tutti i client web tramite il Manager condiviso.
 				// WebSocketHandler.getInstance().sendToAll(holdStateJson)
 			#]
+			println("$name | Update ricevuto: $holdStateJson") color blue
 		}
 	}
 	Transition t0
+		whenEvent hold_state_update -> push_state_to_gui
 		whenMsg hold_state_update -> push_state_to_gui
 }
 

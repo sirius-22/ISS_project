@@ -19,7 +19,6 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import main.java.unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
 
 class Gui_api_gateway ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -32,11 +31,12 @@ class Gui_api_gateway ( name: String, scope: CoroutineScope, isconfined: Boolean
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
 				// Inizializza l'handler' e gli passa il nome del Gateway.
-				//WebSocketHandler.init(this.name, myself.getQActorContext(), 8080);
+				// WebSocketHandler.init(this.name, myself.getQActorContext(), 8001);
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						CommUtils.outblack("$name | Gateway avviato. Configuro la delega delle richieste.")
+						delay(100) 
 						delegate("loadrequest", "gui_request_handler") 
 						//genTimer( actor, state )
 					}

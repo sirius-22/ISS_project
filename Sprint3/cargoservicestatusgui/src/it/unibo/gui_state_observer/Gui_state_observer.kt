@@ -19,7 +19,6 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import main.java.unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
 
 class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -34,29 +33,32 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 				state("s0") { //this:State
 					action { //it:State
 						CommUtils.outgreen("$name | Avvio e inizio ad osservare cargoservice...")
-						observeResource("cargoservicecore","8000","ctx_cargoservice","cargoservice","hold_state_update")
+						observeResource("localhost","8000","ctx_cargoservice","cargoservice","hold_state_update")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
+					 transition(edgeName="t00",targetState="push_state_to_gui",cond=whenEvent("hold_state_update"))
+					transition(edgeName="t01",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
 				}	 
 				state("push_state_to_gui") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE)"), Term.createTerm("hold_state_update(JSONSTATE)"), 
+						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE,TERM)"), Term.createTerm("hold_state_update(JSONSTATE,TERM)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val holdStateJson = payloadArg(0)
 												// Invia il JSON a tutti i client web tramite il Manager condiviso.
-												WebSocketHandler.getInstance().sendToAll(holdStateJson)
+												// WebSocketHandler.getInstance().sendToAll(holdStateJson)
+								CommUtils.outblue("$name | Update ricevuto: $holdStateJson")
 						}
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t01",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
+					 transition(edgeName="t02",targetState="push_state_to_gui",cond=whenEvent("hold_state_update"))
+					transition(edgeName="t03",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
 				}	 
 			}
 		}
