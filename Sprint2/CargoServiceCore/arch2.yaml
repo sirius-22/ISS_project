@@ -108,7 +108,7 @@ services:
   # ------ CARGOSERVICECORE -------------
   cargoservicecore:
     container_name: cargoservicecore
-    image: cargoservice:1.7
+    image: cargoservice:1.9
     mem_limit: 512m
     ports:
       - "8000:8000/tcp"

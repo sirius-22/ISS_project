@@ -25,12 +25,12 @@ with Diagram('cargoservicestatusguiArch', show=False, outformat='png', graph_att
   with Cluster('env'):
      sys = Custom('','./qakicons/system.png')
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
-     with Cluster('ctx_cargoservice', graph_attr=nodeattr):
-          cargoservice=Custom('cargoservice(ext)','./qakicons/externalQActor.png')
-     with Cluster('ctx_cargoservicestatusgui', graph_attr=nodeattr):
+     with Cluster('ctx_gui', graph_attr=nodeattr):
           gui_api_gateway=Custom('gui_api_gateway','./qakicons/symActorWithobjSmall.png')
           gui_state_observer=Custom('gui_state_observer','./qakicons/symActorWithobjSmall.png')
           gui_request_handler=Custom('gui_request_handler','./qakicons/symActorWithobjSmall.png')
+     with Cluster('ctx_cargoservice', graph_attr=nodeattr):
+          cargoservice=Custom('cargoservice(ext)','./qakicons/externalQActor.png')
      gui_request_handler >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
      gui_api_gateway >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> gui_request_handler
      cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<hold_state_update &nbsp; >',  fontcolor='blue') >> gui_state_observer

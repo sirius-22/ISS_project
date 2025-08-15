@@ -19,7 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import main.java.gui.WebSocketManager
+import main.java.unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
 
 class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -34,7 +34,7 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 				state("s0") { //this:State
 					action { //it:State
 						CommUtils.outgreen("$name | Avvio e inizio ad osservare cargoservice...")
-						observeResource("localhost","8000","ctx_cargoservice","cargoservice","hold_state_update")
+						observeResource("cargoservicecore","8000","ctx_cargoservice","cargoservice","hold_state_update")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -49,7 +49,7 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 								
 												val holdStateJson = payloadArg(0)
 												// Invia il JSON a tutti i client web tramite il Manager condiviso.
-												WebSocketManager.getInstance().sendToAll(holdStateJson)
+												WebSocketHandler.getInstance().sendToAll(holdStateJson)
 						}
 						//genTimer( actor, state )
 					}

@@ -19,7 +19,7 @@ services:
     environment:
       - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false       # Il server Eureka non si registra da solo
       - EUREKA_CLIENT_FETCH_REGISTRY=false             # Il server Eureka non recupera il registro
-      - EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false   # Disabilita la modalità di auto-conservazione per testare l'auto-rimozione delle istanze
+      #- EUREKA_SERVER_ENABLE_SELF_PRESERVATION=false   # Disabilita la modalità di auto-conservazione per testare l'auto-rimozione delle istanze
       - EUREKA_INSTANCE_LEASE_RENEWAL_INTERVAL_IN_SECONDS=60
       - EUREKA_INSTANCE_LEASE_EXPIRATION_DURATION_IN_SECONDS=120
     networks:
@@ -79,7 +79,7 @@ services:
   
   basicrobot24:
     container_name: basicrobot24
-    image: pretty2/basicrobot:2.5
+    image: pretty2/basicrobot:2.13
     mem_limit: 512m
     ports:
       - "8020:8020/tcp"
@@ -108,7 +108,7 @@ services:
   # ------ CARGOSERVICECORE -------------
   cargoservicecore:
     container_name: cargoservicecore
-    image: cargoservice:1.6
+    image: cargoservice:1.9
     mem_limit: 512m
     ports:
       - "8000:8000/tcp"

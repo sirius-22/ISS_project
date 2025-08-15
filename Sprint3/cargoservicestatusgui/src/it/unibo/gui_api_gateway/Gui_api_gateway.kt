@@ -19,7 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import main.java.gui.WebSocketManager
+import main.java.unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
 
 class Gui_api_gateway ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -31,8 +31,8 @@ class Gui_api_gateway ( name: String, scope: CoroutineScope, isconfined: Boolean
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				// Inizializza il Manager e gli passa il nome del Gateway.
-				WebSocketManager.init(this.name, myself.getQActorContext(), 8080);
+				// Inizializza l'handler' e gli passa il nome del Gateway.
+				//WebSocketHandler.init(this.name, myself.getQActorContext(), 8080);
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State

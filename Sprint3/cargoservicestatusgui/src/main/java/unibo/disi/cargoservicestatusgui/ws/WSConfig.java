@@ -1,4 +1,4 @@
-package unibo.disi.cargoservicestatusgui.ws;
+package main.java.unibo.disi.cargoservicestatusgui.ws;
 
 
 import org.springframework.context.annotation.Configuration;
@@ -9,9 +9,9 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 public class WSConfig implements WebSocketConfigurer {
-    private final WSHandler handler;
+    private final WebSocketHandler handler;
 
-    public WSConfig(WSHandler handler) {
+    public WSConfig(WebSocketHandler handler) {
         this.handler = handler;
     }
     

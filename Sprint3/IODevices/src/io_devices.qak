@@ -209,21 +209,21 @@ QActor sonarsimul  context ctx_raspdevice{
 	// Memo D_FREE =20
 	
 	State work{
-		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
-		emitlocalstream sonardata      : distance(25)
-	    delay 1000
-		emitlocalstream sonardata      : distance(26)
-	    delay 1000
-		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
-	    delay 2000
-
-		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
-		emitlocalstream sonardata      : distance(8) // lettura clear 1
-	    delay 1000
-		emitlocalstream sonardata      : distance(15)// lettura clear 2
-	    delay 1000
-		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
-	    delay 2000
+//		println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
+//		emitlocalstream sonardata      : distance(25)
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(26)
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(25) // <-- mind emetterà stopActions e andrà in fault_state
+//	    delay 2000
+//
+//		println("sonarsimul | Emetto 8 (per causare RESUME)") color magenta
+//		emitlocalstream sonardata      : distance(8) // lettura clear 1
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(15)// lettura clear 2
+//	    delay 1000
+//		emitlocalstream sonardata      : distance(5) // lettura clear 3 <-- mind emetterà resumeActions e tornerà a work
+	    delay 20000
 	    
 		println("sonarsimul | Emetto 8 (per causare containerhere)") color magenta
 		emitlocalstream sonardata      : distance(8)
@@ -238,7 +238,7 @@ QActor sonarsimul  context ctx_raspdevice{
 	
 	State error_and_resume{
 		
-		if[#count % 2 == 0#]{
+		if[#count % 3 == 0#]{
 			
 			println("sonarsimul | Emetto 25 (per causare FAULT)") color magenta
 			emitlocalstream sonardata      : distance(25)

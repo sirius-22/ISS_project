@@ -65,8 +65,8 @@ Dispatch resume : resume(M)
 // CONTEXTS ===================================================================
 Context ctx_cargoservice ip [host="localhost" port=8000]
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
-Context ctx_productservice ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
-
+Context ctx_productservice 		ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
+Context ctx_gui					ip [host="cargoservicestatusgui" port=8001] //cargoservice-gui
 // per containerizzazione su docker e iodevice attivato su stessa macchina
 Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
 
@@ -436,53 +436,53 @@ QActor cargoservice context ctx_cargoservice {
 	
 	
 // ----------- CLIENT SIMULATOR (for testing) --------------------------------
-QActor external_client context ctx_cargoservice{
- 	State s0 initial {
- 		println("$name | STARTS") color cyan
- 		delay 5000
-  	} 
-  	Goto work1
-  	
-  	// A client that sends multiple spaced requests
-  	State work1 {
- 		println("$name | sends request") color cyan
- 		request cargoservice -m loadrequest: loadrequest(22)
- 		delay 15000
-  	} 
-  	Transition t0
-	   whenReply loadaccepted -> work2
-	   whenReply loadrejected  -> work2
-	   
-	State work2 {
- 		println("$name | sends request") color cyan
- 		request cargoservice -m loadrequest: loadrequest(21)
- 		delay 15000
-  	} 
-  	Transition t0
-	   whenReply loadaccepted -> work3
-	   whenReply loadrejected  -> work3
-	   
-	State work3 {
- 		println("$name | sends request") color cyan
- 		request cargoservice -m loadrequest: loadrequest(20)
- 		delay 20000
-  	} 
-  	Transition t0
-	   whenReply loadaccepted -> work4
-	   whenReply loadrejected  -> work4
-	   
-	State work4 {
- 		println("$name | sends request") color cyan
- 		request cargoservice -m loadrequest: loadrequest(1)
- 		delay 15000
-  	}Transition t0
-  	   whenReply loadaccepted -> work5
-	   whenReply loadrejected  -> work5
-	   
-	State work5{
-		println("$name | sends request") color cyan
- 		request cargoservice -m loadrequest: loadrequest(1)
- 		delay 10000
-	}
-	   
-}
+//QActor external_client context ctx_cargoservice{
+// 	State s0 initial {
+// 		println("$name | STARTS") color cyan
+// 		delay 5000
+//  	} 
+//  	Goto work1
+//  	
+//  	// A client that sends multiple spaced requests
+//  	State work1 {
+// 		println("$name | sends request") color cyan
+// 		request cargoservice -m loadrequest: loadrequest(22)
+// 		delay 15000
+//  	} 
+//  	Transition t0
+//	   whenReply loadaccepted -> work2
+//	   whenReply loadrejected  -> work2
+//	   
+//	State work2 {
+// 		println("$name | sends request") color cyan
+// 		request cargoservice -m loadrequest: loadrequest(21)
+// 		delay 15000
+//  	} 
+//  	Transition t0
+//	   whenReply loadaccepted -> work3
+//	   whenReply loadrejected  -> work3
+//	   
+//	State work3 {
+// 		println("$name | sends request") color cyan
+// 		request cargoservice -m loadrequest: loadrequest(20)
+// 		delay 20000
+//  	} 
+//  	Transition t0
+//	   whenReply loadaccepted -> work4
+//	   whenReply loadrejected  -> work4
+//	   
+//	State work4 {
+// 		println("$name | sends request") color cyan
+// 		request cargoservice -m loadrequest: loadrequest(1)
+// 		delay 15000
+//  	}Transition t0
+//  	   whenReply loadaccepted -> work5
+//	   whenReply loadrejected  -> work5
+//	   
+//	State work5{
+//		println("$name | sends request") color cyan
+// 		request cargoservice -m loadrequest: loadrequest(1)
+// 		delay 10000
+//	}
+//	   
+//}
