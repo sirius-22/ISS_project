@@ -152,8 +152,8 @@ sourceSets {
     main.java.srcDirs += 'src/main/java'
     main.java.srcDirs += 'src/main/kotlin'
     main.java.srcDirs += 'src/main/resources'
-    test.java.srcDirs += 'src/main/java/test'		//test is specific
-    test.java.srcDirs += 'src/main/kotlin/test'
+    test.java.srcDirs += 'src/test/java'		//test is specific
+    test.java.srcDirs += 'src/test/kotlin'
 }
   
 
@@ -167,7 +167,7 @@ eclipse {
 
 application {
     //Define the main class for the application.
-    mainClassName    = 'it.unibo.ctx_cargoservicestatusgui.MainCtx_cargoservicestatusguiKt'
+    mainClassName    = 'it.unibo.ctx_gui.MainCtx_guiKt'
 }
  
  jar {

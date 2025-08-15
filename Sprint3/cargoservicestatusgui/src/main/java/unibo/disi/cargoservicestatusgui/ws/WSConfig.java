@@ -1,4 +1,4 @@
-package main.java.unibo.disi.cargoservicestatusgui.ws;
+package unibo.disi.cargoservicestatusgui.ws;
 
 
 import org.springframework.context.annotation.Configuration;

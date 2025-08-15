@@ -1,4 +1,4 @@
-package main.java.unibo.disi.cargoservicestatusgui;
+package unibo.disi.cargoservicestatusgui;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

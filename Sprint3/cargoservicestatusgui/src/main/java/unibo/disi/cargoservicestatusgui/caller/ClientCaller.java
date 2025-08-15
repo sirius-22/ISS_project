@@ -1,4 +1,4 @@
-package main.java.unibo.disi.cargoservicestatusgui.caller;
+package unibo.disi.cargoservicestatusgui.caller;
 
 import org.springframework.stereotype.Component;
 import unibo.basicomm23.interfaces.IApplMessage;

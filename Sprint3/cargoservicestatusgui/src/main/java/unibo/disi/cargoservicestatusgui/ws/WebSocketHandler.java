@@ -1,4 +1,4 @@
-package main.java.unibo.disi.cargoservicestatusgui.ws;
+package unibo.disi.cargoservicestatusgui.ws;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -6,9 +6,10 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import main.java.unibo.disi.cargoservicestatusgui.caller.*;
+import unibo.disi.cargoservicestatusgui.caller.*;
 
 import unibo.basicomm23.utils.CommUtils;
+import unibo.disi.cargoservicestatusgui.caller.ClientCaller;
 
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArrayList;
