@@ -37,7 +37,7 @@ Per gestire questa duplice natura in modo pulito e aderire al **Principio di Sin
 Il flusso di operazioni si articola quindi come segue:
 
 -   **`gui_api_gateway` (API Gateway)**:
-    -   Agisce come unico punto di ingresso per tutte le comunicazioni provenienti dal mondo esterno (il WebSocket manager della GUI).
+    -   Agisce come unico punto di ingresso per tutte le comunicazioni provenienti dal mondo esterno (il WebSocket Handler della GUI).
     -   Nella sua fase di inizializzazione, configura un meccanismo di **delega** (`delegate`): istruisce l'infrastruttura Qak a inoltrare automaticamente tutte le future richieste di tipo `loadrequest` all'attore `gui_request_handler`.
     -   Dopo la configurazione, rimane in uno stato passivo, agendo da puro router di messaggi.
 
@@ -71,6 +71,13 @@ Si sono quindi modellati altri due tipi di messaggi. Si è optato per messaggi d
   Dispatch ledon : ledon(M)
   Dispatch ledoff : ledoff(M)
 ```
+## Modello
+L'analisi confluisce nei seguenti due modelli logici
+
+<img src='./IODevices/io_devicesarch.png' width="500" alt='iodevices'>
+<img src='./cargoservicestatusgui/cargoservicestatusguiarch.png' width="700" alt='gui'>
+
+
 
 ## Piano di testing
 Avendo ora un formato definito per la visualizzazione dello **stato della stiva**, è possibile verificarne con maggiore precisione il corretto aggiornamento, oltre che il corretto invio del messaggio di update per la GUI.  
