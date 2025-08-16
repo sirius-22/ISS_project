@@ -1,13 +1,16 @@
 %====================================================================================
 % cargoservicestatusgui description   
 %====================================================================================
+mqttBroker("localhost", "1883", "unibo/qak/events").
 request( loadrequest, loadrequest(PID) ).
 reply( loadaccepted, loadaccepted(SLOT) ).  %%for loadrequest
 reply( loadrejected, loadrejected(REASON) ).  %%for loadrequest
 dispatch( hold_state_update, hold_state_update(JSONSTATE) ).
+event( hold_state_update, hold_state_update(JSONSTATE) ).
+dispatch( update_hold_json, update_hold_json(JSONSTATE) ).
 %====================================================================================
 context(ctx_gui, "localhost",  "TCP", "8001").
-context(ctx_cargoservice, "cargoservicecore",  "TCP", "8000").
+context(ctx_cargoservice, "127.0.0.1",  "TCP", "8000").
  qactor( cargoservice, ctx_cargoservice, "external").
   qactor( gui_api_gateway, ctx_gui, "it.unibo.gui_api_gateway.Gui_api_gateway").
  static(gui_api_gateway).

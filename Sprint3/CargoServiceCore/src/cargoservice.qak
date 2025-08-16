@@ -61,6 +61,9 @@ Event containerhere : containerhere(M)
 // autodispatch used by actors for internal state transitions
 Dispatch resume : resume(M)
 
+//evento per aggiornare la gui
+Event hold_state_update: hold_state_update(JSONSTATE)
+
 
 // CONTEXTS ===================================================================
 Context ctx_cargoservice ip [host="localhost" port=8000]
@@ -426,9 +429,11 @@ QActor cargoservice context ctx_cargoservice {
 			
 			//get updated hold state and update gui
 			val JsonHold = SlotMng.getHoldState(true)
+			val JsonMsg = "'$JsonHold'"
 		#]
 		println("Aggiorno la gui con $JsonHold")
-		updateResource[#"hold_state_update($JsonHold)"#]
+		emit hold_state_update: hold_state_update($JsonMsg)
+		updateResource[#"$JsonHold"#]
 	}
 	Goto state_idle
 	

@@ -20,19 +20,22 @@ import org.json.JSONObject;
 public class WebSocketHandler extends TextWebSocketHandler {
 
     private static final CopyOnWriteArrayList<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
-    private final ClientCaller ClientCaller;
+    private final ClientCaller Caller;
     
     // Singleton instance
     private static WebSocketHandler singleton;
 
-    public WebSocketHandler(ClientCaller ClientCaller) {
-        this.ClientCaller = ClientCaller;
+    public WebSocketHandler(ClientCaller Caller) {
+        this.Caller = Caller;
         singleton = this; // Set singleton instance
     }
 
-    public static WebSocketHandler getInstance() {
-        return singleton;
-    }
+//    public static WebSocketHandler getInstance() {
+//    	if (singleton == null)
+//    		singleton = new WebSocketHandler(Caller);
+//    	
+//    	return singleton;
+//    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -52,7 +55,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         if ("loadrequest".equals(type)) {
             int pid = json.getInt("pid");
             // Inoltra la richiesta al sistema Qak usando l'ID di sessione come ID richiesta
-            ClientCaller.sendLoadRequest(pid, session.getId());
+            Caller.sendLoadRequest(pid, session.getId());
         }
     }
 

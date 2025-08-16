@@ -32,6 +32,7 @@ event( stopActions, stopActions(M) ).
 event( resumeActions, resumeActions(M) ).
 event( containerhere, containerhere(M) ).
 dispatch( resume, resume(M) ).
+event( hold_state_update, hold_state_update(JSONSTATE) ).
 %====================================================================================
 context(ctx_cargoservice, "localhost",  "TCP", "8000").
 context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").

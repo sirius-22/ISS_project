@@ -33,7 +33,7 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 				state("s0") { //this:State
 					action { //it:State
 						CommUtils.outgreen("$name | Avvio e inizio ad osservare cargoservice...")
-						observeResource("localhost","8000","ctx_cargoservice","cargoservice","hold_state_update")
+						observeResource("127.0.0.1","8000","ctx_cargoservice","cargoservice","hold_state_update")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -44,14 +44,14 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 				}	 
 				state("push_state_to_gui") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE,TERM)"), Term.createTerm("hold_state_update(JSONSTATE,TERM)"), 
+						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE)"), Term.createTerm("hold_state_update(JSONSTATE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val holdStateJson = payloadArg(0)
 												// Invia il JSON a tutti i client web tramite il Manager condiviso.
-												// WebSocketHandler.getInstance().sendToAll(holdStateJson)
 								CommUtils.outblue("$name | Update ricevuto: $holdStateJson")
 						}
+						forward("update_hold_json", "update_hold_json("$holdStateJson")" ,"gui_state_observer" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

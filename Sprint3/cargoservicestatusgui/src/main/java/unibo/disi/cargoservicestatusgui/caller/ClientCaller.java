@@ -18,6 +18,12 @@ public class ClientCaller {
     private final String gatewayActorName = "gui_api_gateway";
     private final String guiContextHost = "localhost"; // L'host dove gira il contesto GUI
     private final int guiContextPort = 8001;          // La porta del contesto GUI
+    
+    private final WebSocketHandler wsHandler;
+    
+    public ClientCaller(WebSocketHandler wsHandler) {
+        this.wsHandler = wsHandler;
+    }
 
     @Autowired //  INIEZIONE DELLA DIPENDENZA: Spring crea per noi un oggetto 'qakConnection'
     public void setup() {
@@ -49,6 +55,23 @@ public class ClientCaller {
 
         } catch (Exception e) {
             CommUtils.outred("ClientCaller | Error sending request: " + e.getMessage());
+        }
+    }
+    
+    private void listenForReplies() {
+        while (true) {
+            try {
+                IApplMessage reply = qakConnection.receiveMsg();
+                if (reply != null) {
+                    CommUtils.outblue("ClientCaller | Received from QAK: " + reply);
+
+                    // inoltra al frontend
+                    wsHandler.reply(reply.msgId(), reply.toString());
+                }
+            } catch (Exception e) {
+                CommUtils.outred("ClientCaller | Error while listening: " + e.getMessage());
+                break;
+            }
         }
     }
 }
