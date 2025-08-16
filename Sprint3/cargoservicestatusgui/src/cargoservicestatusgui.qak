@@ -20,7 +20,7 @@ ExternalQActor cargoservice context ctx_cargoservice
 
 
 
-// TODO: capire gli errori della forward per il spring
+
 
 
 // ---------- L'API GATEWAY PER LA GUI ----------
@@ -66,14 +66,14 @@ QActor gui_state_observer context ctx_gui {
 	State push_state_to_gui {
 		onMsg(hold_state_update : hold_state_update(JSONSTATE)) {
 			[#
-				val holdStateJson = payloadArg(0)
+				val HoldStateJson = payloadArg(0)
 				// Invia il JSON a tutti i client web tramite il Manager condiviso.
 			#]
 			
 			
-			println("$name | Update ricevuto: $holdStateJson") color blue
+			println("$name | Update ricevuto: $HoldStateJson") color blue
 		}
-		forward gui_state_observer -m update_hold_json : update_hold_json("$holdStateJson")
+		forward gui_state_observer -m update_hold_json : update_hold_json($HoldStateJson)
 	}
 	Transition t0
 		whenEvent hold_state_update -> push_state_to_gui
@@ -83,7 +83,7 @@ QActor gui_state_observer context ctx_gui {
 
 // ---------- GESTORE DELLE RICHIESTE ----------
 QActor gui_request_handler context ctx_gui {
-	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
+//	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
 	[#
 		var Last_PID = 0
 		var Last_Request_ID = ""
@@ -114,10 +114,10 @@ QActor gui_request_handler context ctx_gui {
 		onMsg(loadaccepted : loadaccepted(SLOT)) {
 			[#
 				val slot = payloadArg(0)
-				val responseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
+				val ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
 			#]
 		}
-		forward gui_request_handler -m update_hold_json : update_hold_json("$responseJson")
+		forward gui_request_handler -m update_hold_json : update_hold_json($ResponseJson)
 	}
 	Goto s0
 
@@ -125,10 +125,10 @@ QActor gui_request_handler context ctx_gui {
 		onMsg(loadrejected : loadrejected(REASON)) {
 			[#
 				val reason = payloadArg(0)
-				val responseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
+				val ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
 			#]
 		}
-		forward gui_request_handler -m update_hold_json : update_hold_json("$responseJson")
+		forward gui_request_handler -m update_hold_json : update_hold_json($ResponseJson)
 	}
 	Goto s0
 }

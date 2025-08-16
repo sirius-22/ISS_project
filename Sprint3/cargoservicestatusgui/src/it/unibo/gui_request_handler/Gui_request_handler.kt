@@ -19,7 +19,6 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
 
 class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -68,9 +67,9 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val slot = payloadArg(0)
-												val responseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
+												val ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
 						}
-						forward("update_hold_json", "update_hold_json("$responseJson")" ,"gui_request_handler" ) 
+						forward("update_hold_json", "update_hold_json($ResponseJson)" ,"gui_request_handler" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -84,9 +83,9 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val reason = payloadArg(0)
-												val responseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
+												val ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
 						}
-						forward("update_hold_json", "update_hold_json("$responseJson")" ,"gui_request_handler" ) 
+						forward("update_hold_json", "update_hold_json($ResponseJson)" ,"gui_request_handler" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
