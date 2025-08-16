@@ -51,6 +51,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 												Last_Request_ID = currentMsg.msgId()
 												Last_PID = payloadArg(0).toInt()
 								CommUtils.outblack("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID. Inoltro...")
+								request("loadrequest", "loadrequest($Last_PID)" ,"cargoservice" )  
 						}
 						//genTimer( actor, state )
 					}

@@ -32,6 +32,7 @@ with Diagram('cargoservicestatusguiArch', show=False, outformat='png', graph_att
      with Cluster('ctx_cargoservice', graph_attr=nodeattr):
           cargoservice=Custom('cargoservice(ext)','./qakicons/externalQActor.png')
      sys >> Edge( label='hold_state_update', **evattr, decorate='true', fontcolor='darkgreen') >> gui_state_observer
+     gui_request_handler >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
      gui_api_gateway >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> gui_request_handler
      cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<hold_state_update &nbsp; >',  fontcolor='blue') >> gui_state_observer
 diag

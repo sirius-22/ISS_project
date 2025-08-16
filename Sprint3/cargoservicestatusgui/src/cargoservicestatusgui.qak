@@ -95,7 +95,7 @@ QActor gui_request_handler context ctx_gui {
 				Last_PID = payloadArg(0).toInt()
 			#]
 			println("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID. Inoltro...")
-			//request cargoservice -m loadrequest : loadrequest($Last_PID)
+			request cargoservice -m loadrequest : loadrequest($Last_PID)
 		}
 	}
 	Transition t0
