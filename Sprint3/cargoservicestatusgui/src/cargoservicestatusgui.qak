@@ -1,12 +1,12 @@
 System cargoservicestatusgui
 
-//mqttBroker "mosquitto" : 1883 eventTopic "unibo/qak/events"
+mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
 
 // ======================= MESSAGGI =======================
 Request loadrequest : loadrequest(PID)
 Reply   loadaccepted : loadaccepted(SLOT) for loadrequest
 Reply   loadrejected : loadrejected(REASON) for loadrequest
-Dispatch hold_state_update : hold_state_update(JSONSTATE, TERM)
+Dispatch hold_state_update : hold_state_update(JSONSTATE)
 Event hold_state_update : hold_state_update(JSONSTATE)
 
 // ======================= CONTESTI =======================
@@ -58,7 +58,7 @@ QActor gui_state_observer context ctx_gui {
 		whenMsg hold_state_update -> push_state_to_gui
 
 	State push_state_to_gui {
-		onMsg(hold_state_update : hold_state_update(JSONSTATE, TERM)) {
+		onMsg(hold_state_update : hold_state_update(JSONSTATE)) {
 			[#
 				val holdStateJson = payloadArg(0)
 				// Invia il JSON a tutti i client web tramite il Manager condiviso.
