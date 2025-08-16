@@ -33,7 +33,7 @@ onUnmounted(() => {
 // e sono automaticamente disponibili nel template.
 
 function connectWebSocket() {
-  ws = new WebSocket('ws://localhost:8080/api/updates');
+  ws = new WebSocket('ws://localhost:8080/status-updates');
 
   ws.onopen = () => {
     connectionStatus.value = 'Open';

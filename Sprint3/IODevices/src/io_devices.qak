@@ -29,11 +29,11 @@ QActor mind context ctx_raspdevice{
 		delay 3000
 		println("$name |  start") 
 		
-		subscribe "sonardatatest"
+//		subscribe "sonardatatest"
 		//cambiare dopo il testing
 		subscribeTo sonarsimul for sonardata
 		//con
-		subscribeTo sonardevice for sonardata
+//		subscribeTo sonardevice for sonardata 
 	}
 	Transition t0
 		whenEvent sonardata -> work
@@ -96,7 +96,7 @@ QActor mind context ctx_raspdevice{
  		println("$name | In FAULT_STATE -> EMIT STOPACTIONS") color red
  		emit stopActions: stopActions(Stop)
  		//comunico al led di accendersi
- 		forward leddevice -m ledon : ledon(on)
+// 		forward leddevice -m ledon : ledon(on)
  		[# 
  			// Resetto il contatore quando entro per la prima volta
  			// in questo stato
@@ -127,72 +127,72 @@ QActor mind context ctx_raspdevice{
  	State work_after_resume {
  		println("$name | 3 letture 'clear' consecutive. EMIT resumeActions e torno al lavoro.") color green
  		emit resumeActions : resumeActions(okok)
- 		forward leddevice -m ledoff : ledoff(of)
+// 		forward leddevice -m ledoff : ledoff(of)
  		[# counter = 0; prevInterval = -1; #]
  	}
  	Goto work_wait
 
  }
  
- QActor sonardevice context ctx_raspdevice{
-[# 
-	lateinit var reader : java.io.BufferedReader
-    lateinit var p : Process	
-    var Distance = 0
-#]	
-	State s0 initial{
-		println("$name | start") 
-	 	[#
-			p       = Runtime.getRuntime().exec("python sonar.py")
-			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	
-		#]	
-		delay 2000	
-	}
-	Goto readSonarData
-	
-	State readSonarData{
-	[# 
-		var data = reader.readLine()
-		if( data != null ){
-		try{ 
-			val vd = data.toFloat()
-			val v  = vd.toInt()
-			if( v <= 100 ){	//Un primo filtro...
-				Distance = v				
-			}else Distance = 0
-		}catch(e: Exception){
-			CommUtils.outred("$name readSonarDataERROR: $e "   )
-		}
-		}//if
-		
-	#]	
-		if [# Distance > 0 #] { 
-		    println("$name with python: data = $data"   ) color yellow
-			emitlocalstream sonardata : distance($Distance)			 
-		}
-	}
-	Goto readSonarData
-}//sonardevice
-
-
-
-QActor leddevice context ctx_raspdevice{
-	State init initial{
-	 println("$name | led ready") color yellow
-	}Goto ledoff_state
-	
-	State ledoff_state{
-		[# Runtime.getRuntime().exec("python ledPython25Off.py") #]
-		println("$name | led is off") color yellow
-		println("$name | led waiting for messages") color yellow
-	}Transition t0 whenMsg ledon -> ledon_state
-	
-	State ledon_state{
-		 [# machineExec("python ledPython25On.py") #]
-		println("$name | led is on") color yellow
-	}Transition t0 whenMsg ledoff -> ledoff_state
-	
-}
+// QActor sonardevice context ctx_raspdevice{
+//[# 
+//	lateinit var reader : java.io.BufferedReader
+//    lateinit var p : Process	
+//    var Distance = 0
+//#]	
+//	State s0 initial{
+//		println("$name | start") 
+//	 	[#
+//			p       = Runtime.getRuntime().exec("python sonar.py")
+//			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))	
+//		#]	
+//		delay 2000	
+//	}
+//	Goto readSonarData
+//	
+//	State readSonarData{
+//	[# 
+//		var data = reader.readLine()
+//		if( data != null ){
+//		try{ 
+//			val vd = data.toFloat()
+//			val v  = vd.toInt()
+//			if( v <= 100 ){	//Un primo filtro...
+//				Distance = v				
+//			}else Distance = 0
+//		}catch(e: Exception){
+//			CommUtils.outred("$name readSonarDataERROR: $e "   )
+//		}
+//		}//if
+//		
+//	#]	
+//		if [# Distance > 0 #] { 
+//		    println("$name with python: data = $data"   ) color yellow
+//			emitlocalstream sonardata : distance($Distance)			 
+//		}
+//	}
+//	Goto readSonarData
+//}//sonardevice
+//
+//
+//
+//QActor leddevice context ctx_raspdevice{
+//	State init initial{
+//	 println("$name | led ready") color yellow
+//	}Goto ledoff_state
+//	
+//	State ledoff_state{
+//		[# Runtime.getRuntime().exec("python ledPython25Off.py") #]
+//		println("$name | led is off") color yellow
+//		println("$name | led waiting for messages") color yellow
+//	}Transition t0 whenMsg ledon -> ledon_state
+//	
+//	State ledon_state{
+//		 [# machineExec("python ledPython25On.py") #]
+//		println("$name | led is on") color yellow
+//	}Transition t0 whenMsg ledoff -> ledoff_state
+//	
+//}
  
 // Simulatore aggiornato per testare la transizione a fault e il resume
 QActor sonarsimul  context ctx_raspdevice{

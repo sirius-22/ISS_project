@@ -12,9 +12,5 @@ dispatch( ledoff, ledoff(M) ).
 context(ctx_raspdevice, "localhost",  "TCP", "8128").
  qactor( mind, ctx_raspdevice, "it.unibo.mind.Mind").
  static(mind).
-  qactor( sonardevice, ctx_raspdevice, "it.unibo.sonardevice.Sonardevice").
- static(sonardevice).
-  qactor( leddevice, ctx_raspdevice, "it.unibo.leddevice.Leddevice").
- static(leddevice).
   qactor( sonarsimul, ctx_raspdevice, "it.unibo.sonarsimul.Sonarsimul").
  static(sonarsimul).

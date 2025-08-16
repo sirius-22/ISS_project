@@ -66,12 +66,12 @@ Dispatch resume : resume(M)
 Context ctx_cargoservice ip [host="localhost" port=8000]
 Context ctx_basicrobot     ip [host="basicrobot24"   port=8020] //basicrobot24
 Context ctx_productservice 		ip [host="cargoserviceqak" port=8111]  //cargoserviceqak
-Context ctx_gui					ip [host="cargoservicestatusgui" port=8001] //cargoservice-gui
+//Context ctx_gui					ip [host="cargoservicestatusgui" port=8001] //cargoservice-gui
 // per containerizzazione su docker e iodevice attivato su stessa macchina
-Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
+//Context ctx_raspdevice ip [ host= "host.docker.internal" port= 8128 ]
 
 // se si usa facendo partire il sonar sulla stessa macchina (no container)
-//Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
+Context ctx_raspdevice ip [ host= "127.0.0.1" port= 8128 ]
 
 
 // ACTORS =====================================================================
