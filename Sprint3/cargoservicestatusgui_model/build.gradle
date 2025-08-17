@@ -28,6 +28,12 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.json:json:20240303'
 	
+	/* COAP ********************************************************************************* */
+    // https://mvnrepository.com/artifact/org.eclipse.californium/californium-core
+    implementation group: 'org.eclipse.californium', name: 'californium-core', version: '3.5.0'
+    // https://mvnrepository.com/artifact/org.eclipse.californium/californium-proxy2
+    implementation group: 'org.eclipse.californium', name: 'californium-proxy2', version: '3.5.0'
+	
 	/* UNIBO *********************************************************************************/
     implementation name: 'uniboInterfaces'
     implementation name: '2p301'

@@ -32,6 +32,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 		
 				var Last_PID = 0
 				var Last_Request_ID = ""
+				var ResponseJson = ""
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -48,8 +49,8 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						if( checkMsgContent( Term.createTerm("loadrequest(PID)"), Term.createTerm("loadrequest(PID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												Last_Request_ID = currentMsg.msgId()
-												Last_PID = payloadArg(0).toInt()
+												Last_Request_ID = currentMsg.msgId();
+												Last_PID = payloadArg(0).toInt();
 								CommUtils.outblack("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID. Inoltro...")
 								request("loadrequest", "loadrequest($Last_PID)" ,"cargoservice" )  
 						}
@@ -66,10 +67,9 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						if( checkMsgContent( Term.createTerm("loadaccepted(SLOT)"), Term.createTerm("loadaccepted(SLOT)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val slot = payloadArg(0)
-												val ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
+												val slot = payloadArg(0);
+												ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}";
 						}
-						forward("update_hold_json", "update_hold_json($ResponseJson)" ,"gui_request_handler" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -82,10 +82,9 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						if( checkMsgContent( Term.createTerm("loadrejected(REASON)"), Term.createTerm("loadrejected(REASON)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val reason = payloadArg(0)
-												val ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
+												val reason = payloadArg(0);
+												ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}";
 						}
-						forward("update_hold_json", "update_hold_json($ResponseJson)" ,"gui_request_handler" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

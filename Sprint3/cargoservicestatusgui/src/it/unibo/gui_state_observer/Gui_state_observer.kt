@@ -29,6 +29,9 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
+		
+				var HoldStateJson = "";
+						
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -47,11 +50,10 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE)"), Term.createTerm("hold_state_update(JSONSTATE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val HoldStateJson = payloadArg(0)
+												HoldStateJson = payloadArg(0);
 												// Invia il JSON a tutti i client web tramite il Manager condiviso.
 								CommUtils.outblue("$name | Update ricevuto: $HoldStateJson")
 						}
-						forward("update_hold_json", "update_hold_json($HoldStateJson)" ,"gui_state_observer" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
