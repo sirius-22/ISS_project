@@ -54,7 +54,9 @@ QActor gui_api_gateway context ctx_gui {
 // ---------- OSSERVATORE DELLO STATO (Worker) ----------
 QActor gui_state_observer context ctx_gui {
 //	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
-
+	[#
+		var HoldStateJson = ""	
+	#]
 	State s0 initial {
 		println("$name | Avvio e inizio ad osservare cargoservice...") color green
 		observeResource cargoservice msgid hold_state_update
@@ -66,7 +68,7 @@ QActor gui_state_observer context ctx_gui {
 	State push_state_to_gui {
 		onMsg(hold_state_update : hold_state_update(JSONSTATE)) {
 			[#
-				val HoldStateJson = payloadArg(0)
+				HoldStateJson = payloadArg(0)
 				// Invia il JSON a tutti i client web tramite il Manager condiviso.
 			#]
 			
@@ -87,6 +89,7 @@ QActor gui_request_handler context ctx_gui {
 	[#
 		var Last_PID = 0
 		var Last_Request_ID = ""
+		var ResponseJson = ""
 	#]
 	State s0 initial {
 		println("$name | Pronto a ricevere richieste DELEGATE.") color blue
@@ -114,7 +117,7 @@ QActor gui_request_handler context ctx_gui {
 		onMsg(loadaccepted : loadaccepted(SLOT)) {
 			[#
 				val slot = payloadArg(0)
-				val ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
+				ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
 			#]
 		}
 		forward gui_request_handler -m update_hold_json : update_hold_json($ResponseJson)
@@ -125,7 +128,7 @@ QActor gui_request_handler context ctx_gui {
 		onMsg(loadrejected : loadrejected(REASON)) {
 			[#
 				val reason = payloadArg(0)
-				val ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
+				ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
 			#]
 		}
 		forward gui_request_handler -m update_hold_json : update_hold_json($ResponseJson)

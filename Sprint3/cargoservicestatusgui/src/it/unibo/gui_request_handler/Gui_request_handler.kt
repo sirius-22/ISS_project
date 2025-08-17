@@ -32,6 +32,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 		
 				var Last_PID = 0
 				var Last_Request_ID = ""
+				var ResponseJson = ""
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -67,7 +68,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val slot = payloadArg(0)
-												val ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
+												ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
 						}
 						forward("update_hold_json", "update_hold_json($ResponseJson)" ,"gui_request_handler" ) 
 						//genTimer( actor, state )
@@ -83,7 +84,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val reason = payloadArg(0)
-												val ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
+												ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
 						}
 						forward("update_hold_json", "update_hold_json($ResponseJson)" ,"gui_request_handler" ) 
 						//genTimer( actor, state )
