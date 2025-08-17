@@ -31,7 +31,6 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
 				var HoldStateJson = "";
-						
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State

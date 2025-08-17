@@ -56,7 +56,6 @@ QActor gui_state_observer context ctx_gui {
 //	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
 	[#
 		var HoldStateJson = "";
-				
 	#]
 	State s0 initial {
 
