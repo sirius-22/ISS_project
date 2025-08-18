@@ -23,7 +23,7 @@ Context ctx_gui ip [host="localhost" port=8001]
 Context ctx_cargoservice ip [host="cargoservicecore" port=8000]
 
 // Contesto del server di risposta in Spring Boot
-Context ctx_springboot_gui ip [host="localhost" port=8080]
+Context ctx_springboot_gui ip [host="cargoservicestatusgui_model" port=8002]
  
 // ======================= ATTORI =======================
  
@@ -41,7 +41,7 @@ QActor gui_api_gateway context ctx_gui {
 		
 		// Delega la gestione di tutte le future richieste 'loadrequest'
 		// all'attore specializzato.
-		delegate loadrequest to gui_request_handler
+		delegate client_loadrequest to gui_request_handler
 	}
 	Goto idle_state
  

@@ -11,7 +11,7 @@ dispatch( load_response, response(SESSION_ID,JSON_STRING) ).
 %====================================================================================
 context(ctx_gui, "localhost",  "TCP", "8001").
 context(ctx_cargoservice, "cargoservicecore",  "TCP", "8000").
-context(ctx_springboot_gui, "localhost",  "TCP", "8080").
+context(ctx_springboot_gui, "cargoservicestatusgui_model",  "TCP", "8002").
  qactor( cargoservice, ctx_cargoservice, "external").
   qactor( springboot_gui, ctx_springboot_gui, "external").
   qactor( gui_api_gateway, ctx_gui, "it.unibo.gui_api_gateway.Gui_api_gateway").

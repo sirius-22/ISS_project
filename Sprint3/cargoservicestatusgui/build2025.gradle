@@ -149,7 +149,7 @@ eclipse {
 
 application {
     //Define the main class for the application.
-    mainClassName    = 'it.unibo.ctx_springboot_gui.MainCtx_springboot_guiKt'
+    mainClassName    = 'it.unibo.ctx_gui.MainCtx_guiKt'
 }
  
  jar {
@@ -185,7 +185,7 @@ task run0(type: JavaExec) {
     group = "Execution"
     description = "Run the main class with JavaExecTask"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'it.unibo.ctx_springboot_gui.MainCtx_springboot_guiKt'
+    main = 'it.unibo.ctx_gui.MainCtx_guiKt'
 }
 
 /*

@@ -155,29 +155,32 @@ services:
       - iss-network
 
 
-  # cargoservicestatusgui_model:
-  #   container_name: cargoservicestatusgui_model
-  #   image: cargoservicestatusgui_model:1.0
-  #   mem_limit: 512m
-  #   ports:
-  #     - "8504:8504/tcp"
-  #     - "8504:8504/udp"
-  #   environment:
-  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
-  #     - SERVICE_HOST=172.31.64.1
-  #     - SERVICE_IP=172.31.64.1
-  #     - MQTTBROKER=mosquitto
-  #   depends_on:
-  #     mosquitto:
-  #       condition: service_started
-  #     eureka:
-  #       condition: service_healthy
-  #     basicrobot24:
-  #       condition: service_healthy
-  #     cargoserviceqak:
-  #       condition: service_healthy
-  #   networks:
-  #     - iss-network
+  cargoservicestatusgui_model:
+     container_name: cargoservicestatusgui_model
+     image: cargoservicestatusgui_model:1.1
+     mem_limit: 512m
+     ports:
+       - "8080:8080" 
+       - "8504:8504/tcp"
+       - "8504:8504/udp"
+     environment:
+       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+       - SERVICE_HOST=172.31.64.1
+       - SERVICE_IP=172.31.64.1
+       - MQTTBROKER=mosquitto
+     depends_on:
+       mosquitto:
+         condition: service_started
+       eureka:
+         condition: service_healthy
+       basicrobot24:
+         condition: service_healthy
+       cargoserviceqak:
+         condition: service_healthy
+       cargoservicestatusgui:
+         condition: service_started
+     networks:
+       - iss-network
 
 
   # ------ VUE FRONTEND -------------

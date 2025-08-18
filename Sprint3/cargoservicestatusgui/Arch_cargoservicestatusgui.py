@@ -34,7 +34,7 @@ with Diagram('cargoservicestatusguiArch', show=False, outformat='png', graph_att
      with Cluster('ctx_springboot_gui', graph_attr=nodeattr):
           springboot_gui=Custom('springboot_gui(ext)','./qakicons/externalQActor.png')
      gui_request_handler >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> cargoservice
-     gui_api_gateway >> Edge(color='magenta', style='solid', decorate='true', label='<loadrequest<font color="darkgreen"> loadaccepted loadrejected</font> &nbsp; >',  fontcolor='magenta') >> gui_request_handler
+     gui_api_gateway >> Edge(color='magenta', style='solid', decorate='true', label='<client_loadrequest &nbsp; >',  fontcolor='magenta') >> gui_request_handler
      gui_request_handler >> Edge(color='blue', style='solid',  decorate='true', label='<load_response &nbsp; >',  fontcolor='blue') >> springboot_gui
      cargoservice >> Edge(color='blue', style='solid',  decorate='true', label='<hold_state_update &nbsp; >',  fontcolor='blue') >> gui_state_observer
 diag

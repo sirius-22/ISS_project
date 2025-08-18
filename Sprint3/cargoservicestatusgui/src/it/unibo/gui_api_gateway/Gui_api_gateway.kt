@@ -34,7 +34,7 @@ class Gui_api_gateway ( name: String, scope: CoroutineScope, isconfined: Boolean
 					action { //it:State
 						CommUtils.outblack("$name | Gateway avviato. Configuro la delega delle richieste.")
 						delay(100) 
-						delegate("loadrequest", "gui_request_handler") 
+						delegate("client_loadrequest", "gui_request_handler") 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
