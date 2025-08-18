@@ -1,144 +1,127 @@
 System cargoservicestatusgui
-
+ 
+// Definiamo il broker per la comunicazione con altri sistemi Qak (es. sonardevice)
+// Usiamo localhost perché il broker gira in Docker ed è esposto sull'host.
 mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
-
+ 
 // ======================= MESSAGGI =======================
 Request loadrequest : loadrequest(PID)
+Request client_loadrequest : client_loadrequest(PID, SESSION_ID)
 Reply   loadaccepted : loadaccepted(SLOT) for loadrequest
 Reply   loadrejected : loadrejected(REASON) for loadrequest
-Dispatch hold_state_update : hold_state_update(JSONSTATE)
-Event hold_state_update : hold_state_update(JSONSTATE)
-Dispatch update_hold_json : update_hold_json(JSONSTATE)
 
+// Messaggio per ricevere aggiornamenti di stato da cargoservice via CoAP
+Dispatch hold_state_update : hold_state_update(JSONSTATE)
+
+// Messaggio per inviare la risposta finale al server Spring Boot
+Dispatch load_response : response(SESSION_ID, JSON_STRING)
+ 
 // ======================= CONTESTI =======================
 Context ctx_gui ip [host="localhost" port=8001]
-Context ctx_cargoservice ip [host="127.0.0.1" port=8000] //TODO CHANGE HOST TO cargoservicecore
 
+// Contesto del cargoservice (gira in Docker, raggiungibile via localhost)
+Context ctx_cargoservice ip [host="cargoservicecore" port=8000]
+
+// Contesto del server di risposta in Spring Boot
+Context ctx_springboot_gui ip [host="localhost" port=8080]
+ 
 // ======================= ATTORI =======================
-
+ 
 ExternalQActor cargoservice context ctx_cargoservice
-
-
-
-
-
-
-// ---------- L'API GATEWAY PER LA GUI ----------
+ExternalQActor springboot_gui context ctx_springboot_gui
+ 
+// ---------- ATTORE 1: L'API GATEWAY PER LA GUI ----------
 QActor gui_api_gateway context ctx_gui {
-//	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
-
-	[#
-		// Inizializza l'handler' e gli passa il nome del Gateway.
-		// WebSocketHandler.init(this.name, myself.getQActorContext(), 8001);
-	#]
-
+	// Questo attore non ha bisogno di importare il WebSocketManager.
+	// Il suo unico scopo è configurare la delega.
+ 
 	State s0 initial {
 		println("$name | Gateway avviato. Configuro la delega delle richieste.")
-		delay 100 //per assicurarsi che la delegate sia fatta dopo la creazione dell'attore
-		// --- CONFIGURAZIONE DELLA DELEGA ---
+		delay 100 // Assicura che gui_request_handler sia stato creato
+		
 		// Delega la gestione di tutte le future richieste 'loadrequest'
-		// all'attore specializzato 'GuiRequestHandler'.
+		// all'attore specializzato.
 		delegate loadrequest to gui_request_handler
 	}
-	// Il Gateway, una volta configurata la delega, non fa nient'altro.
-	// Rimane in uno stato passivo. Potrebbe gestire messaggi amministrativi
-	// o di logging se necessario in futuro.
 	Goto idle_state
-
+ 
 	State idle_state {
-		// Stato di attesa.
+		// Il Gateway rimane in attesa passivamente.
 	}
 }
-
-
-// ---------- OSSERVATORE DELLO STATO (Worker) ----------
+ 
+// ---------- ATTORE 2: OSSERVATORE DELLO STATO ----------
 QActor gui_state_observer context ctx_gui {
-//	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
-	[#
-		var HoldStateJson = "";
-	#]
-	State s0 initial {
+	// Nota: L'interazione con WebSocketManager è ora gestita
+	// dal codice Java/Kotlin che implementa l'handler CoAP,
+	// quindi l'attore non ne ha più bisogno direttamente.
 
+	State s0 initial {
 		println("$name | Avvio e inizio ad osservare cargoservice...") color green
+		
+		// Questa azione usa CoAP per sottoscriversi.
+		// La notifica asincrona viene gestita da un CoapHandler
+		// che invia i dati al WebSocketManager.
+		// Per semplicità nel modello, l'implementazione esatta
+		// dell'handler è delegata a una classe Java helper.
 		observeResource cargoservice msgid hold_state_update
 	}
-	Transition t0
-		whenEvent hold_state_update -> push_state_to_gui
-		whenMsg hold_state_update -> push_state_to_gui
-
-	State push_state_to_gui {
-		onMsg(hold_state_update : hold_state_update(JSONSTATE)) {
-			[#
-				HoldStateJson = payloadArg(0);
-				// Invia il JSON a tutti i client web tramite il Manager condiviso.
-			#]
-			
-			
-			println("$name | Update ricevuto: $HoldStateJson") color blue
-			
-		}
-//		forward gui_state_observer -m update_hold_json : update_hold_json($HoldStateJson)
-		
-	}
-	Transition t0
-		whenEvent hold_state_update -> push_state_to_gui
-		whenMsg hold_state_update -> push_state_to_gui
+	
+	// La logica di questo attore si è spostata nell'handler CoAP
+	// e nel WebSocketHandler. Qui rimane solo il setup.
+	// Potremmo aggiungere una transizione per gestire errori, se necessario.
 }
-
-
+ 
+// ---------- ATTORE 3: GESTORE DELLE RICHIESTE ----------
 // ---------- GESTORE DELLE RICHIESTE ----------
 QActor gui_request_handler context ctx_gui {
-//	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
-	[#
-		var Last_PID = 0
-		var Last_Request_ID = ""
-		var ResponseJson = ""
-	#]
-	State s0 initial {
-		println("$name | Pronto a ricevere richieste DELEGATE.") color blue
-	}
-	Transition t0
-		// Questo attore ora riceve le richieste non direttamente,
-		// ma tramite la delega configurata dal Gateway.
-		whenRequest loadrequest -> handle_web_request
-
-	State handle_web_request {
-		onMsg(loadrequest : loadrequest(PID)) {
-			[#
-				Last_Request_ID = currentMsg.msgId();
-				Last_PID = payloadArg(0).toInt();
-			#]
-			println("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID. Inoltro...")
-			request cargoservice -m loadrequest : loadrequest($Last_PID)
-		}
-	}
-	Transition t0
-		whenReply loadaccepted -> handle_load_accepted
-		whenReply loadrejected -> handle_load_rejected
-
-	State handle_load_accepted {
-		onMsg(loadaccepted : loadaccepted(SLOT)) {
-			[#
-				val slot = payloadArg(0);
-				ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}";
-			#]
-			
-		}
-//		forward gui_request_handler -m update_hold_json : update_hold_json($ResponseJson)
-		
-	}
-	Goto s0
-
-	State handle_load_rejected {
-		onMsg(loadrejected : loadrejected(REASON)) {
-			[#
-				val reason = payloadArg(0);
-				ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}";
-			#]
-			
-		}
-//		forward gui_request_handler -m update_hold_json : update_hold_json($ResponseJson)
-		
-	}
-	Goto s0
+ [#
+  var Last_PID = 0
+  var Last_Request_ID = "" // Conterrà il sessionId dal payload
+  var ResponseJson = ""
+ #]
+ State s0 initial {
+  println("$name | Pronto a ricevere richieste DELEGATE.") color blue
+ }
+ Transition t0
+  whenRequest client_loadrequest -> handle_web_request
+ 
+ State handle_web_request {
+  // Il pattern ora matcha il nuovo payload a 2 argomenti
+  onMsg(client_loadrequest : client_loadrequest(PID, SESSION_ID)) {
+   [#
+    Last_PID = payloadArg(0).toInt();
+    Last_Request_ID = payloadArg(1); // Estraiamo il sessionId
+   #]
+   println("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID da Session=$Last_Request_ID. Inoltro...")
+   
+   // Inoltriamo a cargoservice solo il PID, che è l'unica info che gli serve
+   request cargoservice -m loadrequest : loadrequest($Last_PID)
+  }
+ }
+ Transition t0
+  whenReply loadaccepted -> handle_load_accepted
+  whenReply loadrejected -> handle_load_rejected
+ 
+ State handle_load_accepted {
+  onMsg(loadaccepted : loadaccepted(SLOT)) {
+   [#
+    val slot = payloadArg(0);
+    ResponseJson = "'{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}'";
+   #]
+  }
+  forward springboot_gui -m load_response : response($Last_Request_ID, $ResponseJson)
+ }
+ Goto s0
+ 
+ State handle_load_rejected {
+  onMsg(loadrejected : loadrejected(REASON)) {
+   [#
+    val reason = payloadArg(0);
+    ResponseJson = "'{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}'";
+   #]
+  }
+  forward springboot_gui -m load_response : response($Last_Request_ID, $ResponseJson)
+ }
+ Goto s0
 }

@@ -29,37 +29,16 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
-		
-				var HoldStateJson = "";
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
 						CommUtils.outgreen("$name | Avvio e inizio ad osservare cargoservice...")
-						observeResource("127.0.0.1","8000","ctx_cargoservice","cargoservice","hold_state_update")
+						observeResource("cargoservicecore","8000","ctx_cargoservice","cargoservice","hold_state_update")
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="push_state_to_gui",cond=whenEvent("hold_state_update"))
-					transition(edgeName="t01",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
-				}	 
-				state("push_state_to_gui") { //this:State
-					action { //it:State
-						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE)"), Term.createTerm("hold_state_update(JSONSTATE)"), 
-						                        currentMsg.msgContent()) ) { //set msgArgList
-								
-												HoldStateJson = payloadArg(0);
-												// Invia il JSON a tutti i client web tramite il Manager condiviso.
-								CommUtils.outblue("$name | Update ricevuto: $HoldStateJson")
-						}
-						//genTimer( actor, state )
-					}
-					//After Lenzi Aug2002
-					sysaction { //it:State
-					}	 	 
-					 transition(edgeName="t02",targetState="push_state_to_gui",cond=whenEvent("hold_state_update"))
-					transition(edgeName="t03",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
 				}	 
 			}
 		}

@@ -29,9 +29,6 @@ class Gui_api_gateway ( name: String, scope: CoroutineScope, isconfined: Boolean
 	override fun getBody() : (ActorBasicFsm.() -> Unit){
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
-		
-				// Inizializza l'handler' e gli passa il nome del Gateway.
-				// WebSocketHandler.init(this.name, myself.getQActorContext(), 8001);
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State

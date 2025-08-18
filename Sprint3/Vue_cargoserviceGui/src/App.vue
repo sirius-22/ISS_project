@@ -33,7 +33,7 @@ onUnmounted(() => {
 // e sono automaticamente disponibili nel template.
 
 function connectWebSocket() {
-  ws = new WebSocket('ws://localhost:8080/status-updates');
+  ws = new WebSocket('ws://localhost:8504/status-updates');
 
   ws.onopen = () => {
     connectionStatus.value = 'Open';
@@ -41,6 +41,8 @@ function connectWebSocket() {
   };
 
   ws.onmessage = (event) => {
+    console.log('Messaggio ricevuto:', data);
+
     try {
       const data = JSON.parse(event.data);
       console.log('Messaggio ricevuto:', data);

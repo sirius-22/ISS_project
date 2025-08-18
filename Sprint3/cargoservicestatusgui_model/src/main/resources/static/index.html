@@ -1,126 +1,241 @@
 <!DOCTYPE html>
 <html lang="it">
-	<head>
-	    <meta charset="UTF-8">
-	    <title>Client di cargoservice</title>
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	    <!--<style>
-	        body {
-	            font-family: Arial, sans-serif;
-	            display: flex;
-	            flex-direction: column;
-	            align-items: center;
-	            padding: 20px;
-	            background-color: #f5f5f5;
-	        }
-	
-	        .container {
-	            background-color: white;
-	            border-radius: 10px;
-	            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-	            padding: 30px;
-	            width: 90%;
-	            max-width: 600px;
-	        }
-	
-	        h1 {
-	            color: #2c3e50;
-	            margin-bottom: 20px;
-	            text-align: center;
-	        }
-	
-	        form {
-	            display: flex;
-	            flex-direction: column;
-	            gap: 15px;
-	        }
-	
-	        input, button {
-	            padding: 10px;
-	            font-size: 16px;
-	            border-radius: 5px;
-	            border: 2px solid #ccc;
-	        }
-	
-	        button {
-	            background-color: #3498db;
-	            color: white;
-	            font-weight: bold;
-	            border: none;
-	            cursor: pointer;
-	        }
-	
-	        button:hover {
-	            background-color: #2980b9;
-	        }
-	
-	        .response-box {
-	            margin-top: 20px;
-	            padding: 15px;
-	            border: 2px #2c3e50;
-	            border-radius: 8px;
-	            background-color: #ecf0f1;
-	            font-family: monospace;
-	            white-space: pre-wrap;
-	        }
-	
-	        .error {
-	            color: #e74c3c;
-	            font-weight: bold;
-	        }
-	    </style>-->
-	</head>
+<head>
+<meta charset="UTF-8">
+<title>Stato Servizio Cargo</title>
+<style>
 
-	
-	
-	<body>
-		
-		<div class="container">
-		    <h1>Invia richieste a cargoservice</h1>
-		
-		    <form id="holdForm">
-		        <input type="text" id="pidInput" name="pid" placeholder="Inserisci Product ID (e.g. 17)" required />
-		        <button type="submit">Invia richiesta</button>
-		    </form>
-		    
-		    <div class="controllo" id="controllo"></div>
-		
-		    <div class="response-box" id="responseBox">Risposta di cargoservice verrà mostrata qui.</div>
-		</div>
-		
-		<script>
-		    document.getElementById("holdForm").addEventListener("submit", function (e) {
-		        e.preventDefault();
-		
-		        const pid = document.getElementById("pidInput").value.trim();
-		        const responseBox = document.getElementById("responseBox");
-		        const controllo = document.getElementById("controllo");
-		        
-		        
-		        controllo.textContent = pid;
-		
-		        if (!pid) {
-		            responseBox.innerHTML = `<span class="error">Errore: il Product ID è obbligatorio.</span>`;
-		            return;
-		        }
-		
-		        responseBox.textContent = "Caricamento...";
-		
-		        fetch(`/caller?pid=${encodeURIComponent(pid)}`)
-		            .then(response => {
-		                if (!response.ok) {
-		                    throw new Error("Errore HTTP: " + response.status);
-		                }
-		                return response.text();
-		            })
-		            .then(data => {
-		                responseBox.textContent = data;
-		            })
-		            .catch(error => {
-		                responseBox.innerHTML = `<span class="error">Errore: ${error.message}</span>`;
-		            });
-		    });
-		</script>
-		
-	</body>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+
+        h1, h2 { color: #0056b3; }
+
+        #main-container { width: 80%; max-width: 1200px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+        #slots-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+
+        .slot { border: 1px solid #ccc; border-radius: 5px; padding: 15px; }
+
+        .slot.occupied { background-color: #e3f2fd; border-left: 5px solid #2196F3; }
+
+        .slot.free { background-color: #e8f5e9; border-left: 5px solid #4CAF50; }
+
+        .slot h3 { margin-top: 0; }
+
+        #request-form-container { padding: 20px; border-top: 1px solid #ddd; margin-top: 20px; }
+
+        #load-request-form { display: flex; gap: 10px; align-items: center; }
+
+        #load-request-form input { padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 16px; }
+
+        #load-request-form button { padding: 10px 15px; border-radius: 4px; border: none; background-color: #007bff; color: white; font-size: 16px; cursor: pointer; }
+
+        #connection-status { margin-top: 20px; font-size: 14px; }
+
+        #notification-area { margin-bottom: 20px; }
+
+        .notification { padding: 15px; margin-bottom: 10px; border-radius: 5px; color: white; text-align: center; }
+
+        .notification.success { background-color: #4CAF50; }
+
+        .notification.error { background-color: #f44336; }
+</style>
+</head>
+<body>
+<div id="main-container">
+<h1>Stato Stiva Cargo</h1>
+<div id="notification-area"></div>
+<div id="slots-container"></div>
+<div id="request-form-container">
+<h2>Invia Richiesta di Carico</h2>
+<form id="load-request-form">
+<label for="pid">Product ID (PID):</label>
+<input type="number" id="pid" name="pid" required placeholder="Es. 123">
+<button type="submit">Invia Richiesta</button>
+</form>
+</div>
+<div id="connection-status">
+
+            Stato Connessione: <span id="status-light" style="color:red;">●</span> <span id="status-text">Disconnesso</span>
+</div>
+</div>
+<script>
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const wsUri = "ws://localhost:8080/status-updates";
+
+            let websocket;
+
+            const slotsContainer = document.getElementById('slots-container');
+
+            const form = document.getElementById('load-request-form');
+
+            const pidInput = document.getElementById('pid');
+
+            const statusLight = document.getElementById('status-light');
+
+            const statusText = document.getElementById('status-text');
+
+            const notificationArea = document.getElementById('notification-area');
+
+            function initWebSocket() {
+
+                websocket = new WebSocket(wsUri);
+
+                websocket.onopen = () => updateConnectionStatus(true);
+
+                websocket.onclose = () => {
+
+                    updateConnectionStatus(false);
+
+                    setTimeout(initWebSocket, 3000);
+
+                };
+
+                websocket.onmessage = (evt) => {
+
+                    try {
+
+                        const data = JSON.parse(evt.data);
+
+                        // Flusso 1: Aggiornamento stato stiva
+
+                        if (data.slots) {
+
+                            updateSlotsView(data);
+
+                        } 
+
+                        // Flusso 2: Risposta a richiesta di carico
+
+                        else if (data.status) {
+
+                            displayNotification(data);
+
+                        }
+
+                    } catch (e) {
+
+                        console.error("Errore nel parsing JSON: ", e);
+
+                    }
+
+                };
+
+                websocket.onerror = () => updateConnectionStatus(false);
+
+            }
+
+            function updateConnectionStatus(isConnected) {
+
+                statusLight.style.color = isConnected ? 'green' : 'red';
+
+                statusText.textContent = isConnected ? 'Connesso' : 'Disconnesso';
+
+            }
+
+            function updateSlotsView(data) {
+
+                slotsContainer.innerHTML = '';
+
+                // Aggiungiamo lo Slot5 vuoto, perché il JSON potrebbe non contenerlo
+
+                const allSlotsData = [...data.slots];
+
+                if (!allSlotsData.find(s => s.slotName === 'Slot5')) {
+
+                    allSlotsData.push({ slotName: 'Slot5', product: null });
+
+                }
+ 
+                allSlotsData.sort((a, b) => a.slotName.localeCompare(b.slotName));
+
+                allSlotsData.forEach(slot => {
+
+                    const slotDiv = document.createElement('div');
+
+                    slotDiv.classList.add('slot');
+
+                    let content = `<h3>${slot.slotName}</h3>`;
+
+                    if (slot.product) {
+
+                        slotDiv.classList.add('occupied');
+
+                        content += `<p><strong>Prodotto:</strong> ${slot.product.name}</p><p><strong>ID:</strong> ${slot.product.productId}</p><p><strong>Peso:</strong> ${slot.product.weight} kg</p>`;
+
+                    } else {
+
+                        slotDiv.classList.add('free');
+
+                        content += `<p>Libero</p>`;
+
+                    }
+
+                    slotDiv.innerHTML = content;
+
+                    slotsContainer.appendChild(slotDiv);
+
+                });
+
+            }
+
+            function displayNotification(data) {
+
+                const div = document.createElement('div');
+
+                div.classList.add('notification');
+
+                if (data.status === 'accepted') {
+
+                    div.classList.add('success');
+
+                    div.textContent = `Richiesta per PID ${data.pid} ACCETTATA. Assegnato a ${data.slot}.`;
+
+                } else {
+
+                    div.classList.add('error');
+
+                    div.textContent = `Richiesta per PID ${data.pid} RIFIUTATA. Motivo: ${data.reason}.`;
+
+                }
+
+                notificationArea.prepend(div);
+
+                setTimeout(() => div.remove(), 5000);
+
+            }
+ 
+            form.addEventListener('submit', (event) => {
+
+                event.preventDefault();
+
+                const pid = pidInput.value;
+
+                if (!pid) return;
+
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+
+                    websocket.send(JSON.stringify({ type: "loadrequest", pid: parseInt(pid, 10) }));
+
+                    pidInput.value = '';
+
+                } else {
+
+                    alert("Connessione WebSocket non attiva.");
+
+                }
+
+            });
+
+            // Inizializza con slot vuoti, poi attende l'aggiornamento dal server
+
+            updateSlotsView({ slots: [] });
+
+            initWebSocket();
+
+        });
+</script>
+</body>
 </html>
+ 

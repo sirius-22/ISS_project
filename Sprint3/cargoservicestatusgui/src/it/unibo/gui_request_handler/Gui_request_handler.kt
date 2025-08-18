@@ -30,9 +30,9 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 		//val interruptedStateTransitions = mutableListOf<Transition>()
 		//IF actor.withobj !== null val actor.withobj.name» = actor.withobj.method»ENDIF
 		
-				var Last_PID = 0
-				var Last_Request_ID = ""
-				var ResponseJson = ""
+		  var Last_PID = 0
+		  var Last_Request_ID = "" // Conterrà il sessionId dal payload
+		  var ResponseJson = ""
 		return { //this:ActionBasciFsm
 				state("s0") { //this:State
 					action { //it:State
@@ -42,16 +42,16 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t04",targetState="handle_web_request",cond=whenRequest("loadrequest"))
+					 transition(edgeName="t00",targetState="handle_web_request",cond=whenRequest("client_loadrequest"))
 				}	 
 				state("handle_web_request") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("loadrequest(PID)"), Term.createTerm("loadrequest(PID)"), 
+						if( checkMsgContent( Term.createTerm("client_loadrequest(PID,SESSION_ID)"), Term.createTerm("client_loadrequest(PID,SESSION_ID)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												Last_Request_ID = currentMsg.msgId();
-												Last_PID = payloadArg(0).toInt();
-								CommUtils.outblack("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID. Inoltro...")
+								    Last_PID = payloadArg(0).toInt();
+								    Last_Request_ID = payloadArg(1); // Estraiamo il sessionId
+								CommUtils.outblack("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID da Session=$Last_Request_ID. Inoltro...")
 								request("loadrequest", "loadrequest($Last_PID)" ,"cargoservice" )  
 						}
 						//genTimer( actor, state )
@@ -59,17 +59,18 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t05",targetState="handle_load_accepted",cond=whenReply("loadaccepted"))
-					transition(edgeName="t06",targetState="handle_load_rejected",cond=whenReply("loadrejected"))
+					 transition(edgeName="t01",targetState="handle_load_accepted",cond=whenReply("loadaccepted"))
+					transition(edgeName="t02",targetState="handle_load_rejected",cond=whenReply("loadrejected"))
 				}	 
 				state("handle_load_accepted") { //this:State
 					action { //it:State
 						if( checkMsgContent( Term.createTerm("loadaccepted(SLOT)"), Term.createTerm("loadaccepted(SLOT)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val slot = payloadArg(0);
-												ResponseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}";
+								    val slot = payloadArg(0);
+								    ResponseJson = "'{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}'";
 						}
+						forward("load_response", "response($Last_Request_ID,$ResponseJson)" ,"springboot_gui" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
@@ -82,9 +83,10 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						if( checkMsgContent( Term.createTerm("loadrejected(REASON)"), Term.createTerm("loadrejected(REASON)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
-												val reason = payloadArg(0);
-												ResponseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}";
+								    val reason = payloadArg(0);
+								    ResponseJson = "'{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}'";
 						}
+						forward("load_response", "response($Last_Request_ID,$ResponseJson)" ,"springboot_gui" ) 
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002

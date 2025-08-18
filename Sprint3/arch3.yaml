@@ -108,7 +108,7 @@ services:
   # ------ CARGOSERVICECORE -------------
   cargoservicecore:
     container_name: cargoservicecore
-    image: cargoservice:1.10
+    image: cargoservice:2.0
     mem_limit: 512m
     ports:
       - "8000:8000/tcp"
@@ -132,7 +132,7 @@ services:
 
   cargoservicestatusgui:
     container_name: cargoservicestatusgui
-    image: cargoservicestatusgui:1.0
+    image: cargoservicestatusgui:1.1
     mem_limit: 512m
     ports:
       - "8001:8001/tcp"
@@ -153,6 +153,55 @@ services:
         condition: service_healthy
     networks:
       - iss-network
+
+
+  # cargoservicestatusgui_model:
+  #   container_name: cargoservicestatusgui_model
+  #   image: cargoservicestatusgui_model:1.0
+  #   mem_limit: 512m
+  #   ports:
+  #     - "8504:8504/tcp"
+  #     - "8504:8504/udp"
+  #   environment:
+  #     - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+  #     - SERVICE_HOST=172.31.64.1
+  #     - SERVICE_IP=172.31.64.1
+  #     - MQTTBROKER=mosquitto
+  #   depends_on:
+  #     mosquitto:
+  #       condition: service_started
+  #     eureka:
+  #       condition: service_healthy
+  #     basicrobot24:
+  #       condition: service_healthy
+  #     cargoserviceqak:
+  #       condition: service_healthy
+  #   networks:
+  #     - iss-network
+
+
+  # ------ VUE FRONTEND -------------
+  # vue_cargoservicegui:
+  #   container_name: vue_cargoservicegui
+  #   image: vue_cargoservicegui
+  #   # Qui devi specificare le porte corrette. Ad esempio, se la tua applicazione Vue ascolta sulla porta 8080, potresti voler esporla.
+  #   # Assicurati di non avere conflitti con le altre porte già usate (es. 8000, 8001, ecc.).
+  #   ports:
+  #     - "5173:80" # Esempio di mappatura delle porte
+  #   environment:
+  #     # Se la tua app Vue ha bisogno di accedere ad altri servizi, devi configurare le variabili d'ambiente.
+  #     # Ad esempio, potrebbe aver bisogno dell'URL di Eureka o di un altro servizio backend.
+  #     - VUE_APP_EUREKA_URL=http://eureka:8761/eureka/
+  #     - VUE_APP_MQTT_BROKER=mosquitto
+  #   depends_on:
+  #     # Se il frontend ha bisogno che il backend e/o Eureka siano pronti prima di avviarsi,
+  #     # aggiungi le dipendenze qui.
+  #     eureka:
+  #       condition: service_healthy
+  #     cargoservicecore:
+  #       condition: service_started # O service_healthy, a seconda di come lo hai configurato
+  #   networks:
+  #     - iss-network
 
 networks:
   iss-network:

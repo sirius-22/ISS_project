@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Stato Servizio Cargo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        #main-container {
+            width: 80%;
+            max-width: 1200px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #slots-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .slot {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .slot.occupied {
+            background-color: #e3f2fd; /* Azzurro chiaro */
+            border-left: 5px solid #2196F3; /* Blu */
+        }
+        .slot.free {
+            background-color: #e8f5e9; /* Verde chiaro */
+            border-left: 5px solid #4CAF50; /* Verde */
+        }
+        .slot:hover {
+            transform: translateY(-5px);
+        }
+        .slot h3 {
+            margin-top: 0;
+            color: #0056b3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+        .slot p {
+            margin: 5px 0;
+        }
+        #request-form-container {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        #load-request-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        #load-request-form input {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        #load-request-form button {
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #load-request-form button:hover {
+            background-color: #0056b3;
+        }
+        #connection-status {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        #status-light {
+            font-size: 20px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-container">
+        <h1>Stato Stiva Cargo</h1>
+
+        <div id="slots-container">
+            <!-- Gli slot verranno generati dinamicamente qui da JavaScript -->
+        </div>
+
+        <div id="request-form-container">
+            <h2>Invia Richiesta di Carico</h2>
+            <form id="load-request-form">
+                <label for="pid">Product ID (PID):</label>
+                <input type="number" id="pid" name="pid" required placeholder="Es. 123">
+                <button type="submit">Invia Richiesta</button>
+            </form>
+        </div>
+
+        <div id="connection-status">
+            Stato Connessione: <span id="status-light" style="color:red;">●</span> <span id="status-text">Disconnesso</span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // NOTA: Cambia 'localhost:8080' con l'host e la porta corretti del tuo backend
+            const wsUri = "ws://localhost:8080/status-updates";
+            let websocket;
+
+            const slotsContainer = document.getElementById('slots-container');
+            const form = document.getElementById('load-request-form');
+            const pidInput = document.getElementById('pid');
+            const statusLight = document.getElementById('status-light');
+            const statusText = document.getElementById('status-text');
+
+            function initWebSocket() {
+                websocket = new WebSocket(wsUri);
+
+                websocket.onopen = (evt) => {
+                    console.log("CONNESSIONE WEBSOCKET APERTA");
+                    updateConnectionStatus(true);
+                };
+
+                websocket.onclose = (evt) => {
+                    console.log("CONNESSIONE WEBSOCKET CHIUSA");
+                    updateConnectionStatus(false);
+                    // Tenta di riconnettersi dopo 3 secondi per robustezza
+                    setTimeout(initWebSocket, 3000);
+                };
+
+                websocket.onmessage = (evt) => {
+                    console.log("MESSAGGIO RICEVUTO: " + evt.data);
+                    try {
+                        const data = JSON.parse(evt.data);
+                        if (data.slots && Array.isArray(data.slots)) {
+                            updateSlotsView(data.slots);
+                        }
+                    } catch (e) {
+                        console.error("Errore nel parsing del JSON ricevuto: ", e);
+                    }
+                };
+
+                websocket.onerror = (evt) => {
+                    console.error("ERRORE WEBSOCKET: ", evt);
+                    updateConnectionStatus(false);
+                };
+            }
+
+            function updateConnectionStatus(isConnected) {
+                if (isConnected) {
+                    statusLight.style.color = 'green';
+                    statusText.textContent = 'Connesso';
+                } else {
+                    statusLight.style.color = 'red';
+                    statusText.textContent = 'Disconnesso';
+                }
+            }
+
+            function updateSlotsView(slots) {
+                slotsContainer.innerHTML = ''; // Svuota il contenitore attuale
+                slots.forEach(slot => {
+                    const slotDiv = document.createElement('div');
+                    slotDiv.classList.add('slot');
+
+                    let content = `<h3>${slot.slotName}</h3>`;
+
+                    if (slot.product) {
+                        slotDiv.classList.add('occupied');
+                        content += `
+                            <p><strong>Prodotto:</strong> ${slot.product.name}</p>
+                            <p><strong>ID:</strong> ${slot.product.productId}</p>
+                            <p><strong>Peso:</strong> ${slot.product.weight} kg</p>
+                        `;
+                    } else {
+                        slotDiv.classList.add('free');
+                        content += `<p>Libero</p>`;
+                    }
+
+                    slotDiv.innerHTML = content;
+                    slotsContainer.appendChild(slotDiv);
+                });
+            }
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault(); // Impedisce il comportamento di default del form
+                const pid = pidInput.value;
+
+                if (!pid) {
+                    alert("Per favore, inserisci un PID.");
+                    return;
+                }
+
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    const message = {
+                        type: "loadrequest",
+                        pid: parseInt(pid, 10)
+                    };
+                    const jsonMessage = JSON.stringify(message);
+                    websocket.send(jsonMessage);
+                    console.log("MESSAGGIO INVIATO: " + jsonMessage);
+                    pidInput.value = ''; // Pulisce il campo di input
+                } else {
+                    alert("Impossibile inviare la richiesta. Connessione WebSocket non attiva.");
+                }
+            });
+
+            // Inizializza la vista con slot vuoti al caricamento della pagina
+            // Il numero di slot qui deve corrispondere a quelli del tuo sistema
+            const initialSlots = [
+                {"slotName":"Slot1","product":null},
+                {"slotName":"Slot2","product":null},
+                {"slotName":"Slot3","product":null},
+                {"slotName":"Slot4","product":null},
+                {"slotName":"Slot5","product":null},
+                {"slotName":"Slot6","product":null}
+            ];
+            updateSlotsView(initialSlots);
+
+            // Avvia la connessione WebSocket
+            initWebSocket();
+        });
+    </script>
+
+</body>
+</html>
