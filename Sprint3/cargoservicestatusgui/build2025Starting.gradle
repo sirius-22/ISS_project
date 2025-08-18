@@ -154,9 +154,9 @@ task dovesiamo {
 
 distributions {
     main {
-        distributionBaseName = 'cargoservicestatusgui'
+        distributionBaseName = 'gui'
         contents { 
-             from './cargoservicestatusgui.pl'
+             from './gui.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
         }

@@ -149,7 +149,7 @@ eclipse {
 
 application {
     //Define the main class for the application.
-    mainClassName    = 'it.unibo.ctx_cargoservice.MainCtx_cargoserviceKt'
+    mainClassName    = 'it.unibo.ctx_gui.MainCtx_guiKt'
 }
  
  jar {
@@ -172,9 +172,9 @@ task dovesiamo {
 
 distributions {
     main {
-        distributionBaseName = 'cargoservicestatusgui'
+        distributionBaseName = 'gui'
         contents { 
-             from './cargoservicestatusgui.pl'
+             from './gui.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
         }
@@ -185,7 +185,7 @@ task run0(type: JavaExec) {
     group = "Execution"
     description = "Run the main class with JavaExecTask"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'it.unibo.ctx_cargoservice.MainCtx_cargoserviceKt'
+    main = 'it.unibo.ctx_gui.MainCtx_guiKt'
 }
 
 /*

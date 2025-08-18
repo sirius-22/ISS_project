@@ -19,7 +19,6 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
 
 class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -69,7 +68,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 								
 												val slot = payloadArg(0)
 												val responseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
-												WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
+												//WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
 						}
 						//genTimer( actor, state )
 					}
@@ -85,7 +84,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 								
 												val reason = payloadArg(0)
 												val responseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
-												WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
+												//WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
 						}
 						//genTimer( actor, state )
 					}

@@ -1,4 +1,4 @@
-System cargoservicestatusgui
+System gui
 
 mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
 
@@ -6,12 +6,12 @@ mqttBroker "localhost" : 1883 eventTopic "unibo/qak/events"
 Request loadrequest : loadrequest(PID)
 Reply   loadaccepted : loadaccepted(SLOT) for loadrequest
 Reply   loadrejected : loadrejected(REASON) for loadrequest
-Dispatch hold_state_update : hold_state_update(JSONSTATE)
-Event hold_state_update : hold_state_update(JSONSTATE)
+Dispatch changed : changed(JSONSTATE)
+Event changed : changed(JSONSTATE)
 
 // ======================= CONTESTI =======================
+Context ctx_cargoservice ip [host="localhost" port=8000] //TODO CHANGE HOST TO cargoservicecore
 Context ctx_gui ip [host="localhost" port=8001]
-Context ctx_cargoservice ip [host="127.0.0.1" port=8000] //TODO CHANGE HOST TO cargoservicecore
 
 // ======================= ATTORI =======================
 
@@ -19,7 +19,7 @@ ExternalQActor cargoservice context ctx_cargoservice
 
 // ---------- L'API GATEWAY PER LA GUI ----------
 QActor gui_api_gateway context ctx_gui {
-	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
+	//import "unibo.disi.gui.ws.WebSocketHandler"
 
 	[#
 		// Inizializza l'handler' e gli passa il nome del Gateway.
@@ -47,35 +47,49 @@ QActor gui_api_gateway context ctx_gui {
 
 // ---------- OSSERVATORE DELLO STATO (Worker) ----------
 QActor gui_state_observer context ctx_gui {
-	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
-
+	//import "unibo.disi.gui.ws.WebSocketHandler"
+	import "it.unibo.kactor.QakContext"
+	
 	State s0 initial {
 		println("$name | Avvio e inizio ad osservare cargoservice...") color green
-		observeResource cargoservice msgid hold_state_update
+		[#
+
+   val sysUtilClass = Class.forName("it.unibo.kactor.sysUtil")
+    val m = sysUtilClass.getDeclaredField("ctxsMap")
+    m.isAccessible = true
+    val ctxsMap = m.get(null) as Map<*, *>
+
+    println("== ctxsMap (contesti registrati) ==")
+    ctxsMap.forEach { (name, info) -> println("  $name -> $info") }
+    
+  #]
+		observeResource cargoservice msgid changed
+		delay 1000
+		request cargoservice -m loadrequest: loadrequest(1)
 	}
 	Transition t0
-		whenEvent hold_state_update -> push_state_to_gui
-		whenMsg hold_state_update -> push_state_to_gui
+		whenEvent changed -> push_state_to_gui
+		whenMsg changed -> push_state_to_gui
 
 	State push_state_to_gui {
-		onMsg(hold_state_update : hold_state_update(JSONSTATE)) {
+		onMsg(changed : changed(JSONSTATE)) {
 			[#
 				val holdStateJson = payloadArg(0)
 				// Invia il JSON a tutti i client web tramite il Manager condiviso.
-				WebSocketHandler.getInstance().sendToAll(holdStateJson)
+				//WebSocketHandler.getInstance().sendToAll(holdStateJson)
 			#]
 			println("$name | Update ricevuto: $holdStateJson") color blue
 		}
 	}
 	Transition t0
-		whenEvent hold_state_update -> push_state_to_gui
-		whenMsg hold_state_update -> push_state_to_gui
+		whenEvent changed -> push_state_to_gui
+		whenMsg changed -> push_state_to_gui
 }
 
 
 // ---------- GESTORE DELLE RICHIESTE ----------
 QActor gui_request_handler context ctx_gui {
-	import "unibo.disi.cargoservicestatusgui.ws.WebSocketHandler"
+	//import "unibo.disi.gui.ws.WebSocketHandler"
 	[#
 		var Last_PID = 0
 		var Last_Request_ID = ""
@@ -107,7 +121,7 @@ QActor gui_request_handler context ctx_gui {
 			[#
 				val slot = payloadArg(0)
 				val responseJson = "{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}"
-				WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
+				//WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
 			#]
 		}
 	}
@@ -118,7 +132,7 @@ QActor gui_request_handler context ctx_gui {
 			[#
 				val reason = payloadArg(0)
 				val responseJson = "{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}"
-				WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
+				//WebSocketHandler.getInstance().reply(Last_Request_ID, responseJson)
 			#]
 		}
 	}

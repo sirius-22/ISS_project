@@ -68,9 +68,9 @@ dependencies {
     implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core-jvm', version: "$kotlinVersion"
 
 	//SOCKET.IO  
-//    implementation group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
-    //javax.websocket api is only the specification
-//    implementation group: 'org.glassfish.tyrus.bundles', name: 'tyrus-standalone-client', version: '1.9'
+    implementation group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
+//    javax.websocket api is only the specification
+    implementation group: 'org.glassfish.tyrus.bundles', name: 'tyrus-standalone-client', version: '1.9'
   	  implementation group: 'org.java-websocket', name: 'Java-WebSocket', version: '1.6.0'
 
 	//HTTP
@@ -190,9 +190,9 @@ task dovesiamo {
 
 distributions {
     main {
-        distributionBaseName = 'cargoservicestatusgui'
+        distributionBaseName = 'gui'
         contents { 
-             from './cargoservicestatusgui.pl'
+             from './gui.pl'
              from './sysRules.pl'
              from './facadeConfig.json'
         }
@@ -203,7 +203,7 @@ task run0(type: JavaExec) {
     group = "Execution"
     description = "Run the main class with JavaExecTask"
     classpath = sourceSets.main.runtimeClasspath
-    main = 'it.unibo.ctx_cargoservicestatusgui.MainCtx_cargoservicestatusguiKt'
+    main = 'it.unibo.ctx_gui.MainCtx_guiKt'
 }
 
 /*

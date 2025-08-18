@@ -19,7 +19,7 @@ import org.json.simple.JSONObject
 
 
 //User imports JAN2024
-import unibo.disi.cargoservicestatusgui.ws.WebSocketHandler
+import it.unibo.kactor.QakContext
 
 class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Boolean=false, isdynamic: Boolean=false ) : 
           ActorBasicFsm( name, scope, confined=isconfined, dynamically=isdynamic ){
@@ -34,23 +34,35 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 				state("s0") { //this:State
 					action { //it:State
 						CommUtils.outgreen("$name | Avvio e inizio ad osservare cargoservice...")
-						observeResource("127.0.0.1","8000","ctx_cargoservice","cargoservice","hold_state_update")
+						
+						
+						   val sysUtilClass = Class.forName("it.unibo.kactor.sysUtil")
+						    val m = sysUtilClass.getDeclaredField("ctxsMap")
+						    m.isAccessible = true
+						    val ctxsMap = m.get(null) as Map<*, *>
+						
+						    println("== ctxsMap (contesti registrati) ==")
+						    ctxsMap.forEach { (name, info) -> println("  $name -> $info") }
+						    
+						observeResource("localhost","8000","ctx_cargoservice","cargoservice","changed")
+						delay(1000) 
+						request("loadrequest", "loadrequest(1)" ,"cargoservice" )  
 						//genTimer( actor, state )
 					}
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t00",targetState="push_state_to_gui",cond=whenEvent("hold_state_update"))
-					transition(edgeName="t01",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
+					 transition(edgeName="t00",targetState="push_state_to_gui",cond=whenEvent("changed"))
+					transition(edgeName="t01",targetState="push_state_to_gui",cond=whenDispatch("changed"))
 				}	 
 				state("push_state_to_gui") { //this:State
 					action { //it:State
-						if( checkMsgContent( Term.createTerm("hold_state_update(JSONSTATE)"), Term.createTerm("hold_state_update(JSONSTATE)"), 
+						if( checkMsgContent( Term.createTerm("changed(JSONSTATE)"), Term.createTerm("changed(JSONSTATE)"), 
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 												val holdStateJson = payloadArg(0)
 												// Invia il JSON a tutti i client web tramite il Manager condiviso.
-												WebSocketHandler.getInstance().sendToAll(holdStateJson)
+												//WebSocketHandler.getInstance().sendToAll(holdStateJson)
 								CommUtils.outblue("$name | Update ricevuto: $holdStateJson")
 						}
 						//genTimer( actor, state )
@@ -58,8 +70,8 @@ class Gui_state_observer ( name: String, scope: CoroutineScope, isconfined: Bool
 					//After Lenzi Aug2002
 					sysaction { //it:State
 					}	 	 
-					 transition(edgeName="t02",targetState="push_state_to_gui",cond=whenEvent("hold_state_update"))
-					transition(edgeName="t03",targetState="push_state_to_gui",cond=whenDispatch("hold_state_update"))
+					 transition(edgeName="t02",targetState="push_state_to_gui",cond=whenEvent("changed"))
+					transition(edgeName="t03",targetState="push_state_to_gui",cond=whenDispatch("changed"))
 				}	 
 			}
 		}
