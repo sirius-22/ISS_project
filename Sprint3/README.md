@@ -177,6 +177,30 @@ A tal fine, sono stati ideati i seguenti **test plan**:
 
 ## Progettazione
 
+### Leddevice
+
+Grazie all'utilizzo del framework QAK l'implementazione di ```leddevice``` è stata banale: all'arrivo dei dispatch ```ledon``` e ```ledoff```, modellati in fase di analisi, l'attore fa partire il file python dateci dal committente per l'accensione/spegnimento del led fisico e transita nello stato successivo in attesa del messaggio complementare.
+
+```
+QActor leddevice context ctx_raspdevice{
+	State init initial{
+	 println("$name | led ready") color yellow
+	}Goto ledoff_state
+	
+	State ledoff_state{
+		[# Runtime.getRuntime().exec("python ./resources/python/ledPython25Off.py") #]
+		println("$name | led is off") color yellow
+		println("$name | led waiting for messages") color yellow
+	}Transition t0 whenMsg ledon -> ledon_state
+	
+	State ledon_state{
+		 [# machineExec("python ./resources/python/ledPython25On.py") #]
+		println("$name | led is on") color yellow
+	}Transition t0 whenMsg ledoff -> ledoff_state
+	
+}
+```
+### CargoserviceStatusGui
 ## Deployment
 Poiché la parte del sistema relativa alla **logica di business** non ha subito modifiche, si rimanda allo sprint precedente per le istruzioni di [deployment di CargoServiceCore](https://github.com/sirius-22/ISS_project/blob/s3/Sprint2/Sprint2.md#deployment).  
 
