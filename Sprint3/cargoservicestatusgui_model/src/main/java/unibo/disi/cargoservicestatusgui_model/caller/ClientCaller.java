@@ -77,7 +77,7 @@ public class ClientCaller {
     public void setup() {
         try {
             CommUtils.outblue("ClientCaller | Connecting to QAK context...");
-            qakConnection = ConnectionFactory.createClientSupport(
+            qakConnection = ConnectionFactory.createClientSupport23(
                     ProtocolType.tcp, guiContextHost, String.valueOf(guiContextPort));
             CommUtils.outgreen("ClientCaller | Connected to QAK context at " + guiContextHost + ":" + guiContextPort);
         } catch (Exception e) {
@@ -94,7 +94,7 @@ public class ClientCaller {
             String msgId = "client_loadrequest";
             
             // Includiamo il sessionId nel payload, racchiudendolo tra apici singoli per la sintassi Prolog
-            String payload = String.format("loadrequest(%d, '%s')", pid, sessionId);
+            String payload = String.format("client_loadrequest(%d,'%s')", pid, sessionId);
 
             IApplMessage request = CommUtils.buildRequest(
                 "websocket_client",  // sender
