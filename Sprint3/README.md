@@ -253,7 +253,34 @@ QActor leddevice context ctx_raspdevice{
 	
 }
 ```
+
 ### CargoserviceStatusGui
+Il sottosistema QAK ```cargoservicestatusgui``` è il backend “logico” della GUI e vive in un contesto separato dal ```cargoservicecore```. È composto da tre attori indipendenti, come stabilito in fase di modellazione:
+- ```gui_api_gateway```: Punto di ingresso per le comunicazioni provenienti dal mondo esterno. All’avvio delega tutte le ```loadrequest``` al worker specializzato. Si è deciso di definire una nuova richiesta ```client_loadrequest``` per differenziare le loadrequest ricevute tramite la GUI da quelle provenienti da altre fonti.
+	```
+	State s0 initial {
+	  println("$name | Gateway avviato.")
+	  delay 100
+	  delegate client_loadrequest to gui_request_handler
+	} Goto idle_state
+	```
+- ```gui_state_observer```: Osservatore. Si sottoscrive via CoAP allo stato del cargoservice e inoltra gli update al livello applicativo.
+  ```
+  State s0 initial {
+		println("$name | Avvio e inizio ad osservare cargoservice...") color green
+		
+		// Questa azione usa CoAP per sottoscriversi.
+		// La notifica asincrona viene gestita da un CoapHandler
+		// che invia i dati al WebSocketManager.
+		// Per semplicità nel modello, l'implementazione esatta
+		// dell'handler è delegata a una classe Java helper.
+		observeResource cargoservice msgid hold_state_update
+	}
+	
+	// La logica di questo attore si è spostata nell'handler CoAP
+	// e nel WebSocketHandler. Qui rimane solo il setup.
+  ```
+- ```gui_request_handler```: Attore gestore delle richieste/risposte. Riceve client_loadrequest(PID, SESSION_ID) delegata da ```gui_api_gateway``` e inoltra loadrequest(PID) a cargoservice. Attende loadaccepted(SLOT) oppure loadrejected(REASON), poi costruisce un JSON di risposta e lo inoltra a Spring come ```load_response : response($Last_Request_ID, $ResponseJson)```.
 
 ## Deployment
 Poiché la parte del sistema relativa alla **logica di business** non ha subito modifiche, si rimanda allo sprint precedente per le istruzioni di [deployment di CargoServiceCore](https://github.com/sirius-22/ISS_project/blob/s3/Sprint2/Sprint2.md#deployment).  
