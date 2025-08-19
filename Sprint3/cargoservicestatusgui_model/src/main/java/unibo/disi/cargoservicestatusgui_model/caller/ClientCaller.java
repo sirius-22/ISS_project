@@ -77,7 +77,7 @@ public class ClientCaller {
     public void setup() {
         try {
             CommUtils.outblue("ClientCaller | Connecting to QAK context...");
-            qakConnection = ConnectionFactory.createClientSupport23(
+            qakConnection = ConnectionFactory.createClientSupport(
                     ProtocolType.tcp, guiContextHost, String.valueOf(guiContextPort));
             CommUtils.outgreen("ClientCaller | Connected to QAK context at " + guiContextHost + ":" + guiContextPort);
         } catch (Exception e) {

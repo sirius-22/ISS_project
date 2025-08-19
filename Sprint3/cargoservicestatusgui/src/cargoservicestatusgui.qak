@@ -91,7 +91,7 @@ QActor gui_request_handler context ctx_gui {
   onMsg(client_loadrequest : client_loadrequest(PID, SESSION_ID)) {
    [#
     Last_PID = payloadArg(0).toInt();
-    Last_Request_ID = payloadArg(1); // Estraiamo il sessionId
+    Last_Request_ID = "'"+payloadArg(1)+"'"; // Estraiamo il sessionId
    #]
    println("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID da Session=$Last_Request_ID. Inoltro...")
    
@@ -110,6 +110,7 @@ QActor gui_request_handler context ctx_gui {
     ResponseJson = "'{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}'";
    #]
   }
+  println("$name | ricevuta risposta loadaccepted, inizio inoltro alla gui...")
   forward springboot_gui -m load_response : response($Last_Request_ID, $ResponseJson)
  }
  Goto s0
@@ -121,6 +122,7 @@ QActor gui_request_handler context ctx_gui {
     ResponseJson = "'{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}'";
    #]
   }
+  println("$name | ricevuta risposta loadrejected, inizio inoltro alla gui...")
   forward springboot_gui -m load_response : response($Last_Request_ID, $ResponseJson)
  }
  Goto s0

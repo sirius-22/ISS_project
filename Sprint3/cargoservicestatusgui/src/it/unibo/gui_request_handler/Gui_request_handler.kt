@@ -50,7 +50,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 						                        currentMsg.msgContent()) ) { //set msgArgList
 								
 								    Last_PID = payloadArg(0).toInt();
-								    Last_Request_ID = payloadArg(1); // Estraiamo il sessionId
+								    Last_Request_ID = "'"+payloadArg(1)+"'"; // Estraiamo il sessionId
 								CommUtils.outblack("$name | Ricevuta richiesta DELEGATA per PID=$Last_PID da Session=$Last_Request_ID. Inoltro...")
 								request("loadrequest", "loadrequest($Last_PID)" ,"cargoservice" )  
 						}
@@ -70,6 +70,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 								    val slot = payloadArg(0);
 								    ResponseJson = "'{\"status\":\"accepted\", \"slot\":\"$slot\", \"pid\":$Last_PID}'";
 						}
+						CommUtils.outblack("$name | ricevuta risposta loadaccepted, inizio inoltro alla gui...")
 						forward("load_response", "response($Last_Request_ID,$ResponseJson)" ,"springboot_gui" ) 
 						//genTimer( actor, state )
 					}
@@ -86,6 +87,7 @@ class Gui_request_handler ( name: String, scope: CoroutineScope, isconfined: Boo
 								    val reason = payloadArg(0);
 								    ResponseJson = "'{\"status\":\"rejected\", \"reason\":\"$reason\", \"pid\":$Last_PID}'";
 						}
+						CommUtils.outblack("$name | ricevuta risposta loadrejected, inizio inoltro alla gui...")
 						forward("load_response", "response($Last_Request_ID,$ResponseJson)" ,"springboot_gui" ) 
 						//genTimer( actor, state )
 					}
