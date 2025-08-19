@@ -168,18 +168,71 @@ A tal fine, sono stati ideati i seguenti **test plan**:
   }
 ```
 
-### Test invio messaggio di update - [GuiUpdateTest.Java]
+### Test messaggio di update con CoAP - [CoapUpdateTest.Java](./CargoServiceCore/src/test/java/CoapUpdateTest.java)
 
-* Verifica dell'invio del messaggio:
+* Verifica della ricezione del messaggio:
 ```java
+@Test
+	public void testUpdateResourceCoap() throws Exception {
+		
+		CoapClient client = new CoapClient("coap://localhost:8000/ctx_cargoservice/cargoservice");
+		
+		CountDownLatch latch = new CountDownLatch(1); //usato per impostare un timeout
+		
+		Logger califLogger = (Logger) LoggerFactory.getLogger("org.eclipse.californium");
+		califLogger.setLevel(Level.INFO); 
 
+		CoapObserveRelation relation = client.observe(new CoapHandler() {
+			@Override
+			public void onLoad(CoapResponse resp) {
+				System.out.println("response: "+resp);
+				String c = resp.getResponseText();
+				System.out.println("content: "+c);
+	            if (c != null && !c.isBlank() && !"nonews".equalsIgnoreCase(c)) {
+	                content=c;
+	                latch.countDown();
+	            }
+			}
+
+			@Override
+			public void onError() {
+				latch.countDown();
+			}
+		});
+
+    //mock di una loadrequest
+		String req = CommUtils.buildRequest("mock", "loadrequest", "loadrequest(1)", "cargoservice").toString();
+
+		String response = conn.request(req);
+		System.out.println("richiesta inviata: "+response);
+
+		if (!response.contains("loadaccepted"))
+			fail("unexpected rejection");
+
+    //mock dell'evento containerhere per poter testare senza preoccuparsi del sonar
+		IApplMessage ev = CommUtils.buildEvent(
+	            "test",              // Nome mittente
+	            "containerhere",             // Nome evento
+	            "containerhere(ok)"          // Contenuto
+	        );
+		
+		conn.forward(ev);
+
+		// Attendo la notifica CoAP con timeout per sicurezza
+		boolean updated = latch.await(600, TimeUnit.SECONDS);
+		relation.proactiveCancel();
+
+		assertTrue("Nessun update CoAP ricevuto entro il timeout", updated);
+		assertNotNull("Ricevuto update nullo", content);
+		System.out.println("Update ricevuto: " + content);
+	}
 ```
 
 ## Progettazione
 
 ### Leddevice
 
-Grazie all'utilizzo del framework QAK l'implementazione di ```leddevice``` è stata banale: all'arrivo dei dispatch ```ledon``` e ```ledoff```, modellati in fase di analisi, l'attore fa partire il file python dateci dal committente per l'accensione/spegnimento del led fisico e transita nello stato successivo in attesa del messaggio complementare.
+Grazie all'utilizzo del framework QAK l'implementazione di ```leddevice``` è stata banale: all'arrivo dei dispatch ```ledon``` e ```ledoff```, modellati in fase di analisi, l'attore fa partire il file python datoci dal committente per l'accensione/spegnimento del led fisico e transita nello stato successivo in attesa del messaggio complementare.
 
 ```
 QActor leddevice context ctx_raspdevice{
@@ -201,6 +254,7 @@ QActor leddevice context ctx_raspdevice{
 }
 ```
 ### CargoserviceStatusGui
+
 ## Deployment
 Poiché la parte del sistema relativa alla **logica di business** non ha subito modifiche, si rimanda allo sprint precedente per le istruzioni di [deployment di CargoServiceCore](https://github.com/sirius-22/ISS_project/blob/s3/Sprint2/Sprint2.md#deployment).  
 
