@@ -78,7 +78,7 @@ Si noti come anche nel flusso di operazioni ```slotmanagement``` assume solo com
 
 *NOTE* : <br>
 (*) in futuro potrebbe caricare direttamente lo stato della stiva desiderato attraverso un file di configurazione.
-Per rendere più agevole questo passaggio verrà implementata un'interfaccia [FORSE DA METTERE IN IMPLEMENTAZIONE]
+Per rendere più agevole questo passaggio verrà implementata un'interfaccia.
 
 
 
