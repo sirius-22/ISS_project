@@ -256,7 +256,7 @@ QActor leddevice context ctx_raspdevice{
 
 ### CargoserviceStatusGui
 Il sottosistema QAK ```cargoservicestatusgui``` è il backend “logico” della GUI e vive in un contesto separato dal ```cargoservicecore```. È composto da tre attori indipendenti, come stabilito in fase di modellazione:
-- ```gui_api_gateway```: Punto di ingresso per le comunicazioni provenienti dal mondo esterno. All’avvio delega tutte le ```loadrequest``` al worker specializzato. Si è deciso di definire una nuova richiesta ```client_loadrequest``` per differenziare le loadrequest ricevute tramite la GUI da quelle provenienti da altre fonti.
+- ```gui_api_gateway```: Punto di ingresso per le comunicazioni provenienti dal mondo esterno. All’avvio delega tutte le ```loadrequest``` al worker specializzato. Si è deciso di definire una nuova richiesta ```client_loadrequest``` per differenziare le loadrequest ricevute tramite la GUI da quelle provenienti da altre fonti, e per poter passare l'id della sessione websocket come spiegato in seguito.
 	```
 	State s0 initial {
 	  println("$name | Gateway avviato.")
@@ -282,18 +282,103 @@ Il sottosistema QAK ```cargoservicestatusgui``` è il backend “logico” della
   ```
 - ```gui_request_handler```: Attore gestore delle richieste/risposte. Riceve client_loadrequest(PID, SESSION_ID) delegata da ```gui_api_gateway``` e inoltra loadrequest(PID) a cargoservice. Attende loadaccepted(SLOT) oppure loadrejected(REASON), poi costruisce un JSON di risposta e lo inoltra a Spring come ```load_response : response($Last_Request_ID, $ResponseJson)```.
 
+### Cargoservicestatusgui_model
+Questo componente è un'applicazione Spring Boot che funge da ponte tra i browser (che comunicano via WebSocket) e i QAK (che comunicano via TCP + CoAP). Questo modulo è implementato con Spring, sfruttando Inversion of Control (IoC) e Dependency Injection (DI) per ottenere componenti debolmente accoppiati, riusabili e facilmente testabili. In particolare:
+- il container Spring crea e gestisce il ciclo di vita dei bean;
+- le dipendenze vengono iniettate (di norma via constructor injection), evitando new sparsi nel codice;
+- le annotazioni (@Component, @Service, @Configuration, @PostConstruct, @Value/@ConfigurationProperties, ecc.) rendono il wiring esplicito e conciso.
+
+La web GUI vera e propria è una single-page statica (HTML + CSS + JS vanilla) che fornisce una vista in tempo reale dello stato della stiva e consente l’invio di loadrequest.
+- Stato in tempo reale: connessione WebSocket a ws://localhost:8080/status-updates con auto‑reconnect (3s). Un indicatore rosso/verde mostra lo stato della connessione.
+- Vista “hold”: griglia responsiva degli slot aggiornata in tempo reale.
+- Stato della richiesta: la risposta alle loadrequest inviate tramite GUI viene visualizzata temporaneamente sopra la griglia degli slot, e sparisce automaticamente dopo un breve timeout per evitare confusione con le risposte a richieste successive.
+
+### Invio delle richieste tramite web GUI
+Per quanto riguarda la funzionalità aggiuntiva introdotta in questo sprint, ovvero il poter inviare richieste di carico direttamente dalla GUI, essa è stata implementata tramite un ponte WebSocket → QAK realizzato in Spring Boot e l'attore QAK ```gui_request_handler``` introdotto in precedenza.
+Alla pagina della GUI è stato aggiunto un form in cui inserire il PID desiderato e un pulsante Submit per inviare la richiesta. 
+
+Flusso dei messaggi:
+
+Lato Spring (cargoservicestatusgui_model), il browser invia su WebSocket un messaggio contenente un tipo (in questo caso, loadrequest) e il PID inserito nell'apposito form. Il server recupera l’id della sessione WebSocket e lo passa al componente [ClientCaller](./cargoservicestatusgui_model/src/main/java/unibo/disi/cargoservicestatusgui_model/caller/ClientCaller.java), che a sua volta apre una connessione TCP verso il contesto QAK in cui si trovano i tre attori responsabili della gui e vi inoltra una client_loadrequest(PID, SESSION_ID):
+```java
+@PostConstruct
+public void setup() {
+	try {
+		CommUtils.outblue("ClientCaller | Connecting to QAK context...");
+		qakConnection = ConnectionFactory.createClientSupport(
+				ProtocolType.tcp, guiContextHost, String.valueOf(guiContextPort));
+		CommUtils.outgreen("ClientCaller | Connected to QAK context at " + guiContextHost + ":" + guiContextPort);
+	} catch (Exception e) {
+		CommUtils.outred("ClientCaller | Connection to QAK context FAILED: " + e.getMessage());
+	}
+}
+
+public void sendLoadRequest(int pid, String sessionId) {
+	if (qakConnection == null) {
+		CommUtils.outred("ClientCaller | Cannot send request, no connection to QAK context.");
+		return;
+	}
+	try {
+		String msgId = "client_loadrequest";
+		
+		// Includiamo il sessionId nel payload, racchiudendolo tra apici singoli per la sintassi Prolog
+		String payload = String.format("client_loadrequest(%d,'%s')", pid, sessionId);
+
+		IApplMessage request = CommUtils.buildRequest(
+			"websocket_client",  // sender
+			msgId,               // msgId
+			payload,             // content
+			gatewayActorName     // receiver
+		);
+		
+		CommUtils.outblue("ClientCaller | Sending request to QAK: " + request);
+		qakConnection.forward(request);
+
+	} catch (Exception e) {
+		CommUtils.outred("ClientCaller | Error sending request: " + e.getMessage());
+	}
+}
+```
+
+Lato QAK (cargoservicestatusgui), l’attore ```gui_api_gateway``` riceve la ```client_loadrequest``` e ne delega la gestione a ```gui_request_handler```, che:
+- estrae PID e racchiude tra apici il SESSION_ID per evitare errori del motore prolog,
+- invia la loadrequest a cargoservice con ```request cargoservice -m loadrequest : loadrequest(PID)```,
+- una volta ricevuta una risposta ```loadaccepted(SLOT)```o ```loadrejected(REASON)``` costruisce un JSON e lo inoltra a Spring con:
+```forward springboot_gui -m load_response : response(SESSION_ID, JSON_STRING)```
+
+Ritorno a Spring: il server TCP su 8002 ([QakResponseServer](./cargoservicestatusgui_model/src/main/java/unibo/disi/cargoservicestatusgui_model/caller/QakResponseServer.java)) riceve ```load_response```, ne effettua il parsing e invia il JSON grezzo alla specifica sessione WebSocket indicata dal SESSION_ID.
+
+Dopodiché il browser mostra una notifica del risultato della richiesta.
+
+In questo modo, la GUI può eseguire l’azione end‑to‑end senza conoscere dettagli interni del dominio QAK.
+
 ## Deployment
-Poiché la parte del sistema relativa alla **logica di business** non ha subito modifiche, si rimanda allo sprint precedente per le istruzioni di [deployment di CargoServiceCore](https://github.com/sirius-22/ISS_project/blob/s3/Sprint2/Sprint2.md#deployment).  
 
-Per quanto riguarda i componenti che gestiscono i **dispositivi di I/O**, sono disponibili due opzioni:
+1. Andare nella cartella [CargoServiceCore](./CargoServiceCore)
+2. Seguire le [istruzioni](how_to_creare_immagini_docker.md) per caricare l'immagine Docker di cargoservicore
+3. Eseguire il comando ```docker load -i basicrobot24.tar``` per caricare l'immagine Docker del basicrobot
+4. Creare la rete ```docker network create iss-network```
+5. Eseguire  il comando ```docker compose -f arch3.yaml up``` per far partire i componenti del sistema 
+6. Aprire il browser su [localhost:8090](localhost:8090) per visualizzare l’ambiente WEnv in cui lavorerà il DDR robot
+7. Eseguire il comando ```./gradlew run``` oppure ```gradle run``` nella cartella [logicModel_IODevices](./logicModel_IODevices) per far partire il resto del sistema RaspDevice
 
-1. **Utilizzo su Raspberry Pi**  
-   - Si possono impiegare componenti fisici per il sonar e il led.  
-   - Modello QAK da utilizzare: [io_devices_rpi.qak](./IODevices/src/io_devices_rpi.qak)
+*Note:*
 
-2. **Utilizzo senza hardware fisico**  
-   - È possibile utilizzare gli attori *mock* sviluppati negli sprint precedenti.  
-   - Modello QAK da utilizzare: [io_devices.qak](./IODevices/src/io_devices.qak)
+a. Per far eseguire il punto 2 è bene ricordarsi di far partire il demone Docker </br>
+b. Il sistema cargoservice si appoggia a productservice che ha un database Mongo per la persistenza dei prodotti, questo si può riempire con oppurtuni prodotti di test attraverso il file [setup_mongo.js](setup_mongo.js) (eseguire ```node setup_mongo.js```)
+
+### Raspberry Deployment
+
+
+Se si è in possesso di un Raspberry Pi, si possono usare componenti fisici per il controllo dei dispositivi di I/O.
+Per farlo:
+
+1. Eseguire fino al punto 6 della sezione precedente
+2. Copiare sul Raspberry Pi la distribuzione dei componenti relativi ai dispositivi di I/O generata con ```./gradlew run``` utilizzando, ad esempio, il comando ```scp``` oppure clonando direttamente il repository da Git.
+3. Sul Raspberry Pi, assicurarsi di avere installato Java 17 e Python 3: ```sudo apt update && sudo apt install -y openjdk-17-jdk python3 python3-pip```
+4. Verificare che lo script sonar.py sia leggibile ed eseguibile: ```chmod a+rx /percorso/del/progetto/resources/python/sonar.py```
+5. Assicurarsi che il file gradlew abbia il permesso di esecuzione (necessario se il progetto è stato copiato da Windows o scaricato in un formato che perde i permessi): ```chmod +x gradlew```
+6. Lanciare il sistema direttamente sul Raspberry Pi con: ```./gradlew run```
 
 
 
