@@ -1,0 +1,1001 @@
+/* 
+ * ================================================================================
+ * unibo.basicrobot24
+ * ================================================================================
+ */   
+    
+System /* -trace -msglog  */ basicrobot24     
+mqttBroker "localhost" : 1883 eventTopic "robotevents"  //SE definita MQTTBROKER, usa quell'addr
+//mqttBroker "test.mosquitto.org" : 1883 eventTopic "cargoevents"   //mosquitto "localhost" : 1883
+//mqttBroker "broker.hivemq.com" : 1883
+    
+Dispatch cmd       	: cmd(MOVE)         
+
+Dispatch end       	: end(ARG)         
+ 
+Request step       : step(TIME, PLANID)
+Reply stepdone     : stepdone(V, PLANID)                 for step
+Reply stepfailed   : stepfailed(DURATION, CAUSE, PLANID) for step
+Reply stepcollided : stepcollided(DURATION, PLANID)      for step 
+
+Request stepback       : stepback(TIME, PLANID)
+Reply stepbackdone     : stepbackdone(V, PLANID)                 for stepback
+Reply stepbackfailed   : stepbackfailed(DURATION, CAUSE, PLANID) for stepback
+Reply stepbackcollided : stepbackcollided(DURATION, PLANID)      for stepback
+
+Event  sonardata   : sonar( DISTANCE ) 	   
+Event obstacle     : obstacle(X) 
+Event info         : info(X)    
+
+Request  doplan     : doplan( PATH, STEPTIME, PLANID )
+Reply doplandone    : doplandone( ARG )    for doplan
+Reply doplanfailed  : doplanfailed( PATH_DONE, PATH_TODO )  for doplan
+
+Dispatch setrobotstate: setpos(X,Y,D) //D =up|down!left|right
+
+Request engage        : engage(OWNER, STEPTIME)	
+Reply   engagedone    : engagedone(ARG)    for engage
+Reply   engagerefused : engagerefused(ARG) for engage
+
+Dispatch disengage    : disengage(ARG)
+
+Request checkowner    : checkowner(CALLER)
+Reply checkownerok    : checkownerok(ARG)      for checkowner
+Reply checkownerfailed: checkownerfailed(ARG)  for checkowner
+  
+Event alarm           : alarm(X)
+Dispatch nextmove     : nextmove(M)
+Dispatch nomoremove   : nomoremove(M)
+ 
+Dispatch setdirection : dir( D )  //D =up|down!left|right
+
+//Inglobamento endosimbitico di robotpos
+Request moverobot    :  moverobot(TARGETX, TARGETY)  
+Reply moverobotdone  :  moverobotok(ARG)                    for moverobot
+Reply moverobotfailed:  moverobotfailed(PLANDONE, PLANTODO) for moverobot
+Reply moverobotfailed:  moverobotfailed(NoOwner) for moverobot 
+ 
+//Richieste di info 
+Request getrobotstate : getrobotstate(ARG)
+Reply robotstate      : robotstate(POS,DIR)  for getrobotstate
+
+Request getenvmap     : getenvmap(X)
+Reply   envmap        : envmap(MAP)  for getenvmap
+
+//recovery
+Dispatch updatemappath : path( MOVES )
+
+Dispatch resume :resume (Goon)
+
+Context ctxbasicrobot ip [host="localhost" port=8020]  
+
+//CodedQActor datacleaner    context ctxbasicrobot className "rx.dataCleaner"    //riceve l'evento sonarRobot
+//CodedQActor distancefilter context ctxbasicrobot className "rx.distanceFilter" //genera l'evento  obstacle e sonardata
+   
+/*   
+ * ------------------------------
+ * engager 
+ * ------------------------------
+ */ 
+QActor engager context ctxbasicrobot{
+[#     
+  //var Owner           = "unkknown"
+  var EngageCaller    = ""
+  var EngageDone      = true //false  MAY24
+  var curConn : Interaction? = null 
+  var OwnerMngr       = supports.OwnerManager //Kotlin object
+#]  	
+	State s0 initial { 	  
+		//printCurrentMessage color magenta
+		if [# ! currentMsg.isEvent() #]{ println("$name waiting ..")   }
+	} 
+	Transition t0 whenRequest engage     ->  handleEngage  
+		          whenMsg disengage      ->  disengageRobot
+		          whenRequest checkowner ->  checkTheOwner
+     			   
+    State handleEngage{
+    	printCurrentMessage color magenta
+			onMsg( engage : engage(OWNER, STEPTIME) ) {
+				println("engager | owner=${payloadArg(0)}" ) color blue
+				[# if( currentMsg.conn != null ) curConn = currentMsg.conn					
+				   EngageCaller  = currentMsg.msgSender() //payloadArg(0)
+				   if( curConn != null )
+				     CommUtils.outmagenta("engager | engaged by remote $EngageCaller on $curConn" )		
+				   else CommUtils.outmagenta("engager | engaged by local $EngageCaller " )	
+				   //MAY24
+				   EngageDone = OwnerMngr.engage(EngageCaller)
+				   if( EngageDone ) OwnerMngr.setStepTime(payloadArg(1))
+				   //MAY24
+				#]
+				println("$name | engage caller=$EngageCaller - engage done=$EngageDone") color blue
+			}
+     }  
+     //Goto engageAccept if [# Owner == "unkknown" || Owner == EngageCaller || EngageCaller == "gui23xyz9526" #] else engageRefuse
+     Goto engageAccept if [# EngageDone #] else engageRefuse
+     
+     
+     
+    State disengageRobot{  
+     	[# OwnerMngr.disengage()  #]
+     	println( "$name has disengaged")
+    	emitlocalstream alarm : alarm(disengaged)  //lo elabora planexec
+    }
+    Goto s0 
+    
+    State engageRefuse{
+    	[# val Owner = OwnerMngr.owner  #]
+    	println("$name engage refused since already working for $Owner") 
+     	replyTo engage with engagerefused : engagerefused($Owner)
+    }
+    Goto s0  
+        
+    State engageAccept{	 
+    	printCurrentMessage 
+		[# val Owner    = OwnerMngr.owner #]
+		updateResource [# "workingfor($Owner)" #] 			
+		replyTo engage with engagedone : engagedone($Owner)
+		//I messaggi che arrivano al basicrobot sono elaborati solo se OwnerMngr.owner ok	 			 
+	} 
+	Goto s0
+	 
+ 	
+ 	//Added June6. Poi removed a favore di OwnerMngr
+ 	State checkTheOwner{
+ 		printCurrentMessage
+ 	}
+ 	Goto s0 
+}
+
+/*
+ * ------------------------------
+ * basicrobot
+ * ------------------------------
+ */ 
+QActor basicrobot context ctxbasicrobot withobj robot using "uniborobots.robotSupport"{
+[#  
+  var StepTime      = 0L
+  var StartTime     = 0L     
+  var Duration      = 0L   
+  var RobotType     = "" 
+  var CurrentMove   = "unkknown"
+  var StepSynchRes  = false
+  var OwnerMngr     = supports.OwnerManager //Kotlin object
+  var AnswerKo      = "" 
+  var CurrentPlanIdForStep = 0
+  
+  
+  fun checkOwner( ) : Boolean {
+  	return OwnerMngr.checkOwner( currentMsg.msgSender() )
+  }
+#]      
+ 	State ss0 initial { 	
+ 		//printCurrentMessage       
+ 		discardMsg On  //In the intial phase ...
+ 		
+ 		delay 2000 //attende creazione attori locali
+ 		delegate engage to engager
+ 		delegate disengage to engager
+ 		delegate doplan to planexec
+ 		delegate getrobotstate to robotpos
+ 		delegate setrobotstate to robotpos
+ 		delegate moverobot to robotpos
+ 		delegate setdirection to robotpos
+ 		delegate getenvmap to robotpos
+ 		
+ 		subscribeTo basicrobot for sonardata
+ 		//[# unibo.comm22.utils.CommSystemConfig.tracing = false #]  //tracing at unibo.comm22 level
+ 		//delay 1000  //per inserzione in docker
+		//[# sysUtil.trace = true #]  //Trace the behavior of ActorBasic
+ 		//qrun uniborobots.robotSupport.create(myself,"basicrobotConfig.json")	 		
+ 		[# robot.create(myself,"basicrobotConfig.json") #]
+ 		[# RobotType = robot.robotKind #]  
+ 		println("$name | RobotType=$RobotType   ")
+ 		delay 2000 //eureka nel container deve essere on NON SERVE usando EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+ 		println("$name | registerService +++++++++++   ")
+ 		
+		//REGISTER	
+		[#
+			//if( CommUtils.ckeckEureka() )
+			CommUtils.registerService( main.java.EurekaServiceConfig() )
+		#]		
+ 		 
+  		println("basicrobot | STARTING Sept 2024 no moves ... ") color magenta
+  
+ 	}
+ 	//Goto waitForRobot   
+ 	Goto work 
+ 
+    State waitForRobot{
+ 		delay 5000 //per inserzione in docker: attesa per wenv  
+ 		//NO SUBSCRIPTION TO SONAR FOR THE VIRTUAL ROBOT
+ 		println("basicrobot | waitForRobot ... ") color magenta
+
+    } 
+    Goto work
+    
+  	 
+	State work{ 
+		//printCurrentMessage   
+		discardMsg Off //We want store the non-handled messages
+		println("basicrobot  | waiting, working for ${OwnerMngr.owner} ... ")  color magenta 
+	} 
+	Transition t0   whenRequest  step      -> doStep	
+	                whenRequest stepback   -> doStepBack	
+					whenMsg     cmd        -> execcmd
+				  	whenMsg     end        -> endwork		
+				  	whenEvent   sonardata  -> handlesonardata	  
+
+	
+	State handlesonardata{ 
+    	printCurrentMessage color yellow
+    	onMsg( sonardata : sonar(D)){
+    		updateResource [# "sonar(${payloadArg(0)})" #] 
+    	}   	
+    }
+    Goto work
+	
+	
+	State execcmd{ 
+		printCurrentMessage 
+		if [#   checkOwner() #] {   
+			onMsg( cmd : cmd(MOVE) ){
+	  			//activate the motors  
+	  			[# CurrentMove = payloadArg(0) #] 
+				run robot.move( payloadArg(0) )
+				
+				println("$name | execcmd $CurrentMove - updateResource & publish & emit") color magenta
+				updateResource [# "moveactivated(${CurrentMove})" #]				
+ 				publish "unibodisi" -m info : info(done($CurrentMove))
+ 				emit info : info(done($CurrentMove))
+			} 
+		}
+	 }
+	 Goto work   
+	
+   	State doStep{ 
+ 		printCurrentMessage  
+ 		if [#   checkOwner() #] {   
+			onMsg( step : step( T, PLANID ) ){  
+				[#	StepTime     = payloadArg(0).toLong()  
+					CurrentPlanIdForStep = payloadArg(1).toInt()
+					
+					#]    
+				updateResource [# "step(${StepTime},  ${CurrentPlanIdForStep})" #]
+	  		}  
+	        //println("basicrobot | doing doStep StepTime=$StepTime  ")        
+	        memoCurrentTime StartTime  
+	        [# StepSynchRes = robot.dostep( StepTime ) #]          
+        } else{
+ 		    //println("$name doStep AnswerKo=$AnswerKo") color red
+        	[# AnswerKo = "youarenotowner" #]
+			//replyTo step with stepfailed : stepfailed($Duration, noowner)
+		}
+	}  	
+	Goto stepok if [# StepSynchRes #] else handleStepFailure 
+ 
+ 	
+     	 
+	State stepok{   
+		//printCurrentMessage
+		[# StepSynchRes = false
+			
+			#
+		]
+ 		run robot.move( "h" )  //stop the (real) robot 
+		updateResource [# "stepDone($StepTime, $CurrentPlanIdForStep)" #]
+   		//emit info : info( stepdone($StepTime) )
+   		replyTo step with stepdone: stepdone ($StepTime,  $CurrentPlanIdForStep) 
+		//println("basicrobot | stepDone reply done")
+  	}
+	Goto work  
+	
+	    State handleStepFailure {
+        run robot.move( "h" ) // Fermiamo sempre il robot
+    }
+    Goto stepKoLogical if [# AnswerKo != "" #] else stepKoCollision
+
+    // Stato per fallimenti logici (posizione non cambia)
+    State stepKoLogical {
+        [#
+            val Cause = AnswerKo
+            AnswerKo = "" // Reset
+        #]
+        updateResource [# "stepFail(0, $Cause)" #]
+        replyTo step with stepfailed : stepfailed(0, $Cause, $CurrentPlanIdForStep)
+    }
+    Goto work
+
+    // Stato per collisioni fisiche (posizione cambia)
+    State stepKoCollision {
+        setDuration Duration from StartTime
+        updateResource [# "stepCollided($Duration)" #]
+        replyTo step with stepcollided : stepcollided($Duration, $CurrentPlanIdForStep)
+    }
+    Goto work
+	
+	//stepback
+	
+	State doStepBack {
+	    printCurrentMessage color green // Colore diverso per il debug
+	    if [# checkOwner() #] {
+	        onMsg( stepback : stepback(T, PLANID) ) {
+	            [# StepTime = payloadArg(0).toLong()
+	            	CurrentPlanIdForStep = payloadArg(1).toInt()
+	            	#
+	            ]
+	            updateResource [# "stepback($StepTime,  ${CurrentPlanIdForStep})" #]
+	        }
+	        memoCurrentTime StartTime
+	        [# StepSynchRes = robot.dostepback( StepTime ) #] // Chiama la nuova funzione di supporto
+	    } else {
+	        [# AnswerKo = "youarenotowner" #]
+	    }
+	}
+	Goto stepBackOk if [# StepSynchRes #] else handleStepBackFailure
+
+	State stepBackOk {
+	    [# StepSynchRes = false #]
+	    run robot.move("h")
+	    updateResource [# "stepBackDone($StepTime, $CurrentPlanIdForStep)" #]
+	    
+	    replyTo stepback with stepbackdone : stepbackdone($StepTime, $CurrentPlanIdForStep )
+	}
+	Goto work
+	
+	    State handleStepBackFailure{
+        run robot.move( "h" )
+    }
+    Goto stepBackKoLogical if [# AnswerKo != "" #] else stepBackKoCollision
+	
+
+    State stepBackKoLogical {
+        [#
+            val Cause = AnswerKo
+            AnswerKo = "" // Reset
+        #]
+        updateResource [# "stepBackFail(0, $Cause)" #]
+        replyTo stepback with stepbackfailed : stepbackfailed(0, $Cause, $CurrentPlanIdForStep)
+    }
+    Goto work
+
+    // Stato per collisioni fisiche (posizione cambia)
+    State stepBackKoCollision {
+        setDuration Duration from StartTime
+        updateResource [# "stepbackCollided($Duration)" #]
+        replyTo stepback with stepbackcollided : stepbackcollided($Duration, $CurrentPlanIdForStep)
+    }
+    Goto work
+
+					
+	State endwork{ 
+		//printCurrentMessage
+		updateResource [# "basicrobot(end)" #]	 		
+ 		//terminate 1
+	}   
+   
+} 
+  
+/*
+ * ------------------------------
+ * planexec
+ * ------------------------------
+ */
+QActor planexec context ctxbasicrobot withobj robot using "uniborobots.robotSupport"{
+	[#  var Plan          = ""
+		var PlanOrig      = ""
+		var PlanDone	  = ""
+		var CurMoveTodo   = ""	
+		var AlarmReceived = false	
+		var StepTime      = "200"
+		var OwnerMngr     = supports.OwnerManager //Kotlin object
+		var IsOwner       = false
+		var CurrentPlanId = 0
+		var msgId = ""
+		var isValid = false
+		var PathTodoOnFail = "" 
+   	#]
+	State s0 initial{
+//		subscribeTo engager for alarm
+	}
+	Goto work
+
+	State work{
+		//println("planexec | waiting ...")  
+	}
+	Transition t0 whenRequest doplan -> checkTheOwner
+	
+    
+    State checkTheOwner{
+    	//printCurrentMessage color blue
+    	onMsg( doplan : doplan(PLAN, STEPTIME, PLANID)){
+    		[# Plan       = payloadArg(0).replace("[","").replace("]","").replace(",","").replace(" ","")
+			   PlanOrig   = Plan
+			   PlanDone   = ""
+			   AlarmReceived = false 
+			   StepTime   = payloadArg(1)          //if int ...
+    		   val Caller = currentMsg.msgSender() //payloadArg(1) 
+    		   IsOwner    = OwnerMngr.checkOwner( Caller )
+    		   CurrentPlanId  = payloadArg(2).toInt()
+    		   PathTodoOnFail = ""
+    		#]
+    		//println("$name | checkTheOwner $Caller")
+    		//request engager -m checkowner : checkowner($Caller)
+    	}
+    }
+    Goto nextMove if [# IsOwner #] else planrefused
+ 
+	
+	State nextMove{ 
+		[# 
+		   if( Plan.length > 0  ){
+		   	CurMoveTodo =  Plan.elementAt(0).toString() 
+		   	Plan        =  Plan.removePrefix(CurMoveTodo)
+		   }else{
+		   	CurMoveTodo = ""
+		   	Plan        = "empty"
+		   } 		   
+		#]
+ 
+ 		//println("$name | domove $CurMoveTodo")    
+ 		if [# CurMoveTodo == "" #] { 
+ 			forward planexec -m nomoremove : nomoremove(end)
+ 		} 
+		else{ if [# CurMoveTodo == "w" #] {
+	 			delay 300  //avoid too fast ...
+	 			//Chiedo di fare step 
+	 			request basicrobot -m step : step($StepTime, $CurrentPlanId )	//mentre fa doplan ...		
+			}else{
+				   if [# CurMoveTodo == "s" #] {
+			            // Usa la nuova richiesta sincrona per la marcia indietro
+			            request basicrobot -m stepback : stepback($StepTime, $CurrentPlanId )
+        		} else{
+						//println("$name | doMoveTurn $CurMoveTodo")  
+						run robot.move(  CurMoveTodo )
+						forward planexec -m nextmove : nextmove(goon)
+        	
+        		}
+			}
+		}
+ 	}  
+	Transition t0  whenReply stepfailed  -> validateReply
+	               whenReply stepbackfailed  -> validateReply
+				   whenEvent alarm    -> handleAlarm 
+					whenReply stepcollided   -> validateReply
+               		whenReply stepbackcollided  -> validateReply
+	               whenMsg nomoremove   -> planend
+	               whenMsg nextmove   -> handleTurnAndUpdate  
+	               whenReply stepdone  -> validateReply
+	               whenReply stepbackdone -> validateReply
+//alarm gestito solo se non c'è stepfailed
+
+// STATO FILTRO: per la validazione
+State validateReply {
+    printCurrentMessage color gray
+    [#
+          val content = currentMsg.msgContent()
+			
+			val planIdInMsgStr = content.substringAfterLast(",").substringBefore(")").trim()
+			var planIdInMsg = -1
+			try{
+				planIdInMsg = planIdInMsgStr.toInt()
+			}catch(e: Exception){}
+
+		    isValid = (planIdInMsg == CurrentPlanId && CurrentPlanId != 0)
+			msgId = currentMsg.msgId()
+    #]
+    if [# !isValid #] {
+        println("$name | Discarding obsolete reply for plan $planIdInMsg (current is $CurrentPlanId): $currentMsg") color red
+    }else{
+    	if [# AlarmReceived #] {
+				println("$name | Final reply after alarm received: $currentMsg") color magenta
+				if [# msgId.contains("done") || msgId.contains("collided") #] {
+					[# PlanDone += CurMoveTodo 
+						PathTodoOnFail = Plan 
+						
+						#]
+				}else{
+					[#PathTodoOnFail = CurMoveTodo + Plan#]
+				}
+		}
+	}
+    
+    autodispatch resume: resume(go)
+}Transition t0
+				whenMsg resume and [# !isValid #] ->work
+				whenMsg resume and [# isValid && AlarmReceived #] ->failThePlan 
+				whenMsg resume and [# isValid && (msgId == "stepdone" || msgId == "stepbackdone")#] -> handleStepDoneAndUpdate
+				whenMsg resume and [# isValid && (msgId == "stepcollided" || msgId == "stepbackcollided" )#] -> planInterruptedCollision
+				whenMsg resume and [# isValid && (msgId == "stepbackfailed " || msgId == "stepfailed")#] -> planInterruptedLogical
+				
+	
+	State handleStepDoneAndUpdate {
+		
+        [# PlanDone += CurMoveTodo #] // Aggiungiamo la mossa 'w' o 's' al percorso completato
+    }
+    Goto nextMove
+
+    State handleTurnAndUpdate {
+        [# PlanDone += CurMoveTodo #] // Aggiungiamo 'l', 'r', 'a', 'd' al percorso completato
+    }
+    Goto nextMove 	
+    
+    State planInterruptedLogical {
+	    println("$name | Plan interrupted by logical failure. Move not performed.") color red
+	    [# PathTodoOnFail = CurMoveTodo + Plan #]
+	}
+	Goto failThePlan
+	
+	State planInterruptedCollision {
+	    println("$name | Plan interrupted by collision. Move was performed.") color yellow
+	    [# PlanDone += CurMoveTodo #]
+	    // PathTodo è solo il resto del piano.
+		[# PathTodoOnFail = Plan #]
+	}
+	Goto failThePlan
+	    
+	State failThePlan {
+		[#
+		    // Ora usiamo il valore corretto calcolato prima
+		    val PathTodo = PathTodoOnFail
+		    var SafePlanDone = if (PlanDone.isEmpty()) "n" else PlanDone
+			var SafePathTodo = if (PathTodo.isEmpty()) "none" else PathTodo
+		#]
+		replyTo doplan with doplanfailed : doplanfailed( $SafePlanDone, $SafePathTodo )
+		[# CurrentPlanId = 0 
+			AlarmReceived = false
+			#
+		]
+	}
+	Goto work
+    
+	State planend{ 
+		//printCurrentMessage color red
+		if [# currentMsg.msgContent() == "alarm(disengaged)" #]{}
+		else{ 
+			if [# currentMsg.msgId() == "alarm" #]{
+		 		println("$name |  planend alarm $Plan $CurMoveTodo")	 
+		 		[# val Plantodo = CurMoveTodo + Plan #]
+		 		replyTo doplan with doplanfailed : doplanfailed( $Plantodo )			
+			}else{ 
+				println("$name | planend ok plan=$PlanOrig ") color blue
+				replyTo doplan with doplandone : doplandone($PlanOrig)
+				updateResource [# "plandone($PlanOrig)" #] 
+				
+			[#
+		        CurrentPlanId = 0
+		        AlarmReceived = false // Anche se dovrebbe essere già false, è buona pratica
+		    #]
+			}
+		}
+	}
+	Goto work 
+	
+	State planinterruptedobstacle{  
+		printCurrentMessage
+ 		println("$name |  planinterruptedobstacle $CurMoveTodo StepTime=$StepTime")	color magenta
+ 		[# var Plantodo =  CurMoveTodo + Plan
+ 		#]
+ 		if [#PlanDone.isEmpty()#]{
+ 			[#PlanDone = "n"#]
+ 		}
+ 		updateResource [# "planfailed($PlanOrig,$Plantodo )" #] 
+ 		replyTo doplan with doplanfailed : doplanfailed( $PlanDone, $Plantodo )
+ 		delay 200 // per evitare race condition
+ 	}	
+ 	Goto work 
+ 	
+    // NUOVO STATO PER GESTIRE L'ALLARME IN MODO SICURO
+    State handleAlarm {
+        printCurrentMessage color red
+        if [#( !AlarmReceived )#] { // Gestiamo l'allarme solo una volta
+            [# AlarmReceived = true#]
+            println("$name | ALARM RECEIVED! Halting robot and waiting for final reply.") color red
+
+            // FERMARE IMMEDIATAMENTE IL ROBOT
+            forward basicrobot -m cmd : cmd(h)
+
+           }
+    }
+    Goto awaitingFinalReplyAfterAlarm 	
+    
+    State awaitingFinalReplyAfterAlarm{
+    	println("$name | ... awaiting final reply for plan $CurrentPlanId ...")
+    }	// Aspettiamo solo la risposta pertinente. Qualsiasi altra cosa viene ignorata.
+	Transition t0 whenReply stepdone -> validateReply
+	               whenReply stepbackdone -> validateReply
+	               whenReply stepfailed -> validateReply
+	               whenReply stepbackfailed -> validateReply
+	               whenReply stepcollided -> validateReply
+	               whenReply stepbackcollided -> validateReply
+ 	
+ 	State planinterruptedalarm{  
+
+ 	}	 
+ 	Transition t0 //whenTime 200 -> work  //THanks to Mirabella 2023
+ 				  whenMsg nextmove    ->  nonextmovesincealarm
+ 				  whenReply stepdone  ->  nonextmovesincealarm //possiblestepdonemirabella
+ 				  whenReply stepfailed -> planinterruptedobstacle //work
+ 				  whenReply stepbackdone -> nonextmovesincealarm
+ 				  whenReply stepbackfailed -> planinterruptedobstacle
+
+
+	State nonextmovesincealarm{
+ 		println("$name |  nonextmovesincealarm $CurMoveTodo plantodo=$Plan") color magenta
+ 		updateResource [# "planfailed($PlanOrig,$Plan )" #] 
+ 		if [# Plan.length == 0 #]{ //Piano esaurito nonostante l'allarme
+ 			replyTo doplan with doplandone : doplandone($PlanOrig)
+ 		}else{ //Piano interrotto; da fare ancora: Plan
+ 		   replyTo doplan with doplanfailed : doplanfailed( $Plan )
+ 		}
+ 		delay 200
+	}
+	Goto work
+
+ 	State planrefused{
+ 		println("$name | planrefused ") color red
+ 		replyTo doplan with doplanfailed : doplanfailed( youarenotowner )
+ 		//TODO: inserire motivazione fallimento ?
+ 	}
+ 	Goto work
+}
+
+/*
+ * ------------------------------
+ * robotpos
+ * ------------------------------
+ */  
+   	
+QActor robotpos context ctxbasicrobot{
+	[# val planner = unibo.planner23.Planner23Util()
+	    val MapName   = "map2025all"//"map25complete_x"  //"""mapCompleteWithObst23ok"
+	    val MyName    = name //upcase var
+		var OwnerMngr = supports.OwnerManager //Kotlin object
+		var IsOwner   = false
+	    var StepTime  = "360"
+		var Plan      = ""	
+		var Caller    = ""
+		var TargetX   = ""
+		var TargetY   = ""
+		var X         = ""
+		var Y         = "" 
+		var D         = ""
+		var PlanCounter = 0 //contatore per PlanID
+	#]
+	State s0 initial{
+        println("$name STARTS loading $MapName") 		
+        
+		[# planner.initAI()  
+		   planner.loadRoomMap(MapName) 
+		   planner.showMap()
+		#]
+	}
+	Goto waitclientrequest
+ 		              
+	State waitclientrequest{
+		println("$name | waiting the client request...")
+	}              
+	Transition t0 whenRequest getrobotstate -> getRoboSstate
+				  whenRequest moverobot -> checkTheOwnerForMove  
+				  whenRequest getenvmap -> getEnvMap
+				  whenMsg setrobotstate -> checkTheOwnerForSet   
+				  whenMsg setdirection  -> checkTheOwnerForSetDir   
+				  //recovery
+				  whenMsg updatemappath -> update_map_after_recovery
+				  
+		// recovery
+	State update_map_after_recovery {
+	    onMsg( updatemappath : path(MOVES) ) {
+	        println("$name | Updating map with recovery moves: ${payloadArg(0)}") color yellow
+	        [# planner.doPathOnMap(payloadArg(0)) #]
+	    }
+	    [# planner.showCurrentRobotState() #]
+	}
+	Goto waitclientrequest
+
+    //Non fa check su owner: risponde a tutti
+    State getRoboSstate{
+    	[# val PX   = planner.getPosX() 
+    		val PY  = planner.getPosY()
+    		val DIR = ""+planner.getDir()
+    	#]
+    	replyTo getrobotstate with robotstate : robotstate(pos($PX,$PY),$DIR)
+    }
+    Goto waitclientrequest
+    
+    State getEnvMap{
+    	[# val Maprep = planner.getMapOneLine() #]
+    	replyTo getenvmap with envmap : envmap($Maprep)
+    	println("$Maprep") color yellow
+    	updateResource [# Maprep #]    	
+    }
+    Goto waitclientrequest
+    
+    State checkTheOwnerForSetDir{
+ 		onMsg(setdirection : dir( D )){
+			[# D       = payloadArg(0)
+ 			   Caller  = currentMsg.msgSender() 
+ 			   IsOwner = OwnerMngr.checkOwner( Caller )
+ 			   
+			#]						 
+		}
+
+    }
+    Goto setTheRobotDirection if [# IsOwner #] else waitclientrequest
+
+    State setTheRobotDirection{
+    	println("setTheRobotDirection $D") color magenta
+    	[# Plan = planner.setTheDirection(D)
+    		#
+    	]  
+    	
+    	// Quando si trova già nella direzione corretta ... ELIMINIAMO IL BUG che fa esplodere prolog :)
+    	if [# Plan.isEmpty() #] {
+        println("robotpos | Direction is already set. No plan needed.") color green
+        forward robotpos -m nomoremove : nomoremove(noNeed)
+    } else {
+            [#
+                PlanCounter++
+            #]
+            println("$name | Direction plan: '$Plan' with ID: $PlanCounter") color green
+            // invio richiesta
+            request planexec -m doplan : doplan( $Plan, $StepTime, $PlanCounter )
+    	}
+    }
+ 	Transition t0 whenReply doplandone   -> planfordirok
+	              whenReply doplanfailed -> fatalerror
+	              whenMsg nomoremove -> planfordirok
+	              
+    
+    State planfordirok{
+		[# planner.doPathOnMap(Plan)        #]
+		[# planner.showCurrentRobotState(); #]
+		updateResource [# planner.robotOnMap() #] 
+	}
+	Goto waitclientrequest
+    
+    State fatalerror{
+    	println("fatalerror ") color red
+    }
+    Goto waitclientrequest
+    
+    
+	//Se setrobotstate � inviato da un attore diverso da Owner, non si fa nulla
+	//Il caller per� potrebbe non capire perch� il comando non � stato fatti
+	//MA: setTheRobotState � una utility per allineare lo stato del robot
+	//con lo stato che posizioniamo 'a mano'			  
+	
+    State checkTheOwnerForSet	{
+		onMsg(setrobotstate : setpos(X,Y,D)){
+			[# X = payloadArg(0)
+			   Y = payloadArg(1)
+			   D = payloadArg(2)
+			   Caller = currentMsg.msgSender() 
+               IsOwner = OwnerMngr.checkOwner( Caller )
+			   
+			#]			 
+		}
+   		//request engager -m checkowner : checkowner($Caller)
+    }
+    Goto setTheRobotState if [# IsOwner #] else waitclientrequest
+    /*
+    Transition t0 whenReply checkownerok     -> setTheRobotState
+                  whenReply checkownerfailed -> waitclientrequest
+    */
+	State setTheRobotState{
+		[# planner.setRobotState(X,Y,D) #]
+		//println("setTheRobotState ($X, $Y, $D) ") color magenta
+		[# planner.showCurrentRobotState(); #]	 
+		delay 300  //Give time to the webpage ...
+		println("update resource for setTheRobotState ${planner.robotOnMap()}") color magenta  
+		updateResource [# planner.robotOnMap() #] 
+	} 
+	Goto waitclientrequest
+	
+    State checkTheOwnerForMove{
+    	printCurrentMessage
+    	[# Caller    = currentMsg.msgSender() 
+    		StepTime = OwnerMngr.steptime  
+    	#]
+		onMsg( moverobot : moverobot(X,Y)){
+			[# TargetX = payloadArg(0)
+			   TargetY = payloadArg(1)
+               IsOwner = OwnerMngr.checkOwner( Caller )
+			   
+		    #]
+		}
+    	//println("$name checkTheOwnerForMove $Caller") color blue
+   			//request engager -m checkowner : checkowner($Caller)
+    }
+    Goto planTheRobotmoves if [# IsOwner #] else moveRefused    
+	
+	/* 
+	 * Uso il planner per gestire il robot
+	*/
+	State planTheRobotmoves{	 
+		//printCurrentMessage 
+		[#  
+		   Plan = planner.planForGoal(""+TargetX,""+TargetY).toString()
+		   println("planTheRobotmoves $Plan")
+		   Plan = planner.planCompacted(Plan) 
+		   if( Plan.isEmpty()) Plan="''"
+		   //CommUtils.outblue("$name | Plan to reach pos: $Plan")
+		   
+           PlanCounter++
+        #]
+        println("$name | Plan to reach pos: '$Plan' for $Caller with ID: $PlanCounter")  color blue
+        // 3. INVIAMO L'ID NELLA RICHIESTA doplan
+        request planexec -m doplan : doplan($Plan, $StepTime, $PlanCounter)
+	}
+	Transition t0 whenReply doplandone   -> endok
+	              whenReply doplanfailed -> endko
+	  
+	State endok{
+		//println("pos reached") 
+		//Aggiorno il path sulla mappa
+		[# planner.doPathOnMap(Plan) #]
+		[# planner.showCurrentRobotState(); #]
+		updateResource [# planner.robotOnMap() #] 
+		replyTo moverobot with moverobotdone : moverobotdone(ok)
+	}
+	Goto waitclientrequest
+	
+	State endko{
+		onMsg( doplanfailed : doplanfailed(PATH_DONE, PATH_TODO) ){
+			[# val PathDone  = payloadArg(0) 
+				val PathTodo = payloadArg(1)
+				
+				#]
+			println("pos NOT reached - PathTodo = ${PathTodo} vs. $Plan") color red		
+			
+			println("===> [ROBOTPOS | ENDKO] ESECUZIONE LOGICA DI RECUPERO AVVIATA Pathdone : $PathDone <===") color cyan	 
+            if [# PathDone != "n"  #] {
+                 println("===> [ROBOTPOS | ENDKO] AGGIORNAMENTO MAPPA CON: '$PathDone'") color green
+                 [#planner.doPathOnMap(PathDone)#]
+            } else {
+                 println("===> [ROBOTPOS | ENDKO] NESSUN AGGIORNAMENTO MAPPA (PathDone vuoto)") color red
+            }			
+			
+			[# planner.showCurrentRobotState(); #]
+			replyTo moverobot with moverobotfailed : moverobotfailed($PathDone,$PathTodo)
+		}
+	}
+	Goto waitclientrequest
+	 
+ 	//Added June6
+	State moveRefused{
+		//println("moveRefused ") color red
+		replyTo moverobot with moverobotfailed : moverobotfailed(youarenotowner)
+	}
+	Goto waitclientrequest
+ 
+} 	
+ 
+  
+//Facade robotfacadestart port 8085 usingactor basicrobot inctx ctxbasicrobot  
+//                   appl "main.java.facade24.Facade24Application" 
+//                   UserLibs -f "Facade24Start-1.0-plain"  -f "Facade24Start-1.0"
+
+/*
+Facade robotfacade port 8085 usingactor basicrobot inctx ctxbasicrobot  
+                   appl "main.java.robotfacade24.Robotfacade24Application" 
+                   UserLibs -f "robotfacade24-1.0-plain"  -f "robotfacade24-1.0"
+ */
+  
+/*
+ * ------------------------------
+ * robotposclient (tester)
+ * ------------------------------
+ */
+
+/* 
+QActor robotposclient context ctxbasicrobot{
+	
+	State ss0 initial{
+		println("$name request engage") color green
+		request basicrobot -m engage : engage( robotposclient )
+	}
+ 	Transition t0 whenReply engagedone    -> gototarget
+	              whenReply engagerefused -> waitrobotfree
+ 	
+ 	State waitrobotfree{
+		println("$name | Sorry, the robot is already engaged.")  color green
+	}		
+	 
+	 
+	State gototarget {
+		println("$name goto (4,3)") color green
+		//[# CommUtils.waitTheUser("$name | hit 1CR") #] //blocca anche basicrobot ...
+		//delay 1000
+		request basicrobot -m moverobot : moverobot(4,3)   
+		//[# emitWithDelay("alarm","alarm(fire)", 1400)   #] 
+	} 
+	Transition t0 whenReply moverobotdone   -> handleAnswer
+	              whenReply moverobotfailed -> handleAnswer
+	
+	State handleAnswer {
+		printCurrentMessage color magenta
+		//[# CommUtils.waitTheUser("$name | hit 1CR") #]
+		//request basicrobot -m moverobot : moverobot(6,4)   
+		//TODO: verificare che la direzione sia verso la porta
+		//Come so la direzione? A cho chiedo di spostarsi?
+		//Il basicrobot dovrebbe rispondere a messaggi di richiesta sullo stato
+		//(posiione e direzione)
+		request basicrobot -m getrobotstate : robotstate(ok)
+	}
+	Transition t0 whenReply robotstate -> handleRobotState
+	
+	State handleRobotState{
+		printCurrentMessage
+	}
+}
+*/
+
+/*
+ * ------------------------------
+ * basicrobotusage (tester)
+ * ------------------------------
+ */
+/* 
+QActor basicrobotusage context ctxbasicrobot{
+	[# val Plan    = "\"[w, w, l, w, w, w, w]\"" //Come quello restituito da doplan
+		val MyName = name 
+	#] 
+	State ss0 initial { 	
+		delay 3000
+		printCurrentMessage color black 
+		//[# CommUtils.waitTheUser("basicrobotusage, please hit 1CR")	 #]
+		request basicrobot -m engage : engage( MyName,350 )
+	}
+	Transition t0 whenReply engagedone -> dowork
+	//Transition t0 whenReply engagedone -> testdoplan
+	
+ 	
+	State dowork{
+		printCurrentMessage color magenta
+		//forward basicrobot -m cmd : cmd(p)
+		request basicrobot -m step : step(350) 
+	}
+	Transition t0 whenReply stepdone   -> handleStepDone
+	              whenReply stepfailed -> handleStepFail
+	
+	State handleStepDone{
+		printCurrentMessage color black
+	}
+	Goto dowork 
+	
+	State handleStepFail{
+		printCurrentMessage color black
+	}
+	
+//Testdopoath	
+	State testdoplan{
+		request basicrobot -m doplan : doplan($Plan, 345)
+	}
+	Transition t0 whenReply doplandone   -> testdoplanEnd
+				  whenReply doplanfailed -> testdoplanEnd
+	State testdoplanEnd{
+		printCurrentMessage color magenta
+		forward basicrobot -m disengage :  disengage($MyName)
+	}	
+}
+ 
+ 
+ QActor sonarobs context ctxbasicrobot{
+	State s0 initial{
+        println("$name STARTS ") 
+    }
+    Goto work
+    
+    State work{
+    	
+    }
+    Transition t0 whenEvent sonardata -> handlesonardata
+    
+    State handlesonardata{
+    	printCurrentMessage color yellow
+    }
+    Goto work
+	
+}
+*/
+ 

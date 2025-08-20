@@ -1,0 +1,19 @@
+# Dipendenze
+node_modules
+
+# File di output del build
+dist
+build
+
+# Log e file temporanei
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variabili d'ambiente locali
+.env.local
+.env.*.local
+
+# Cartelle del version control
+.git
+.svn

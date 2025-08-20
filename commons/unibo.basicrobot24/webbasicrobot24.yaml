@@ -1,0 +1,32 @@
+#version: '3'
+services:
+
+   wenv:
+    image: docker.io/natbodocker/virtualrobotdisi23:1.0
+    ports:
+      - 8090:8090 
+      - 8091:8091/tcp
+      - 8091:8091/udp
+
+   basicrobot24:
+    image: basicrobot24:1.0
+    #image: docker.io/natbodocker/basicrobot24:1.0 
+    environment:
+      - VIRTUAL_ENV=wenv   
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://192.168.1.6:8761/eureka/
+      - EUREKA_CLIENT_INITIAL_INSTANCE_INFO_REPLICATION_INTERVAL_SECONDS=10
+      - EUREKA_CLIENT_REGISTRY_FETCH_INTERVAL_SECONDS=5
+    ports:
+      - 8020:8020/tcp
+      - 8020:8020/udp
+      - 8085:8085
+    depends_on:
+      - wenv
+ 
+
+## -------------------------------------------------------------
+## TODO See https://docs.docker.com/compose/startup-order/
+## -------------------------------------------------------------
+## docker-compose -f webbasicrobot24.yaml  up
+## docker-compose run --service-ports wenv
+## docker-compose run --service-ports vrobotclient  ATTIVA ANCHE wenv

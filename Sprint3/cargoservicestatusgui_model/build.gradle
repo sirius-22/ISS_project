@@ -1,0 +1,58 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.8'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'distribution'
+}
+
+group = 'unibo.disi'
+version = '1.0'
+description = 'Demo project for Spring Boot'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+	flatDir {   dirs '../../commons/unibolibs'	 }
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.json:json:20240303'
+	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+	
+	/* COAP ********************************************************************************* */
+    // https://mvnrepository.com/artifact/org.eclipse.californium/californium-core
+    implementation group: 'org.eclipse.californium', name: 'californium-core', version: '3.5.0'
+    // https://mvnrepository.com/artifact/org.eclipse.californium/californium-proxy2
+    implementation group: 'org.eclipse.californium', name: 'californium-proxy2', version: '3.5.0'
+	
+	/* UNIBO *********************************************************************************/
+    implementation name: 'uniboInterfaces'
+    implementation name: '2p301'
+	implementation name: 'unibo.qakactor23-5.0'
+    implementation name: 'unibo.basicomm23-1.0'
+    testImplementation name: 'uniboInterfaces'
+	testImplementation name: 'unibo.basicomm23-1.0'
+}
+
+distributions {
+    main {
+        contents {
+            from(tasks.bootJar) // includi il jar eseguibile
+        }
+    }
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
