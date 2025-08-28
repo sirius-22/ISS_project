@@ -71,6 +71,38 @@ Si sono quindi modellati altri due tipi di messaggi. Si è optato per messaggi d
   Dispatch ledon : ledon(M)
   Dispatch ledoff : ledoff(M)
 ```
+
+### SonarDevice come principale pilota di Leddevice  
+
+La scelta architetturale di far sì che sia il sonar a inviare direttamente i messaggi al `leddevice` dipende da requisiti, semplicità di progettazione e testabilità.  
+
+#### Allineamento ai requisiti  
+Secondo i requisiti il LED deve accendersi e spegnersi alla rilevazione di una distanza anomala da parte del sonar.  
+Questo comportamento è dunque esclusivamente legato alla misura del sonar e non ad altro, come la logica di business.  
+Per questo motivo è sembrato naturale che fosse proprio `sonardevice` a generare i messaggi `ledon` e `ledoff`.  
+
+#### Semplicità e chiarezza del codice  
+Far emettere direttamente al sonar i messaggi verso il LED evita la necessità di introdurre ulteriori meccanismi di notifica (es. eventi condivisi) che non aggiungerebbero reale valore.  
+Questa scelta rende il flusso più lineare, leggibile e semplice da mantenere.  
+
+Infatti, se dovessero servire più LED non sarebbe comunque il sonar a doverli conoscere direttamente: basterebbe modellare il `leddevice` come un attore composito capace di propagare l’accensione a più istanze, senza modificare la responsabilità del sonar.  
+
+#### Reattività immediata  
+Da requisiti l’accensione del LED deve avvenire nel momento in cui il sonar stesso rileva una condizione di allarme (container presente o distanza fuori range).  
+L’uso di un dispatch diretto minimizza il costo di comunicazione e garantisce la risposta più tempestiva possibile, anche a livello visivo.  
+
+#### Testabilità e modularità  
+Il `leddevice` può essere testato in isolamento simulando i dispatch `ledon` / `ledoff`.  
+Analogamente, il `cargoservice` può essere testato senza preoccuparsi dei dispositivi fisici.  
+
+Questa separazione aumenta la manutenibilità e permette deployment indipendenti (ad es. LED e sonar sul Raspberry, `cargoservice` su Docker).  
+
+---
+
+In questo modo si evidenzia che la scelta di far pilotare direttamente il LED dal sonar garantisce reattività, semplicità del modello, costo di comunicazione minimo e alta testabilità.  
+
+
+
 ## Modello
 L'analisi confluisce nei seguenti due modelli logici
 
