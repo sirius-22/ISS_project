@@ -384,6 +384,12 @@ Dopodiché il browser mostra una notifica del risultato della richiesta.
 
 In questo modo, la GUI può eseguire l’azione end‑to‑end senza conoscere dettagli interni del dominio QAK.
 
+
+## Modifiche al codice del committente
+Durante le prime prove di integrazione tra i diversi componenti del sistema, abbiamo riscontrato alcuni malfunzionamenti legati al comportamento del basicrobot. In particolare, alcune anomalie emerse nei test non derivavano dai nostri modelli o dal flusso di messaggi, bensì dal codice del robot stesso, fornito dal committente. Dopo aver verificato che il ragionamento architetturale e la logica di interazione dei nostri attori fosse corretta, abbiamo deciso di intervenire direttamente sul [codice del basicrobot](https://github.com/sirius-22/ISS_project/blob/main/Sprint3/modificheAlCodiceSorgente.md).
+
+
+
 ## Deployment
 
 1. Andare nella cartella [CargoServiceCore](./CargoServiceCore)
