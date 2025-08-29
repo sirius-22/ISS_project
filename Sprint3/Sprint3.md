@@ -398,7 +398,7 @@ Durante le prime prove di integrazione tra i diversi componenti del sistema, abb
 4. Creare la rete ```docker network create iss-network```
 5. Eseguire  il comando ```docker compose -f arch3.yaml up``` per far partire i componenti del sistema 
 6. Aprire il browser su [localhost:8090](localhost:8090) per visualizzare l’ambiente WEnv in cui lavorerà il DDR robot
-7. Eseguire il comando ```./gradlew run``` oppure ```gradle run``` nella cartella [logicModel_IODevices](./logicModel_IODevices) per far partire il resto del sistema RaspDevice
+7. Eseguire il comando ```./gradlew run``` oppure ```gradle run``` nella cartella [IODevices](./IODevices) per far partire il resto del sistema RaspDevice
 
 *Note:*
 
