@@ -1,0 +1,28 @@
+System testcoap
+
+Dispatch changed : changed (ARG)
+
+Context ctx_observer ip [host="localhost" port=8101]
+Context ctx_update ip [host="localhost" port=8100]
+
+ExternalQActor updater context ctx_update
+
+QActor system_obs context ctx_observer{
+	[# var Update = "" #]
+	State state_init initial{
+		println("[system_observer] | started") color green
+		
+		observeResource updater msgid changed
+	} Transition t0 whenMsg changed -> state_handle
+	
+	State state_handle{
+		printCurrentMessage
+		println("[system_obs]| ricevuto update: $currentMsg") color blue
+		onMsg (changed:changed(ARG)){
+			[#
+				Update = payloadArg(0)	
+			#]
+		}
+		println("[system_observer] | update received:$Update") color green
+	}
+}
