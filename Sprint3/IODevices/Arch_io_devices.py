@@ -27,9 +27,11 @@ with Diagram('io_devicesArch', show=False, outformat='png', graph_attr=graphattr
 ### see https://renenyffenegger.ch/notes/tools/Graphviz/attributes/label/HTML-like/index
      with Cluster('ctx_raspdevice', graph_attr=nodeattr):
           mind=Custom('mind','./qakicons/symActorWithobjSmall.png')
-          sonarsimul=Custom('sonarsimul','./qakicons/symActorWithobjSmall.png')
-     sonarsimul >> Edge( label='sonardata', **eventedgeattr, decorate='true', fontcolor='red') >> mind
+          sonardevice=Custom('sonardevice','./qakicons/symActorWithobjSmall.png')
+          leddevice=Custom('leddevice','./qakicons/symActorWithobjSmall.png')
+     sonardevice >> Edge( label='sonardata', **eventedgeattr, decorate='true', fontcolor='red') >> mind
      mind >> Edge( label='containerhere', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      mind >> Edge( label='stopActions', **eventedgeattr, decorate='true', fontcolor='red') >> sys
      mind >> Edge( label='resumeActions', **eventedgeattr, decorate='true', fontcolor='red') >> sys
+     mind >> Edge(color='blue', style='solid',  decorate='true', label='<ledon &nbsp; ledoff &nbsp; >',  fontcolor='blue') >> leddevice
 diag

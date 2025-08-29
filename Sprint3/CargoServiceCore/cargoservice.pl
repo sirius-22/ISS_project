@@ -37,7 +37,6 @@ event( hold_state_update, hold_state_update(JSONSTATE) ).
 context(ctx_cargoservice, "localhost",  "TCP", "8000").
 context(ctx_basicrobot, "basicrobot24",  "TCP", "8020").
 context(ctx_productservice, "cargoserviceqak",  "TCP", "8111").
-context(ctx_raspdevice, "host.docker.internal",  "TCP", "8128").
  qactor( basicrobot, ctx_basicrobot, "external").
   qactor( productservice, ctx_productservice, "external").
   qactor( cargorobot, ctx_cargoservice, "it.unibo.cargorobot.Cargorobot").

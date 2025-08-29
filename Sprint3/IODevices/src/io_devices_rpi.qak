@@ -1,6 +1,6 @@
 System io_devices
 
-mqttBroker "192.168.78.21" : 1883 eventTopic "unibo/qak/events"
+mqttBroker "192.168.137.1" : 1883 eventTopic "unibo/qak/events"
 //Attenzione! cambiare localhost con l'ip su cui gira mosqitto (il container con tutto dentro)
 
 Event sonardata      : distance(D)
