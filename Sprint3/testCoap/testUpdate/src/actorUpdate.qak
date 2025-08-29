@@ -1,0 +1,41 @@
+System testcoap
+mqttBroker "127.0.0.1" : 1883 eventTopic "unibo/qak/events"
+
+Dispatch changed : changed(ARG)
+
+Context ctx_update ip [host="localhost" port=8100]
+
+QActor updater context ctx_update {
+	State state_init initial {
+		discardMsg Off
+		println("[updater] | Started ") color blue
+	}
+	Goto state_update
+	
+	State state_update {
+		delay 20000
+		[#
+			val ToUpdate = "test"
+		#]
+		updateResource[# "$ToUpdate" #]
+		println("update sent") color magenta
+	}
+}
+
+QActor local_observer context ctx_update{
+	[# var Update = "" #]
+	State state_init initial{
+		println("[local_observer] | started") color green
+		observeResource updater msgid changed
+	} Transition t0 whenMsg changed -> state_handle
+	
+	State state_handle{
+		printCurrentMessage
+		onMsg (changed:changed(ARG)){
+			[#
+				Update = payloadArg(0)	
+			#]
+		}
+		println("[local_observer] | update received:$Update") color green
+	}
+}

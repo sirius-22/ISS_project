@@ -1,0 +1,36 @@
+System testcoap
+mqttBroker "127.0.0.1" : 1883 eventTopic "unibo/qak/events"
+
+
+Dispatch changed : changed(ARG)
+
+Context ctx_observer ip [host="localhost" port=8101]
+Context ctx_update ip [host="localhost" port=8100]
+
+ExternalQActor updater context ctx_update
+
+QActor observer context ctx_observer{
+	import "it.unibo.kactor.QakContext"
+	State state_init initial{
+		println("observer started") color blue
+		discardMsg Off
+		delay 2000
+		[#
+
+	    val sysUtilClass = Class.forName("it.unibo.kactor.sysUtil")
+	    val m = sysUtilClass.getDeclaredField("ctxsMap")
+	    m.isAccessible = true
+	    val ctxsMap = m.get(null) as Map<*, *>
+	
+	    println("== ctxsMap (contesti registrati) ==")
+	    ctxsMap.forEach { (name, info) -> println("  $name -> $info") }
+    
+  		#]
+		observeResource updater msgid changed
+	} Transition t0 whenMsg changed -> state_idle
+	
+	State state_idle{
+		printCurrentMessage
+		println("currentMsg=${currentMsg}")
+	}
+}
