@@ -79,7 +79,7 @@ services:
   
   basicrobot24:
     container_name: basicrobot24
-    image: pretty2/basicrobot:2.13
+    image: sirius0022/basicrobot:2.13 
     mem_limit: 512m
     ports:
       - "8020:8020/tcp"
@@ -108,7 +108,7 @@ services:
   # ------ CARGOSERVICECORE -------------
   cargoservicecore:
     container_name: cargoservicecore
-    image: cargoservice:2.0
+    image: sirius0022/cargoservice:2.0 
     mem_limit: 512m
     ports:
       - "8000:8000/tcp"
@@ -132,7 +132,7 @@ services:
 
   cargoservicestatusgui:
     container_name: cargoservicestatusgui
-    image: cargoservicestatusgui:1.1
+    image: sirius0022/cargoservicestatusgui:1.1 
     mem_limit: 512m
     ports:
       - "8001:8001/tcp"
@@ -157,7 +157,7 @@ services:
 
   cargoservicestatusgui_model:
      container_name: cargoservicestatusgui_model
-     image: cargoservicestatusgui_model:1.1
+     image: sirius0022/cargoservicestatusgui_model:1.1
      mem_limit: 512m
      ports:
        - "8080:8080" 
@@ -181,30 +181,6 @@ services:
          condition: service_started
      networks:
        - iss-network
-
-
-  # ------ VUE FRONTEND -------------
-  # vue_cargoservicegui:
-  #   container_name: vue_cargoservicegui
-  #   image: vue_cargoservicegui
-  #   # Qui devi specificare le porte corrette. Ad esempio, se la tua applicazione Vue ascolta sulla porta 8080, potresti voler esporla.
-  #   # Assicurati di non avere conflitti con le altre porte già usate (es. 8000, 8001, ecc.).
-  #   ports:
-  #     - "5173:80" # Esempio di mappatura delle porte
-  #   environment:
-  #     # Se la tua app Vue ha bisogno di accedere ad altri servizi, devi configurare le variabili d'ambiente.
-  #     # Ad esempio, potrebbe aver bisogno dell'URL di Eureka o di un altro servizio backend.
-  #     - VUE_APP_EUREKA_URL=http://eureka:8761/eureka/
-  #     - VUE_APP_MQTT_BROKER=mosquitto
-  #   depends_on:
-  #     # Se il frontend ha bisogno che il backend e/o Eureka siano pronti prima di avviarsi,
-  #     # aggiungi le dipendenze qui.
-  #     eureka:
-  #       condition: service_healthy
-  #     cargoservicecore:
-  #       condition: service_started # O service_healthy, a seconda di come lo hai configurato
-  #   networks:
-  #     - iss-network
 
 networks:
   iss-network:
