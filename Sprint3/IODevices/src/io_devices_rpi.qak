@@ -2,7 +2,6 @@ System io_devices
 
 mqttBroker "192.168.137.1" : 1883 eventTopic "unibo/qak/events"
 //Attenzione! cambiare localhost con l'ip su cui gira mosqitto (il container con tutto dentro)
-
 Event sonardata      : distance(D)
 
 Event stopActions : stopActions(REASON)
@@ -137,14 +136,20 @@ QActor mind context ctx_raspdevice{
  QActor sonardevice context ctx_raspdevice{
 [# 
 	lateinit var reader : java.io.BufferedReader
-    lateinit var p : Process	
     var Distance = 0
 #]	
 	State s0 initial{
 		println("$name | start") color green
 	 	[#
-			p       = Runtime.getRuntime().exec("python ./resources/python/sonar.py")
-			System.out.println(p)
+	 		var p = Runtime.getRuntime().exec("python -u -")
+			this::class.java.getResourceAsStream("/python/sonar.py")!!.use {
+   				it.copyTo(p.outputStream)
+			}
+			p.outputStream.close()
+			// Consuma l'output rimasto'
+			Thread {
+    			p.inputStream.bufferedReader().forEachLine { println("[PY] $it") }
+			}.start()
 			reader  = java.io.BufferedReader(  java.io.InputStreamReader(p.getInputStream() ))
 		#]	
 		delay 2000	

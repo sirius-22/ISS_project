@@ -1,0 +1,8 @@
+CREATE DEPLOY IN WINDOWS
+- gradle wrapper
+- ./gradlew clean bootJar distTar
+-  scp ",\build\distributions\<name>-1.0.tar" <user>@192.168.137.2:/home/<user>
+EXTRACT AND START ON LINUX:
+- tar -xf ~/<name>-1.0.tar
+- cd ~/<name>-1.0/bin (IMPORTANTE! CERCA I FILE PL NELLA CARTELLA DALLA QUALE SI LANCIA LO SCRIPT)
+- ./<name>

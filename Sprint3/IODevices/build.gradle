@@ -174,9 +174,8 @@ distributions {
     main {
         distributionBaseName = 'io_devices'
         contents { 
-             from './io_devices.pl'
-             from './sysRules.pl'
-             from './facadeConfig.json'
+             from(bootJar.archiveFile) { into "lib" }
+             from(".") { into "bin"; include "*.pl", "*.json" }
         }
     }
 } 
